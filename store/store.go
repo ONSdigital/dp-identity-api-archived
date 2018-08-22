@@ -1,29 +1,47 @@
 package store
 
-import "github.com/ONSdigital/dp-identity-api/mongo"
+import (
+	"github.com/ONSdigital/dp-identity-api/mongo"
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
+	"github.com/pkg/errors"
+)
 
-// DataStore provides a datastore.Storer struct to attach methods to
 type DataStore struct {
 	Backend mongo.Mongo
 }
 
-/*
-Methods for querying mongo, add as needed
 
-example .....
------------------------
+func (store *DataStore) GetIdentity(id string) (*models.Identity, error) {
 
-func (s *DataSTore) GetIdentity(id) (*models.identity, error) {
+	s := store.Backend.Session.Copy()
+	defer s.Close()
+	var identity models.Identity
+	err := s.DB(store.Backend.Database).C("identities").Find(bson.M{"_id": id}).One(&identity)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, errors.New("Identity not found")
+		}
+		return nil, err
+	}
 
-	// some code to query mongo and get id
-
-return identity, nil
+	return &identity, nil
 }
 
-------------------------
+func (store *DataStore) PostIdentity(identity *models.Identity) error {
 
-accessed in the handlers via something like:
+	s := store.Backend.Session.Copy()
+	defer s.Close()
 
-identity :=  api.storer.GetIdentity(id)
+	err := s.DB(store.Backend.Database).C("identities").Insert(identity)
+	if err == mgo.ErrNotFound {
+		return errors.New("Failed to post identity to mongo")
+	}
 
-*/
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

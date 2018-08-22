@@ -43,8 +43,8 @@ func main() {
 		"bind_address": cfg.BindAddr,
 	})
 
-	store := store.DataStore{Backend: *mongodb}
+	store := &store.DataStore{Backend: *mongodb}
 
-	api.CreateIdentityAPI(store, *cfg)
+	api.CreateIdentityAPI(*store, *cfg)
 
 }

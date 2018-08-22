@@ -36,6 +36,7 @@ func CreateIdentityAPI(store store.DataStore, cfg config.Configuration) {
 		log.Error(errors.Wrap(err, "error creating kakfa audit producer"), nil)
 		os.Exit(1)
 	}
+
 	auditor = audit.New(auditProducer, "dp-identity-api")
 
 	api := &IdentityAPI{
@@ -46,11 +47,13 @@ func CreateIdentityAPI(store store.DataStore, cfg config.Configuration) {
 		auditor:            auditor,
 	}
 
-	api.router.HandleFunc("/name/{name}", api.hello).Methods("GET")
+	api.router.HandleFunc("/identity/{id}", api.GetIdentity).Methods("GET")
+	api.router.HandleFunc("/identity", api.PostIdentity).Methods("POST")
 
 	httpServer = server.New(cfg.BindAddr, router)
 
 	log.Debug("Starting api...", nil)
 	httpServer.ListenAndServe()
+
 
 }
