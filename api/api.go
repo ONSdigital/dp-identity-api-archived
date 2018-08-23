@@ -8,11 +8,11 @@ import (
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/store"
 	"github.com/ONSdigital/go-ns/audit"
+	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/kafka"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"os"
-	"github.com/ONSdigital/go-ns/healthcheck"
 )
 
 var httpServer *server.Server

@@ -5,10 +5,10 @@ import (
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/dp-identity-api/store"
-	"github.com/ONSdigital/go-ns/log"
-	"os"
 	"github.com/ONSdigital/go-ns/healthcheck"
+	"github.com/ONSdigital/go-ns/log"
 	mongolib "github.com/ONSdigital/go-ns/mongo"
+	"os"
 )
 
 const serviceNamespace = "dp-identity-api"
