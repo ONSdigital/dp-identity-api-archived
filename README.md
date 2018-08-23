@@ -12,12 +12,24 @@ DP Identity API
 * Run ```brew services start zookeeper```
 * Run ```brew services start kafka```
 
+### Usage
+
+`make debug` to run locally.
+
+### DEV NOTES
+
+1.) Have added basic endpoints for GetIdentityByID and PostIdentity `('identities/{id}' and '/identities'` respectively), this was just to sanity check the database and auditing
+functionality was working as intended. Delete/modify/purge as needed.
+
+2.) The auditor will trigger an error on GetIdentityByID for any requests that lack the correct context fields (i.e didn't come in via cmd/zebedee).
+This is expected behaviour and not a bug. A live request from another app would have these context items.
+
 ### Configuration
 
 | Environment variable        | Default                                   | Description
 | --------------------------- | ----------------------------------------- | -----------
 | BIND_ADDR                   |                                          | The host and port to bind to
-| MONGODB_BIND_ADDR           | localhost:20111                          | The MongoDB bind address
+| MONGODB_BIND_ADDR           | localhost:23800                        | The MongoDB bind address
 | MONGODB_DATABASE            | identities                               | The MongoDB dataset database
 | MONGODB_COLLECTION          | identities                               | MongoDB collection
 | HEALTHCHECK_INTERVAL       | 30s                                       | Time between self-healthchecks (`time.Duration` format)

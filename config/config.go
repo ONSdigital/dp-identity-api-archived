@@ -33,7 +33,7 @@ func Get() (*Configuration, error) {
 	}
 
 	cfg = &Configuration{
-		BindAddr:            ":20111",
+		BindAddr:            ":23800",
 		AuditEventsTopic:    "audit-events",
 		KafkaAddr:           []string{"localhost:9092"},
 		HealthCheckInterval: 30 * time.Second,
