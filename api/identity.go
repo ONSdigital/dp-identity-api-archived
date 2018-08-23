@@ -38,6 +38,12 @@ func (api *IdentityAPI) GetIdentityByID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	if err := api.auditor.Record(ctx, "get Identity", audit.Successful, auditParams); err != nil {
+		log.ErrorCtx(ctx, errors.WithMessage(err, "request unsuccessful"), logData)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	b, err := json.Marshal(identity)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "failed to marshal identity into bytes"), logData)
