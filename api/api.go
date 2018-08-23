@@ -47,13 +47,12 @@ func CreateIdentityAPI(store store.DataStore, cfg config.Configuration) {
 		auditor:            auditor,
 	}
 
-	api.router.HandleFunc("/identity/{id}", api.GetIdentity).Methods("GET")
+	api.router.HandleFunc("/identity/{id}", api.GetIdentityByID).Methods("GET")
 	api.router.HandleFunc("/identity", api.PostIdentity).Methods("POST")
 
 	httpServer = server.New(cfg.BindAddr, router)
 
 	log.Debug("Starting api...", nil)
 	httpServer.ListenAndServe()
-
 
 }

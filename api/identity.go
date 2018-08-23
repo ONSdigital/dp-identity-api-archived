@@ -1,19 +1,19 @@
 package api
 
 import (
-	"github.com/gorilla/mux"
-	"net/http"
-	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/ONSdigital/go-ns/log"
-	"github.com/ONSdigital/go-ns/common"
-	"github.com/ONSdigital/go-ns/audit"
-	"github.com/pkg/errors"
 	"encoding/json"
+	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/go-ns/audit"
+	"github.com/ONSdigital/go-ns/common"
+	"github.com/ONSdigital/go-ns/log"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"io/ioutil"
+	"net/http"
 )
 
-
-func (api *IdentityAPI) GetIdentity(w http.ResponseWriter, r *http.Request) {
+// TODO - added to sanity check - remove/change/purge as needed
+func (api *IdentityAPI) GetIdentityByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	identityID := vars["id"]
@@ -27,7 +27,7 @@ func (api *IdentityAPI) GetIdentity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	identity, err := api.dataStore.GetIdentity(identityID)
+	identity, err := api.dataStore.GetIdentityByID(identityID)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "failed to get identity"), logData)
 		err := api.auditor.Record(ctx, "get Identity", audit.Unsuccessful, auditParams)
@@ -49,6 +49,7 @@ func (api *IdentityAPI) GetIdentity(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(b))
 }
 
+// TODO - added to sanity check - remove/change/purge as needed
 func (api *IdentityAPI) PostIdentity(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

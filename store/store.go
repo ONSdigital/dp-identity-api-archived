@@ -1,8 +1,8 @@
 package store
 
 import (
-	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/dp-identity-api/models"
+	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/pkg/errors"
@@ -12,8 +12,7 @@ type DataStore struct {
 	Backend mongo.Mongo
 }
 
-
-func (store *DataStore) GetIdentity(id string) (*models.Identity, error) {
+func (store *DataStore) GetIdentityByID(id string) (*models.Identity, error) {
 
 	s := store.Backend.Session.Copy()
 	defer s.Close()
