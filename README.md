@@ -16,8 +16,12 @@ DP Identity API
 
 | Environment variable        | Default                                   | Description
 | --------------------------- | ----------------------------------------- | -----------
-| BIND_ADDR                   |                                   | The host and port to bind to
-
+| BIND_ADDR                   |                                          | The host and port to bind to
+| MONGODB_BIND_ADDR           | localhost:20111                          | The MongoDB bind address
+| MONGODB_DATABASE            | identities                               | The MongoDB dataset database
+| MONGODB_COLLECTION          | identities                               | MongoDB collection
+| HEALTHCHECK_INTERVAL       | 30s                                       | Time between self-healthchecks (`time.Duration` format)
+| HEALTHCHECK_TIMEOUT         | 2s                                     | The timeout that the healthcheck allows for checked subsystems
 
 ### Contributing
 
