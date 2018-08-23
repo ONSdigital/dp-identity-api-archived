@@ -58,6 +58,6 @@ func CreateIdentityAPI(store store.DataStore, cfg config.Configuration) {
 	httpServer = server.New(cfg.BindAddr, router)
 
 	log.Debug("Starting api...", nil)
-	httpServer.ListenAndServe()
+	httpServer.ListenAndServe() // TODO, properly + graceful shutdown
 
 }

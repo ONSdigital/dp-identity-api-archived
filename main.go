@@ -55,6 +55,8 @@ func main() {
 
 	api.CreateIdentityAPI(*store, *cfg)
 
+	// TODO - graceful shutdown + related api changes
+
 	healthTicker.Close()
 
 }
