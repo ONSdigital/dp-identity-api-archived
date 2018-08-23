@@ -22,7 +22,7 @@ DP Identity API
 functionality was working as intended. Delete/modify/purge as needed.
 
 2.) The auditor will trigger an error on GetIdentityByID for any requests that lack the correct context fields (i.e didn't come in via cmd/zebedee).
-This is expected behaviour and not a bug. A live request from another app would have these context items.
+This is expected behaviour and not a bug.
 
 ### Configuration
 
