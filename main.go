@@ -7,6 +7,8 @@ import (
 	"github.com/ONSdigital/dp-identity-api/store"
 	"github.com/ONSdigital/go-ns/log"
 	"os"
+	"github.com/ONSdigital/go-ns/healthcheck"
+	mongolib "github.com/ONSdigital/go-ns/mongo"
 )
 
 const serviceNamespace = "dp-identity-api"
@@ -45,6 +47,14 @@ func main() {
 
 	store := &store.DataStore{Backend: *mongodb}
 
+	healthTicker := healthcheck.NewTicker(
+		cfg.HealthCheckInterval,
+		cfg.HealthCheckTimeout,
+		mongolib.NewHealthCheckClient(mongodb.Session),
+	)
+
 	api.CreateIdentityAPI(*store, *cfg)
+
+	healthTicker.Close()
 
 }
