@@ -71,12 +71,14 @@ func (api *IdentityAPI) PostIdentity(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "failed to unmarshall request body"), nil)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	err = api.dataStore.PostIdentity(identity)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "failed to write data to mongo"), nil)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
