@@ -12,6 +12,7 @@ type DataStore struct {
 	Backend mongo.Mongo
 }
 
+// TODO - added to sanity check - remove/change/purge as needed
 func (store *DataStore) GetIdentityByID(id string) (*models.Identity, error) {
 
 	s := store.Backend.Session.Copy()
@@ -28,6 +29,7 @@ func (store *DataStore) GetIdentityByID(id string) (*models.Identity, error) {
 	return &identity, nil
 }
 
+// TODO - added to sanity check - remove/change/purge as needed
 func (store *DataStore) PostIdentity(identity *models.Identity) error {
 
 	s := store.Backend.Session.Copy()

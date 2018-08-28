@@ -13,6 +13,7 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"os"
+	"context"
 )
 
 var httpServer *server.Server
@@ -25,7 +26,7 @@ type IdentityAPI struct {
 	auditor            audit.AuditorService
 }
 
-func CreateIdentityAPI(store store.DataStore, cfg config.Configuration) {
+func CreateIdentityAPI(store store.DataStore, cfg config.Configuration, errorChan chan error) {
 
 	router := mux.NewRouter()
 
@@ -57,7 +58,21 @@ func CreateIdentityAPI(store store.DataStore, cfg config.Configuration) {
 
 	httpServer = server.New(cfg.BindAddr, router)
 
-	log.Debug("Starting api...", nil)
-	httpServer.ListenAndServe() // TODO, properly + graceful shutdown
+	go func() {
+		log.Debug("Starting api...", nil)
+		if err := httpServer.ListenAndServe(); err != nil {
+			log.ErrorC("api http server returned error", err, nil)
+			errorChan <- err
+		}
+	}()
 
+}
+
+// Close represents the graceful shutting down of the http server
+func Close(ctx context.Context) error {
+	if err := httpServer.Shutdown(ctx); err != nil {
+		return err
+	}
+	log.Info("graceful shutdown of http server complete", nil)
+	return nil
 }

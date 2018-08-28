@@ -9,12 +9,13 @@ import (
 
 // Configuration structure which hold information for configuring the import API
 type Configuration struct {
-	BindAddr            string        `envconfig:"BIND_ADDR"`
-	AuditEventsTopic    string        `envconfig:"AUDIT_EVENTS_TOPIC"`
-	KafkaAddr           []string      `envconfig:"KAFKA_ADDR"                       json:"-"`
-	HealthCheckInterval time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
-	HealthCheckTimeout  time.Duration `envconfig:"HEALTHCHECK_TIMEOUT"`
-	MongoConfig         MongoConfig
+	BindAddr                string        `envconfig:"BIND_ADDR"`
+	AuditEventsTopic        string        `envconfig:"AUDIT_EVENTS_TOPIC"`
+	GracefulShutdownTimeout time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
+	KafkaAddr               []string      `envconfig:"KAFKA_ADDR"                       json:"-"`
+	HealthCheckInterval     time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
+	HealthCheckTimeout      time.Duration `envconfig:"HEALTHCHECK_TIMEOUT"`
+	MongoConfig             MongoConfig
 }
 
 // MongoConfig contains the config required to connect to MongoDB.
@@ -33,11 +34,12 @@ func Get() (*Configuration, error) {
 	}
 
 	cfg = &Configuration{
-		BindAddr:            ":23800",
-		AuditEventsTopic:    "audit-events",
-		KafkaAddr:           []string{"localhost:9092"},
-		HealthCheckInterval: 30 * time.Second,
-		HealthCheckTimeout:  2 * time.Second,
+		BindAddr:                ":23800",
+		AuditEventsTopic:        "audit-events",
+		GracefulShutdownTimeout: 5 * time.Second,
+		KafkaAddr:               []string{"localhost:9092"},
+		HealthCheckInterval:     30 * time.Second,
+		HealthCheckTimeout:      2 * time.Second,
 		MongoConfig: MongoConfig{
 			BindAddr:   "localhost:27017",
 			Collection: "identities",

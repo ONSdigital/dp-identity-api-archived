@@ -9,6 +9,10 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 	mongolib "github.com/ONSdigital/go-ns/mongo"
 	"os"
+	"fmt"
+	"context"
+	"os/signal"
+	"syscall"
 )
 
 const serviceNamespace = "dp-identity-api"
@@ -16,6 +20,10 @@ const serviceNamespace = "dp-identity-api"
 func main() {
 
 	log.Namespace = serviceNamespace
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+
+
 	cfg, err := config.Get()
 	if err != nil {
 		log.Error(err, nil)
@@ -53,10 +61,39 @@ func main() {
 		mongolib.NewHealthCheckClient(mongodb.Session),
 	)
 
-	api.CreateIdentityAPI(*store, *cfg)
+	apiErrors := make(chan error, 1)
 
-	// TODO - graceful shutdown + related api changes
+	api.CreateIdentityAPI(*store, *cfg, apiErrors)
 
-	healthTicker.Close()
 
+	// Gracefully shutdown the application closing any open resources.
+	gracefulShutdown := func() {
+		log.Info(fmt.Sprintf("shutdown with timeout: %s", cfg.GracefulShutdownTimeout), nil)
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.GracefulShutdownTimeout)
+
+		// stop any incoming requests before closing any outbound connections
+		api.Close(ctx)
+
+		healthTicker.Close()
+
+		if err = mongolib.Close(ctx, session); err != nil {
+			log.Error(err, nil)
+		}
+
+		log.Info("shutdown complete", nil)
+
+		cancel()
+		os.Exit(1)
+	}
+
+	for {
+		select {
+		case err := <-apiErrors:
+			log.ErrorC("api error received", err, nil)
+			gracefulShutdown()
+		case <-signals:
+			log.Debug("os signal received", nil)
+			gracefulShutdown()
+		}
+	}
 }
