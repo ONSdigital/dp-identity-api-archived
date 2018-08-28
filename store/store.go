@@ -30,7 +30,7 @@ func (store *DataStore) GetIdentity(id string) (*models.Identity, error) {
 }
 
 
-func (store *DataStore) PostIdentity(identity *models.Identity) error {
+func (store *DataStore) CreateIdentity(identity *models.Identity) error {
 
 	s := store.Backend.Session.Copy()
 	defer s.Close()
