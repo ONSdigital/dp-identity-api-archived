@@ -50,8 +50,8 @@ func CreateIdentityAPI(store store.DataStore, cfg config.Configuration, errorCha
 	}
 
 	// TODO - temporary routes for testing/dev
-	api.router.HandleFunc("/identity/{id}", api.GetIdentityByID).Methods("GET")
-	api.router.HandleFunc("/identity", api.PostIdentity).Methods("POST")
+	api.router.HandleFunc("/identity/{id}", api.GetIdentity).Methods("GET")
+	api.router.HandleFunc("/identity", api.CreateIdentity).Methods("POST")
 
 	// 'Real' routes
 	api.router.Path("/healthcheck").HandlerFunc(healthcheck.Do)

@@ -12,8 +12,8 @@ type DataStore struct {
 	Backend mongo.Mongo
 }
 
-// TODO - added to sanity check - remove/change/purge as needed
-func (store *DataStore) GetIdentityByID(id string) (*models.Identity, error) {
+
+func (store *DataStore) GetIdentity(id string) (*models.Identity, error) {
 
 	s := store.Backend.Session.Copy()
 	defer s.Close()
@@ -21,7 +21,7 @@ func (store *DataStore) GetIdentityByID(id string) (*models.Identity, error) {
 	err := s.DB(store.Backend.Database).C("identities").Find(bson.M{"_id": id}).One(&identity)
 	if err != nil {
 		if err == mgo.ErrNotFound {
-			return nil, errors.New("Identity not found")
+			return nil, errors.New("identity not found")
 		}
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func (store *DataStore) GetIdentityByID(id string) (*models.Identity, error) {
 	return &identity, nil
 }
 
-// TODO - added to sanity check - remove/change/purge as needed
+
 func (store *DataStore) PostIdentity(identity *models.Identity) error {
 
 	s := store.Backend.Session.Copy()

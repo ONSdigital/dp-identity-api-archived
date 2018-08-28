@@ -12,8 +12,8 @@ import (
 	"net/http"
 )
 
-// TODO - added to sanity check - remove/change/purge as needed
-func (api *IdentityAPI) GetIdentityByID(w http.ResponseWriter, r *http.Request) {
+
+func (api *IdentityAPI) GetIdentity(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	identityID := vars["id"]
@@ -21,24 +21,24 @@ func (api *IdentityAPI) GetIdentityByID(w http.ResponseWriter, r *http.Request) 
 	logData := log.Data{"identity_id": identityID}
 	auditParams := common.Params{"identity_id": identityID}
 
-	if err := api.auditor.Record(ctx, "get Identity", audit.Attempted, auditParams); err != nil {
+	if err := api.auditor.Record(ctx, "get identity", audit.Attempted, auditParams); err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "request unsuccessful"), logData)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	identity, err := api.dataStore.GetIdentityByID(identityID)
+	identity, err := api.dataStore.GetIdentity(identityID)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "failed to get identity"), logData)
-		err := api.auditor.Record(ctx, "get Identity", audit.Unsuccessful, auditParams)
+		err := api.auditor.Record(ctx, "get identity", audit.Unsuccessful, auditParams)
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "request unsuccessful"), logData)
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	if err := api.auditor.Record(ctx, "get Identity", audit.Successful, auditParams); err != nil {
+	if err := api.auditor.Record(ctx, "get identity", audit.Successful, auditParams); err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "request unsuccessful"), logData)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -55,8 +55,8 @@ func (api *IdentityAPI) GetIdentityByID(w http.ResponseWriter, r *http.Request) 
 	w.Write([]byte(b))
 }
 
-// TODO - added to sanity check - remove/change/purge as needed
-func (api *IdentityAPI) PostIdentity(w http.ResponseWriter, r *http.Request) {
+
+func (api *IdentityAPI) CreateIdentity(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -70,7 +70,7 @@ func (api *IdentityAPI) PostIdentity(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &identity)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "failed to unmarshall request body"), nil)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
