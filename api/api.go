@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/config"
@@ -10,10 +9,8 @@ import (
 	"github.com/ONSdigital/dp-identity-api/store"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
-	"github.com/ONSdigital/go-ns/kafka"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
-	"os"
 	"context"
 )
 
@@ -27,31 +24,18 @@ type IdentityAPI struct {
 	auditor            audit.AuditorService
 }
 
-// Satisfies the store.Datastore interface
-type MongoStore struct {
-	*mongo.Mongo
-}
-
 func CreateIdentityAPI(mongodb *mongo.Mongo, cfg config.Configuration, errorChan chan error) {
 
 	router := mux.NewRouter()
 
 	var auditor audit.AuditorService
-	var auditProducer kafka.Producer
-
-	auditProducer, err := kafka.NewProducer(cfg.KafkaAddr, cfg.AuditEventsTopic, 0)
-	if err != nil {
-		log.Error(errors.Wrap(err, "error creating kakfa audit producer"), nil)
-		os.Exit(1)
-	}
-
-	auditor = audit.New(auditProducer, "dp-identity-api")
+	auditor = &audit.NopAuditor{}
 
 	store := store.DataStore{Backend:mongodb}
 
 	api := &IdentityAPI{
 		dataStore:          store,
-		host:               "http://localhost:20111",
+		host:               "http://localhost:" + cfg.BindAddr,
 		router:             router,
 		healthCheckTimeout: cfg.HealthCheckTimeout,
 		auditor:            auditor,

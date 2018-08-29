@@ -42,7 +42,7 @@ func (m *Mongo) CreateIdentity(identity *models.Identity) error {
 
 	err := s.DB(m.Database).C("identities").Insert(identity)
 	if err == mgo.ErrNotFound {
-		return errors.New("Failed to post identity to mongo")
+		return errors.New("Failed to post new identity document to mongo")
 	}
 
 	if err != nil {

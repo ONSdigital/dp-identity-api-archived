@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/ONSdigital/dp-identity-api/api"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/mongo"
@@ -8,21 +10,17 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 	mongolib "github.com/ONSdigital/go-ns/mongo"
 	"os"
-	"fmt"
-	"context"
 	"os/signal"
 	"syscall"
 )
 
 const serviceNamespace = "dp-identity-api"
 
-
 func main() {
 
 	log.Namespace = serviceNamespace
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-
 
 	cfg, err := config.Get()
 	if err != nil {

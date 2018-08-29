@@ -35,9 +35,7 @@ func Get() (*Configuration, error) {
 
 	cfg = &Configuration{
 		BindAddr:                ":23800",
-		AuditEventsTopic:        "audit-events",
 		GracefulShutdownTimeout: 5 * time.Second,
-		KafkaAddr:               []string{"localhost:9092"},
 		HealthCheckInterval:     30 * time.Second,
 		HealthCheckTimeout:      2 * time.Second,
 		MongoConfig: MongoConfig{
