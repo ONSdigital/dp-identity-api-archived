@@ -40,6 +40,7 @@ func (m *Mongo) CreateIdentity(identity *models.Identity) error {
 	s := m.Session.Copy()
 	defer s.Close()
 
+	// NOTE - Upsert may be more appropriate than Insert. Consider "already exists" scenarios?
 	err := s.DB(m.Database).C("identities").Insert(identity)
 	if err == mgo.ErrNotFound {
 		return errors.New("Failed to post new identity document to mongo")

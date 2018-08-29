@@ -31,7 +31,6 @@ DP Identity API
 | HEALTHCHECK_INTERVAL        | 30s                                       | Time between self-healthchecks (`time.Duration` format)
 | HEALTHCHECK_TIMEOUT         | 2s                                        | The timeout that the healthcheck allows for checked subsystems
 | GRACEFUL_SHUTDOWN_TIMEOUT   | 5s                                        | The graceful shutdown timeout in seconds
-| KAFKA_ADDR                  | localhost:9092                            | The list of kafka hosts
 
 ### Contributing
 
