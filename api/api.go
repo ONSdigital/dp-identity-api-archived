@@ -42,8 +42,6 @@ func CreateIdentityAPI(mongodb *mongo.Mongo, cfg config.Configuration, errorChan
 	}
 
 	api.router.HandleFunc("/identity", api.CreateIdentity).Methods("POST")
-
-	// 'Real' routes
 	api.router.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 
 	httpServer = server.New(cfg.BindAddr, router)
