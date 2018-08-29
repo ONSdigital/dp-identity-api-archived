@@ -1,4 +1,4 @@
-DP Identity API
+dp-identity-api
 ==============
 
 ### Getting started

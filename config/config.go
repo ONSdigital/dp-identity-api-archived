@@ -10,9 +10,7 @@ import (
 // Configuration structure which hold information for configuring the import API
 type Configuration struct {
 	BindAddr                string        `envconfig:"BIND_ADDR"`
-	AuditEventsTopic        string        `envconfig:"AUDIT_EVENTS_TOPIC"`
 	GracefulShutdownTimeout time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
-	KafkaAddr               []string      `envconfig:"KAFKA_ADDR"                       json:"-"`
 	HealthCheckInterval     time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckTimeout      time.Duration `envconfig:"HEALTHCHECK_TIMEOUT"`
 	MongoConfig             MongoConfig
