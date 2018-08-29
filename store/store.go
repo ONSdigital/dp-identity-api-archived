@@ -8,6 +8,5 @@ type DataStore struct {
 
 // Storer represents basic data access
 type Storer interface {
-	GetIdentity(id string) (*models.Identity, error)
 	CreateIdentity(identity *models.Identity) error
 }

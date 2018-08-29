@@ -4,7 +4,6 @@ import (
 	"github.com/ONSdigital/dp-identity-api/api"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/mongo"
-	"github.com/ONSdigital/dp-identity-api/store"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	mongolib "github.com/ONSdigital/go-ns/mongo"
@@ -16,6 +15,7 @@ import (
 )
 
 const serviceNamespace = "dp-identity-api"
+
 
 func main() {
 
@@ -53,8 +53,6 @@ func main() {
 		"bind_address": cfg.BindAddr,
 	})
 
-	store := &store.DataStore{Backend: *mongodb}
-
 	healthTicker := healthcheck.NewTicker(
 		cfg.HealthCheckInterval,
 		cfg.HealthCheckTimeout,
@@ -63,8 +61,7 @@ func main() {
 
 	apiErrors := make(chan error, 1)
 
-	api.CreateIdentityAPI(*store, *cfg, apiErrors)
-
+	api.CreateIdentityAPI(mongodb, *cfg, apiErrors)
 
 	// Gracefully shutdown the application closing any open resources.
 	gracefulShutdown := func() {

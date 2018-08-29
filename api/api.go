@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/config"
+	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/dp-identity-api/store"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
@@ -26,7 +27,12 @@ type IdentityAPI struct {
 	auditor            audit.AuditorService
 }
 
-func CreateIdentityAPI(store store.DataStore, cfg config.Configuration, errorChan chan error) {
+// Satisfies the store.Datastore interface
+type MongoStore struct {
+	*mongo.Mongo
+}
+
+func CreateIdentityAPI(mongodb *mongo.Mongo, cfg config.Configuration, errorChan chan error) {
 
 	router := mux.NewRouter()
 
@@ -41,6 +47,8 @@ func CreateIdentityAPI(store store.DataStore, cfg config.Configuration, errorCha
 
 	auditor = audit.New(auditProducer, "dp-identity-api")
 
+	store := store.DataStore{Backend:mongodb}
+
 	api := &IdentityAPI{
 		dataStore:          store,
 		host:               "http://localhost:20111",
@@ -49,8 +57,6 @@ func CreateIdentityAPI(store store.DataStore, cfg config.Configuration, errorCha
 		auditor:            auditor,
 	}
 
-	// TODO - temporary routes for testing/dev
-	api.router.HandleFunc("/identity/{id}", api.GetIdentity).Methods("GET")
 	api.router.HandleFunc("/identity", api.CreateIdentity).Methods("POST")
 
 	// 'Real' routes

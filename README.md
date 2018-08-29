@@ -18,10 +18,7 @@ DP Identity API
 
 ### DEV NOTES
 
-1.) Have added basic endpoints for GetIdentity and CreateIdentity `('identities/{id}' and '/identities'` respectively), this was just to sanity check the database and auditing
-functionality was working as intended. Delete/modify/purge as needed.
-
-2.) The auditor will trigger an error on GetIdentity for any requests that lack the correct context fields. This is expected behaviour and not a bug.
+1.) Have added basic endpoint for CreateIdentity, `/identities'` with a very basic model.
 
 ### Configuration
 
