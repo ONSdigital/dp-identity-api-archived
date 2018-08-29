@@ -1,0 +1,16 @@
+---
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.10.2
+
+inputs:
+  - name: dp-identity-api
+    path: go/src/github.com/ONSdigital/dp-identity-api
+
+run:
+  path: go/src/github.com/ONSdigital/dp-identity-api/ci/scripts/unit.sh
