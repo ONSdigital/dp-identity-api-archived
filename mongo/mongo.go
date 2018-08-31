@@ -34,7 +34,7 @@ func (m *Mongo) Init() (session *mgo.Session, err error) {
 }
 
 
-// CreateIdentity creates an identity document
+// CreateIdentityHandler creates an identity document
 func (m *Mongo) CreateIdentity(identity *models.Identity) error {
 
 	s := m.Session.Copy()

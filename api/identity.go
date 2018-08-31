@@ -7,33 +7,48 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+	"context"
 )
 
+const (
+	createIdentityAction = "createIdentity"
+)
 
-func (api *IdentityAPI) CreateIdentity(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+var (
+	ErrFailedToReadRequestBody = &apiError{
+		status:  http.StatusInternalServerError,
+		message: "error while attempting to read request body",
+	}
 
+	ErrFailedToMarshalRequestBody = &apiError{
+		status:  http.StatusInternalServerError,
+		message: "error while attempting to unmarshall request body",
+	}
+
+	ErrFailedToWriteToMongo = &apiError{
+		status:  http.StatusInternalServerError,
+		message: "error while attempting to write data to mongo",
+	}
+)
+
+func (api *IdentityAPI) createIdentity(ctx context.Context, r *http.Request) *apiError {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.ErrorCtx(ctx, errors.WithMessage(err, "failed to read request body"), nil)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.ErrorCtx(ctx, errors.WithMessage(err, "createIdentity error failed to read request body"), nil)
+		return ErrFailedToReadRequestBody
 	}
 
 	var identity *models.Identity
 	err = json.Unmarshal(body, &identity)
 	if err != nil {
-		log.ErrorCtx(ctx, errors.WithMessage(err, "failed to unmarshall request body"), nil)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		log.ErrorCtx(ctx, errors.WithMessage(err, "createIdentity: failed to unmarshall request body"), nil)
+		return ErrFailedToMarshalRequestBody
 	}
 
 	err = api.dataStore.Backend.CreateIdentity(identity)
 	if err != nil {
-		log.ErrorCtx(ctx, errors.WithMessage(err, "failed to write data to mongo"), nil)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.ErrorCtx(ctx, errors.WithMessage(err, "createIdentity: failed to write data to mongo"), nil)
+		return ErrFailedToWriteToMongo
 	}
-
-	w.WriteHeader(http.StatusCreated)
+	return nil
 }
