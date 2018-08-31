@@ -27,7 +27,7 @@ var (
 
 	ErrFailedToMarshalRequestBody = &apiError{
 		status:  http.StatusInternalServerError,
-		message: "error while attempting to unmarshall request body",
+		message: "error while attempting to unmarshal request body",
 	}
 
 	ErrFailedToWriteToMongo = &apiError{
@@ -39,25 +39,25 @@ var (
 //createIdentity contains the business logic for creating a new Identity.
 func (api *IdentityAPI) createIdentity(ctx context.Context, r *http.Request) *apiError {
 	if ctx == nil {
-		log.Error(errors.New("mandatory context parameter was nil"), nil)
+		log.Error(errors.New("createIdentity: failed mandatory context parameter was nil"), nil)
 		return ErrInvalidArguments
 	}
 
 	if r == nil {
-		log.Error(errors.New("mandatory request parameter was nil"), nil)
+		log.Error(errors.New("createIdentity: failed mandatory request parameter was nil"), nil)
 		return ErrInvalidArguments
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.ErrorCtx(ctx, errors.WithMessage(err, "createIdentity error failed to read request body"), nil)
+		log.ErrorCtx(ctx, errors.WithMessage(err, "createIdentity: failed to read request body"), nil)
 		return ErrFailedToReadRequestBody
 	}
 
 	var identity *models.Identity
 	err = json.Unmarshal(body, &identity)
 	if err != nil {
-		log.ErrorCtx(ctx, errors.WithMessage(err, "createIdentity: failed to unmarshall request body"), nil)
+		log.ErrorCtx(ctx, errors.WithMessage(err, "createIdentity: failed to unmarshal request body"), nil)
 		return ErrFailedToMarshalRequestBody
 	}
 
