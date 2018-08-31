@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/ONSdigital/go-ns/log"
 )
 
 // Configuration structure which hold information for configuring the import API
@@ -43,7 +44,13 @@ func Get() (*Configuration, error) {
 		},
 	}
 
-	return cfg, envconfig.Process("", cfg)
+	if err := envconfig.Process("", cfg); err != nil {
+		return nil, err
+	}
+
+	// sensitive fields are omitted from config.String().
+	log.Info("loaded service configuration", log.Data{"config": cfg})
+	return cfg, nil
 }
 
 // String is implemented to prevent sensitive fields being logged.

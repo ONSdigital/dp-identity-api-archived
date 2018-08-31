@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-identity-api/config"
-	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/dp-identity-api/store"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
@@ -24,19 +23,11 @@ type IdentityAPI struct {
 	auditor            audit.AuditorService
 }
 
-func CreateIdentityAPI(mongodb *mongo.Mongo, cfg config.Configuration, errorChan chan error) {
-
-	router := mux.NewRouter()
-
-	var auditor audit.AuditorService
-	auditor = &audit.NopAuditor{}
-
-	store := store.DataStore{Backend:mongodb}
-
+func New(storer store.Storer, cfg config.Configuration, auditor audit.AuditorService) *IdentityAPI {
 	api := &IdentityAPI{
-		dataStore:          store,
+		dataStore:          store.DataStore{Backend: storer},
 		host:               "http://localhost:" + cfg.BindAddr,
-		router:             router,
+		router:             mux.NewRouter(),
 		healthCheckTimeout: cfg.HealthCheckTimeout,
 		auditor:            auditor,
 	}
@@ -44,16 +35,11 @@ func CreateIdentityAPI(mongodb *mongo.Mongo, cfg config.Configuration, errorChan
 	api.router.HandleFunc("/identity", api.CreateIdentity).Methods("POST")
 	api.router.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 
-	httpServer = server.New(cfg.BindAddr, router)
+	return api
+}
 
-	go func() {
-		log.Debug("Starting api...", nil)
-		if err := httpServer.ListenAndServe(); err != nil {
-			log.ErrorC("api http server returned error", err, nil)
-			errorChan <- err
-		}
-	}()
-
+func (api *IdentityAPI) GetRouter() *mux.Router {
+	return api.router
 }
 
 // Close represents the graceful shutting down of the http server

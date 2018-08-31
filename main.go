@@ -12,44 +12,32 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/ONSdigital/go-ns/audit"
+	"github.com/gorilla/mux"
+	"github.com/ONSdigital/go-ns/server"
+	"github.com/globalsign/mgo"
+	"time"
 )
 
 const serviceNamespace = "dp-identity-api"
 
 func main() {
-
 	log.Namespace = serviceNamespace
+
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 	cfg, err := config.Get()
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorC("error loading service configuration", err, nil)
 		os.Exit(1)
 	}
 
-	// sensitive fields are omitted from config.String().
-	log.Info("loaded config", log.Data{
-		"config": cfg,
-	})
-
-	mongodb := &mongo.Mongo{
-		Collection: cfg.MongoConfig.Collection,
-		Database:   cfg.MongoConfig.Database,
-		URI:        cfg.MongoConfig.BindAddr,
-	}
-
-	session, err := mongodb.Init()
+	mongodb, err := initMongoDB(cfg.MongoConfig)
 	if err != nil {
-		log.ErrorC("failed to initialise mongo", err, nil)
+		log.ErrorC("failed to initialise mongo, exiting app", err, nil)
 		os.Exit(1)
 	}
-
-	mongodb.Session = session
-
-	log.Debug("listening...", log.Data{
-		"bind_address": cfg.BindAddr,
-	})
 
 	healthTicker := healthcheck.NewTicker(
 		cfg.HealthCheckInterval,
@@ -57,38 +45,75 @@ func main() {
 		mongolib.NewHealthCheckClient(mongodb.Session),
 	)
 
+	auditor := &audit.NopAuditor{}
+
 	apiErrors := make(chan error, 1)
 
-	api.CreateIdentityAPI(mongodb, *cfg, apiErrors)
-
-	// Gracefully shutdown the application closing any open resources.
-	gracefulShutdown := func() {
-		log.Info(fmt.Sprintf("shutdown with timeout: %s", cfg.GracefulShutdownTimeout), nil)
-		ctx, cancel := context.WithTimeout(context.Background(), cfg.GracefulShutdownTimeout)
-
-		// stop any incoming requests before closing any outbound connections
-		api.Close(ctx)
-
-		healthTicker.Close()
-
-		if err = mongolib.Close(ctx, session); err != nil {
-			log.Error(err, nil)
-		}
-
-		log.Info("shutdown complete", nil)
-
-		cancel()
-		os.Exit(1)
-	}
+	identityAPI := api.New(mongodb, *cfg, auditor)
+	httpServer := startHTTPServer(cfg.BindAddr, identityAPI.GetRouter(), apiErrors)
 
 	for {
 		select {
 		case err := <-apiErrors:
-			log.ErrorC("api error received", err, nil)
-			gracefulShutdown()
-		case <-signals:
-			log.Debug("os signal received", nil)
-			gracefulShutdown()
+			log.ErrorC("api error received shutting down service", err, nil)
+			gracefulShutdown(cfg.GracefulShutdownTimeout, httpServer, healthTicker, mongodb.Session)
+		case s := <-signals:
+			log.Debug("os signal received shutting down service", log.Data{"signal": s.String()})
+			gracefulShutdown(cfg.GracefulShutdownTimeout, httpServer, healthTicker, mongodb.Session)
 		}
 	}
+}
+
+func startHTTPServer(bindAddr string, router *mux.Router, errorChan chan error) *server.Server {
+	httpServer := server.New(bindAddr, router)
+
+	go func() {
+		log.Debug("starting identity api http server", nil)
+		if err := httpServer.ListenAndServe(); err != nil {
+			log.ErrorC("httpServer.ListenAndServe() returned an error", err, nil)
+			errorChan <- err
+		}
+	}()
+	return httpServer
+}
+
+func initMongoDB(mongoCfg config.MongoConfig) (*mongo.Mongo, error) {
+	mongodb := &mongo.Mongo{
+		Collection: mongoCfg.Collection,
+		Database:   mongoCfg.Database,
+		URI:        mongoCfg.BindAddr,
+	}
+
+	session, err := mongodb.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	mongodb.Session = session
+	return mongodb, nil
+}
+
+func gracefulShutdown(timeout time.Duration, httpServer *server.Server, healthTicker *healthcheck.Ticker, mongoSess *mgo.Session) {
+	log.Info(fmt.Sprintf("shutdown with timeout: %s", timeout), nil)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+
+	// stop any incoming requests before closing any outbound connections
+	if err := api.Close(ctx); err != nil {
+		log.Error(err, nil)
+	}
+
+	if err := httpServer.Shutdown(ctx); err != nil {
+		log.Error(err, nil)
+	}
+
+	healthTicker.Close()
+
+	if err := mongolib.Close(ctx, mongoSess); err != nil {
+		log.Error(err, nil)
+	}
+
+	log.Info("shutdown complete", nil)
+
+	cancel()
+	os.Exit(1)
 }

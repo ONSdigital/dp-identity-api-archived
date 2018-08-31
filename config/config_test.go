@@ -19,8 +19,8 @@ func TestSpec(t *testing.T) {
 
 			Convey("The values should be set to the expected defaults", func() {
 				So(cfg.BindAddr, ShouldEqual, ":23800")
-				So(cfg.AuditEventsTopic, ShouldEqual, "audit-events")
-				So(cfg.KafkaAddr, ShouldContain, "localhost:9092")
+/*				So(cfg.AuditEventsTopic, ShouldEqual, "audit-events")
+				So(cfg.KafkaAddr, ShouldContain, "localhost:9092")*/
 				So(cfg.HealthCheckInterval, ShouldEqual, 30*time.Second)
 				So(cfg.HealthCheckTimeout, ShouldEqual, 2*time.Second)
 				So(cfg.MongoConfig.Database, ShouldEqual, "identities")
