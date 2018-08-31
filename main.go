@@ -45,6 +45,7 @@ func main() {
 		mongolib.NewHealthCheckClient(mongodb.Session),
 	)
 
+	// use Nop until kafka is added to environment
 	auditor := &audit.NopAuditor{}
 
 	apiErrors := make(chan error, 1)

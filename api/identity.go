@@ -15,6 +15,11 @@ const (
 )
 
 var (
+	ErrInvalidArguments = &apiError{
+		status:  http.StatusInternalServerError,
+		message: "error while attempting create new identity",
+	}
+
 	ErrFailedToReadRequestBody = &apiError{
 		status:  http.StatusInternalServerError,
 		message: "error while attempting to read request body",
@@ -31,7 +36,18 @@ var (
 	}
 )
 
+//createIdentity contains the business logic for creating a new Identity.
 func (api *IdentityAPI) createIdentity(ctx context.Context, r *http.Request) *apiError {
+	if ctx == nil {
+		log.Error(errors.New("mandatory context parameter was nil"), nil)
+		return ErrInvalidArguments
+	}
+
+	if r == nil {
+		log.Error(errors.New("mandatory request parameter was nil"), nil)
+		return ErrInvalidArguments
+	}
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "createIdentity error failed to read request body"), nil)

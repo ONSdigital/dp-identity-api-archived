@@ -32,7 +32,7 @@ type apiError struct {
 func (err *apiError) Error() string {
 	return err.message
 }
-
+//New constructor function for creating a new instance of the IdentityAPI.
 func New(storer store.Storer, cfg config.Configuration, auditor audit.AuditorService) *IdentityAPI {
 	api := &IdentityAPI{
 		dataStore:          store.DataStore{Backend: storer},
@@ -61,6 +61,8 @@ func Close(ctx context.Context) error {
 	return nil
 }
 
+//CreateIdentityHandler is a POST HTTP handler for creating a new Identity. Each request to the endpoint will audit 2
+// actions 1) create identity action was attempted. 2) create identity was successful or unsuccessful.
 func (api *IdentityAPI) CreateIdentityHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
