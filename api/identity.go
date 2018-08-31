@@ -54,6 +54,8 @@ func (api *IdentityAPI) createIdentity(ctx context.Context, r *http.Request) *ap
 		return ErrFailedToReadRequestBody
 	}
 
+	defer r.Body.Close()
+
 	var identity *models.Identity
 	err = json.Unmarshal(body, &identity)
 	if err != nil {
