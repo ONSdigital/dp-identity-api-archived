@@ -25,7 +25,7 @@ var (
 		message: "error while attempting to read request body",
 	}
 
-	ErrFailedToMarshalRequestBody = &apiError{
+	ErrFailedToUnmarshalRequestBody = &apiError{
 		status:  http.StatusInternalServerError,
 		message: "error while attempting to unmarshal request body",
 	}
@@ -58,7 +58,7 @@ func (api *IdentityAPI) createIdentity(ctx context.Context, r *http.Request) *ap
 	err = json.Unmarshal(body, &identity)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "createIdentity: failed to unmarshal request body"), nil)
-		return ErrFailedToMarshalRequestBody
+		return ErrFailedToUnmarshalRequestBody
 	}
 
 	err = api.dataStore.Backend.CreateIdentity(identity)

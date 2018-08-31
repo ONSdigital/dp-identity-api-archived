@@ -38,7 +38,7 @@ func TestCreateIdentity_Success(t *testing.T) {
 	})
 }
 
-func TestCreateIdentity_ErrorUnmarshallingTheRequestBody(t *testing.T) {
+func TestCreateIdentity_ErrorUnmarshalingTheRequestBody(t *testing.T) {
 	Convey("should return expected error if unmarshalling the request body returns an error", t, func() {
 		mockStore := &storetest.StorerMock{
 			CreateIdentityFunc: func(identity *models.Identity) error {
@@ -55,7 +55,7 @@ func TestCreateIdentity_ErrorUnmarshallingTheRequestBody(t *testing.T) {
 
 		err := identityAPI.createIdentity(context.Background(), r)
 
-		So(err, ShouldEqual, ErrFailedToMarshalRequestBody)
+		So(err, ShouldEqual, ErrFailedToUnmarshalRequestBody)
 		So(mockStore.CreateIdentityCalls(), ShouldHaveLength, 0)
 	})
 }
