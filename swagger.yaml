@@ -1,0 +1,50 @@
+swagger: "2.0"
+info:
+  description: "API for creating and authenticating user/service identities."
+  version: "1.0.0"
+  title: "TODO"
+  license:
+    name: "Open Government Licence v3.0"
+    url: "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+basePath: "/v1"
+tags:
+- name: "Identity API"
+schemes:
+- "https"
+parameters:
+  id:
+    name: id
+    description: "The ID of a code list"
+    in: path
+    type: string
+    required: true
+  new_identity:
+    name: identity
+    description: "A new identity"
+    in: body
+    required: true
+    schema:
+      $ref: '#/definitions/Identity'
+paths:
+  /identity:
+    post:
+      tags:
+      - "Identity"
+      summary: "Create a new identity"
+      description: "Create a new identity"
+      parameters:
+      - $ref: '#/parameters/new_identity'
+      produces:
+      - "application/json"
+      responses:
+        201:
+          description: "identity created successfully"
+        500:
+          description: "TODO"
+definitions:
+  Identity:
+    type: object
+    properties:
+      name:
+        type: string
+        description: "TODO 1"
