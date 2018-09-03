@@ -34,7 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	mongodb, err := initMongoDB(cfg.MongoConfig)
+	mongodb, err := mongo.New(cfg.MongoConfig)
 	if err != nil {
 		log.ErrorC("failed to initialise mongo, exiting app", err, nil)
 		os.Exit(1)
@@ -53,8 +53,9 @@ func main() {
 
 	identityService := &identity.Service{Persistence: mongodb}
 
-	router := mux.NewRouter()
 	identityAPI := api.New(identityService, auditor)
+
+	router := mux.NewRouter()
 	identityAPI.RegisterEndpoints(router)
 
 	httpServer := startHTTPServer(cfg.BindAddr, router, apiErrors)
@@ -83,23 +84,6 @@ func startHTTPServer(bindAddr string, router *mux.Router, errorChan chan error) 
 		}
 	}()
 	return httpServer
-}
-
-//initMongoDB initialises the mongo configuration for the application.
-func initMongoDB(mongoCfg config.MongoConfig) (*mongo.Mongo, error) {
-	mongodb := &mongo.Mongo{
-		Collection: mongoCfg.Collection,
-		Database:   mongoCfg.Database,
-		URI:        mongoCfg.BindAddr,
-	}
-
-	session, err := mongodb.Init()
-	if err != nil {
-		return nil, err
-	}
-
-	mongodb.Session = session
-	return mongodb, nil
 }
 
 //gracefulShutdown attempts to gracefully shutdown the service resources before existing.

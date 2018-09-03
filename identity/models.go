@@ -8,8 +8,6 @@ import (
 
 var (
 	ErrInvalidArguments             = errors.New("error while attempting create new identity")
-	ErrFailedToReadRequestBody      = errors.New("error while attempting to read request body")
-	ErrFailedToUnmarshalRequestBody = errors.New("error while attempting to unmarshal request body")
 	ErrPersistence                  = errors.New("error while attempting to write data to mongo")
 )
 

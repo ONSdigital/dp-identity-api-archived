@@ -47,11 +47,7 @@ func TestIdentityAPI_CreateIdentityAuditAttemptedFailed(t *testing.T) {
 func TestIdentityAPI_CreateIdentityError(t *testing.T) {
 	Convey("given createIdentity returns an error", t, func() {
 		auditMock := auditortest.New()
-		serviceMock := &IdentityServiceMock{
-			CreateFunc: func(ctx context.Context, r *http.Request) error {
-				return identity.ErrFailedToUnmarshalRequestBody
-			},
-		}
+		serviceMock := &IdentityServiceMock{}
 
 		Convey("when createIdentity is called", func() {
 			identityAPI := &API{
@@ -67,11 +63,11 @@ func TestIdentityAPI_CreateIdentityError(t *testing.T) {
 			identityAPI.CreateIdentityHandler(w, r)
 
 			Convey("then the expected error response is returned", func() {
-				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), identity.ErrFailedToUnmarshalRequestBody.Error())
+				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), ErrFailedToUnmarshalRequestBody.Error())
 			})
 
-			Convey("and no identity is created", func() {
-				So(serviceMock.CreateCalls(), ShouldHaveLength, 1)
+			Convey("and identity service is never called", func() {
+				So(serviceMock.CreateCalls(), ShouldHaveLength, 0)
 			})
 
 			Convey("and an unsuccessful audit event is recorded", func() {
@@ -88,7 +84,7 @@ func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 	Convey("given audit action successful returns an error", t, func() {
 		auditMock := auditortest.NewErroring(createIdentityAction, audit.Successful)
 		serviceMock := &IdentityServiceMock{
-			CreateFunc: func(ctx context.Context, r *http.Request) error {
+			CreateFunc: func(ctx context.Context, i *identity.Model) error {
 				return nil
 			},
 		}
@@ -129,7 +125,7 @@ func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 	Convey("given create identity is successful", t, func() {
 		auditMock := auditortest.New()
 		serviceMock := &IdentityServiceMock{
-			CreateFunc: func(ctx context.Context, r *http.Request) error {
+			CreateFunc: func(ctx context.Context, i *identity.Model) error {
 				return nil
 			},
 		}
@@ -148,7 +144,7 @@ func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 			w := httptest.NewRecorder()
 			identityAPI.CreateIdentityHandler(w, r)
 
-			Convey("then a HTTP 200 status is returned", func() {
+			Convey("then a HTTP 201 status is returned", func() {
 				assertErrorResponse(w.Code, http.StatusCreated, w.Body.String(), "")
 			})
 

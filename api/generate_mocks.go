@@ -5,7 +5,7 @@ package api
 
 import (
 	"context"
-	"net/http"
+	"github.com/ONSdigital/dp-identity-api/identity"
 	"sync"
 )
 
@@ -19,7 +19,7 @@ var (
 //
 //         // make and configure a mocked IdentityService
 //         mockedIdentityService := &IdentityServiceMock{
-//             CreateFunc: func(ctx context.Context, r *http.Request) error {
+//             CreateFunc: func(ctx context.Context, i *identity.Model) error {
 // 	               panic("TODO: mock out the Create method")
 //             },
 //         }
@@ -30,7 +30,7 @@ var (
 //     }
 type IdentityServiceMock struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(ctx context.Context, r *http.Request) error
+	CreateFunc func(ctx context.Context, i *identity.Model) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -38,28 +38,28 @@ type IdentityServiceMock struct {
 		Create []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// R is the r argument value.
-			R *http.Request
+			// I is the i argument value.
+			I *identity.Model
 		}
 	}
 }
 
 // Create calls CreateFunc.
-func (mock *IdentityServiceMock) Create(ctx context.Context, r *http.Request) error {
+func (mock *IdentityServiceMock) Create(ctx context.Context, i *identity.Model) error {
 	if mock.CreateFunc == nil {
 		panic("moq: IdentityServiceMock.CreateFunc is nil but IdentityService.Create was just called")
 	}
 	callInfo := struct {
 		Ctx context.Context
-		R   *http.Request
+		I   *identity.Model
 	}{
 		Ctx: ctx,
-		R:   r,
+		I:   i,
 	}
 	lockIdentityServiceMockCreate.Lock()
 	mock.calls.Create = append(mock.calls.Create, callInfo)
 	lockIdentityServiceMockCreate.Unlock()
-	return mock.CreateFunc(ctx, r)
+	return mock.CreateFunc(ctx, i)
 }
 
 // CreateCalls gets all the calls that were made to Create.
@@ -67,11 +67,11 @@ func (mock *IdentityServiceMock) Create(ctx context.Context, r *http.Request) er
 //     len(mockedIdentityService.CreateCalls())
 func (mock *IdentityServiceMock) CreateCalls() []struct {
 	Ctx context.Context
-	R   *http.Request
+	I   *identity.Model
 } {
 	var calls []struct {
 		Ctx context.Context
-		R   *http.Request
+		I   *identity.Model
 	}
 	lockIdentityServiceMockCreate.RLock()
 	calls = mock.calls.Create

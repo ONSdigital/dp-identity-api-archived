@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/globalsign/mgo"
 	"time"
@@ -18,8 +19,24 @@ type Mongo struct {
 	lastPingResult error
 }
 
-// Init creates a new mgo.Session with a strong consistency and a write mode of "majortiy".
-func (m *Mongo) Init() (session *mgo.Session, err error) {
+func New(cfg config.MongoConfig) (*Mongo, error) {
+	mongodb := &Mongo{
+		Collection: cfg.Collection,
+		Database:   cfg.Database,
+		URI:        cfg.BindAddr,
+	}
+
+	session, err := mongodb.createSession()
+	if err != nil {
+		return nil, err
+	}
+
+	mongodb.Session = session
+	return mongodb, nil
+}
+
+// createSession creates a new mgo.Session with a strong consistency and a write mode of "majortiy".
+func (m *Mongo) createSession() (session *mgo.Session, err error) {
 	if session != nil {
 		return nil, errors.New("session already exists")
 	}
@@ -32,7 +49,6 @@ func (m *Mongo) Init() (session *mgo.Session, err error) {
 	session.SetMode(mgo.Strong, true)
 	return session, nil
 }
-
 
 func (m *Mongo) Create(identity *identity.Model) error {
 	s := m.Session.Copy()

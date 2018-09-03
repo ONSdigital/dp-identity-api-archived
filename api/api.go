@@ -1,42 +1,16 @@
 package api
 
 import (
+	"context"
+	"encoding/json"
 	"github.com/ONSdigital/dp-identity-api/identity"
-	"github.com/gorilla/mux"
-	"time"
-
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
+	"github.com/gorilla/mux"
+	"io/ioutil"
 	"net/http"
 )
-
-const (
-	createIdentityAction = "createIdentity"
-)
-
-var (
-	//map identity errors to http status codes.
-	errorStatusMapping = map[error]int{
-		identity.ErrPersistence:                  http.StatusInternalServerError,
-		identity.ErrFailedToUnmarshalRequestBody: http.StatusInternalServerError,
-		identity.ErrInvalidArguments:             http.StatusInternalServerError,
-		identity.ErrFailedToReadRequestBody:      http.StatusInternalServerError,
-	}
-)
-
-//API defines HTTP HandlerFunc's for the endpoints offered by the Identity API service.
-type API struct {
-	IdentityService    IdentityService
-	healthCheckTimeout time.Duration
-	auditor            audit.AuditorService
-}
-
-type apiError interface {
-	Error() string
-	GetStatus() int
-	GetMessage() string
-}
 
 //New is a constructor function for creating a new instance of the API.
 func New(identityService IdentityService, auditor audit.AuditorService) *API {
@@ -63,7 +37,7 @@ func (api *API) CreateIdentityHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := api.IdentityService.Create(ctx, r)
+	err := api.createIdentity(ctx, r)
 
 	if err != nil {
 		api.auditor.Record(ctx, createIdentityAction, audit.Unsuccessful, nil)
@@ -79,6 +53,21 @@ func (api *API) CreateIdentityHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	log.InfoCtx(ctx, "createIdentity: identity created successfully", nil)
+}
+
+func (api *API) createIdentity(ctx context.Context, r *http.Request) error {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return ErrFailedToReadRequestBody
+	}
+	defer r.Body.Close()
+
+	var i identity.Model
+	if err := json.Unmarshal(body, &i); err != nil {
+		return ErrFailedToUnmarshalRequestBody
+	}
+
+	return api.IdentityService.Create(ctx, nil)
 }
 
 //writeErrorResponse writes a HTTP error back to the response writer. If the err can be cast to apiError then the values
