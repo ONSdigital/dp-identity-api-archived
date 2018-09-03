@@ -9,12 +9,8 @@ import (
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
-	"github.com/ONSdigital/go-ns/server"
-	"context"
 	"net/http"
 )
-
-var httpServer *server.Server
 
 type IdentityAPI struct {
 	dataStore          store.DataStore
@@ -32,6 +28,7 @@ type apiError struct {
 func (err *apiError) Error() string {
 	return err.message
 }
+
 //New constructor function for creating a new instance of the IdentityAPI.
 func New(storer store.Storer, cfg config.Configuration, auditor audit.AuditorService) *IdentityAPI {
 	api := &IdentityAPI{
@@ -50,15 +47,6 @@ func New(storer store.Storer, cfg config.Configuration, auditor audit.AuditorSer
 
 func (api *IdentityAPI) GetRouter() *mux.Router {
 	return api.router
-}
-
-// Close represents the graceful shutting down of the http server
-func Close(ctx context.Context) error {
-	if err := httpServer.Shutdown(ctx); err != nil {
-		return err
-	}
-	log.Info("graceful shutdown of http server complete", nil)
-	return nil
 }
 
 //CreateIdentityHandler is a POST HTTP handler for creating a new Identity. Each request to the endpoint will audit 2

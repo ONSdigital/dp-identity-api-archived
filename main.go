@@ -6,16 +6,16 @@ import (
 	"github.com/ONSdigital/dp-identity-api/api"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/mongo"
+	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	mongolib "github.com/ONSdigital/go-ns/mongo"
+	"github.com/ONSdigital/go-ns/server"
+	"github.com/globalsign/mgo"
+	"github.com/gorilla/mux"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/ONSdigital/go-ns/audit"
-	"github.com/gorilla/mux"
-	"github.com/ONSdigital/go-ns/server"
-	"github.com/globalsign/mgo"
 	"time"
 )
 
@@ -65,6 +65,7 @@ func main() {
 	}
 }
 
+//startHTTPServer creates and starts a new HTTP Server for the service.
 func startHTTPServer(bindAddr string, router *mux.Router, errorChan chan error) *server.Server {
 	httpServer := server.New(bindAddr, router)
 
@@ -78,6 +79,7 @@ func startHTTPServer(bindAddr string, router *mux.Router, errorChan chan error) 
 	return httpServer
 }
 
+//initMongoDB initialises the mongo configuration for the application.
 func initMongoDB(mongoCfg config.MongoConfig) (*mongo.Mongo, error) {
 	mongodb := &mongo.Mongo{
 		Collection: mongoCfg.Collection,
@@ -94,15 +96,12 @@ func initMongoDB(mongoCfg config.MongoConfig) (*mongo.Mongo, error) {
 	return mongodb, nil
 }
 
+//gracefulShutdown attempts to gracefully shutdown the service resources before existing.
 func gracefulShutdown(timeout time.Duration, httpServer *server.Server, healthTicker *healthcheck.Ticker, mongoSess *mgo.Session) {
 	log.Info(fmt.Sprintf("shutdown with timeout: %s", timeout), nil)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
 	// stop any incoming requests before closing any outbound connections
-	if err := api.Close(ctx); err != nil {
-		log.Error(err, nil)
-	}
-
 	if err := httpServer.Shutdown(ctx); err != nil {
 		log.Error(err, nil)
 	}
