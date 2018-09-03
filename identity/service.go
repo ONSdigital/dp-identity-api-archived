@@ -41,7 +41,7 @@ func (s *Service) Create(ctx context.Context, r *http.Request) error {
 	err = s.Persistence.Create(i)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "Create: failed to write data to mongo"), nil)
-		return ErrFailedToWriteToMongo
+		return ErrPersistence
 	}
 
 	log.InfoCtx(ctx, "Create: new identity created successfully", log.Data{"name": i.Name, "email": i.Email})

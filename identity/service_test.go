@@ -69,7 +69,7 @@ func TestCreateIdentity_DataStoreError(t *testing.T) {
 
 		err := s.Create(context.Background(), r)
 
-		So(err, ShouldEqual, ErrFailedToWriteToMongo)
+		So(err, ShouldEqual, ErrPersistence)
 		So(persistenceMock.CreateCalls(), ShouldHaveLength, 1)
 		So(persistenceMock.CreateCalls()[0].Identity, ShouldResemble, newIdentity)
 	})

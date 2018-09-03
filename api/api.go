@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/gorilla/mux"
 	"time"
 
@@ -12,6 +13,16 @@ import (
 
 const (
 	createIdentityAction = "createIdentity"
+)
+
+var (
+	//map identity errors to http status codes.
+	errorStatusMapping = map[error]int{
+		identity.ErrPersistence:                  http.StatusInternalServerError,
+		identity.ErrFailedToUnmarshalRequestBody: http.StatusInternalServerError,
+		identity.ErrInvalidArguments:             http.StatusInternalServerError,
+		identity.ErrFailedToReadRequestBody:      http.StatusInternalServerError,
+	}
 )
 
 //API defines HTTP HandlerFunc's for the endpoints offered by the Identity API service.
@@ -74,11 +85,11 @@ func (api *API) CreateIdentityHandler(w http.ResponseWriter, r *http.Request) {
 // of err.GetMessage() and err.GetStatus() will be used to set the response body and status code respectively otherwise
 // a default 500 status is used with err.Error() for the response body.
 func writeErrorResponse(err error, w http.ResponseWriter) {
-	msg := err.Error()
 	status := http.StatusInternalServerError
 
-	if apiErr, ok := err.(apiError); ok {
-		http.Error(w, apiErr.GetMessage(), apiErr.GetStatus())
+	if val, ok := errorStatusMapping[err]; ok {
+		status = val
 	}
-	http.Error(w, msg, status)
+
+	http.Error(w, err.Error(), status)
 }

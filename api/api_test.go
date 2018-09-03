@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/ONSdigital/dp-identity-api/identity"
-	"github.com/ONSdigital/dp-identity-api/models"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/audit/auditortest"
 	. "github.com/smartystreets/goconvey/convey"
@@ -100,7 +99,7 @@ func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 				IdentityService: serviceMock,
 			}
 
-			newIdentity := &models.Identity{Name: "Eleven"}
+			newIdentity := &identity.Model{Name: "Eleven"}
 			b, err := json.Marshal(newIdentity)
 			So(err, ShouldBeNil)
 
@@ -141,7 +140,7 @@ func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 				IdentityService: serviceMock,
 			}
 
-			newIdentity := &models.Identity{Name: "Eleven"}
+			newIdentity := &identity.Model{Name: "Eleven"}
 			b, err := json.Marshal(newIdentity)
 			So(err, ShouldBeNil)
 

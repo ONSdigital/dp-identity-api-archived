@@ -1,29 +1,16 @@
 package identity
 
-import "net/http"
+import (
+	"errors"
+)
 
 //go:generate moq -out generate_mocks.go -pkg identity . Persistence
 
 var (
-	ErrInvalidArguments = &ServiceError{
-		status:  http.StatusInternalServerError,
-		message: "error while attempting create new identity",
-	}
-
-	ErrFailedToReadRequestBody = &ServiceError{
-		status:  http.StatusInternalServerError,
-		message: "error while attempting to read request body",
-	}
-
-	ErrFailedToUnmarshalRequestBody = &ServiceError{
-		status:  http.StatusInternalServerError,
-		message: "error while attempting to unmarshal request body",
-	}
-
-	ErrFailedToWriteToMongo = &ServiceError{
-		status:  http.StatusInternalServerError,
-		message: "error while attempting to write data to mongo",
-	}
+	ErrInvalidArguments             = errors.New("error while attempting create new identity")
+	ErrFailedToReadRequestBody      = errors.New("error while attempting to read request body")
+	ErrFailedToUnmarshalRequestBody = errors.New("error while attempting to unmarshal request body")
+	ErrPersistence                  = errors.New("error while attempting to write data to mongo")
 )
 
 // Persistence...
@@ -31,20 +18,12 @@ type Persistence interface {
 	Create(identity *Model) error
 }
 
-//Service...
+//Service encapsulates the logic for creating, updating and deleting identities
 type Service struct {
 	Persistence Persistence
 }
 
-type ServiceError struct {
-	status  int
-	message string
-}
-
-func (err *ServiceError) Error() string {
-	return err.message
-}
-
+//Model is an object representation of a user identity.
 type Model struct {
 	ID                string `bson:"id" json:"id"`
 	Name              string `bson:"name" json:"name"`
