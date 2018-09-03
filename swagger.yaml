@@ -45,6 +45,27 @@ definitions:
   Identity:
     type: object
     properties:
+      id:
+        type: string
+        description: "unique identifier for user"
       name:
         type: string
-        description: "TODO 1"
+        description: "the name of the user"
+      email:
+        type: string
+        description: "the email of the user"
+      password:
+        type: string
+        description: "the password of the user"
+      temporary_password:
+        type: string
+        description: "temporary password for user identity"
+      migrated:
+        type: boolean
+        description: "true if the user has been migrated to identity API, false otherwise"
+      deleted:
+        type: boolean
+        description: "flag to indicate if the user has been deleted"
+      user_type:
+        type: string
+        description: "the user type - TODO: need to define what these are."

@@ -1,11 +1,11 @@
 package mongo
 
 import (
+	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/globalsign/mgo"
 	"time"
 
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/models"
 )
 
 // Mongo represents a simplistic MongoDB configuration.
@@ -34,16 +34,14 @@ func (m *Mongo) Init() (session *mgo.Session, err error) {
 }
 
 
-// CreateIdentityHandler creates an identity document
-func (m *Mongo) CreateIdentity(identity *models.Identity) error {
-
+func (m *Mongo) Create(identity *identity.Model) error {
 	s := m.Session.Copy()
 	defer s.Close()
 
 	// NOTE - Upsert may be more appropriate than Insert. Consider "already exists" scenarios?
 	err := s.DB(m.Database).C("identities").Insert(identity)
 	if err == mgo.ErrNotFound {
-		return errors.New("Failed to post new identity document to mongo")
+		return errors.New("failed to post new identity document to mongo")
 	}
 
 	if err != nil {

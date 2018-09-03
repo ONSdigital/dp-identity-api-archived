@@ -2,11 +2,10 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"errors"
+	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/dp-identity-api/models"
-	"github.com/ONSdigital/dp-identity-api/store"
-	"github.com/ONSdigital/dp-identity-api/store/storetest"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/audit/auditortest"
 	. "github.com/smartystreets/goconvey/convey"
@@ -19,17 +18,12 @@ import (
 func TestIdentityAPI_CreateIdentityAuditAttemptedFailed(t *testing.T) {
 	Convey("given audit action attempted returns an error", t, func() {
 		auditMock := auditortest.NewErroring(createIdentityAction, audit.Attempted)
+		serviceMock := &IdentityServiceMock{}
 
 		Convey("when createIdentity is called", func() {
-			mockStore := &storetest.StorerMock{
-				CreateIdentityFunc: func(identity *models.Identity) error {
-					return errors.New("expected")
-				},
-			}
-
-			identityAPI := &IdentityAPI{
-				auditor:   auditMock,
-				dataStore: store.DataStore{Backend: mockStore},
+			identityAPI := &API{
+				auditor:         auditMock,
+				IdentityService: serviceMock,
 			}
 
 			r := httptest.NewRequest("POST", "http://localhost:23800/identity", nil)
@@ -41,7 +35,7 @@ func TestIdentityAPI_CreateIdentityAuditAttemptedFailed(t *testing.T) {
 			})
 
 			Convey("and no identity is created", func() {
-				So(mockStore.CreateIdentityCalls(), ShouldHaveLength, 0)
+				So(serviceMock.CreateCalls(), ShouldHaveLength, 0)
 			})
 
 			Convey("and an unsuccessful audit event is recorded", func() {
@@ -54,13 +48,16 @@ func TestIdentityAPI_CreateIdentityAuditAttemptedFailed(t *testing.T) {
 func TestIdentityAPI_CreateIdentityError(t *testing.T) {
 	Convey("given createIdentity returns an error", t, func() {
 		auditMock := auditortest.New()
+		serviceMock := &IdentityServiceMock{
+			CreateFunc: func(ctx context.Context, r *http.Request) error {
+				return identity.ErrFailedToUnmarshalRequestBody
+			},
+		}
 
 		Convey("when createIdentity is called", func() {
-			mockStore := &storetest.StorerMock{}
-
-			identityAPI := &IdentityAPI{
-				auditor:   auditMock,
-				dataStore: store.DataStore{Backend: mockStore},
+			identityAPI := &API{
+				auditor:         auditMock,
+				IdentityService: serviceMock,
 			}
 
 			b, err := json.Marshal([]int{1, 2, 3})
@@ -71,11 +68,11 @@ func TestIdentityAPI_CreateIdentityError(t *testing.T) {
 			identityAPI.CreateIdentityHandler(w, r)
 
 			Convey("then the expected error response is returned", func() {
-				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), ErrFailedToUnmarshalRequestBody.Error())
+				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), identity.ErrFailedToUnmarshalRequestBody.Error())
 			})
 
 			Convey("and no identity is created", func() {
-				So(mockStore.CreateIdentityCalls(), ShouldHaveLength, 0)
+				So(serviceMock.CreateCalls(), ShouldHaveLength, 1)
 			})
 
 			Convey("and an unsuccessful audit event is recorded", func() {
@@ -91,17 +88,16 @@ func TestIdentityAPI_CreateIdentityError(t *testing.T) {
 func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 	Convey("given audit action successful returns an error", t, func() {
 		auditMock := auditortest.NewErroring(createIdentityAction, audit.Successful)
+		serviceMock := &IdentityServiceMock{
+			CreateFunc: func(ctx context.Context, r *http.Request) error {
+				return nil
+			},
+		}
 
 		Convey("when createIdentity is called", func() {
-			mockStore := &storetest.StorerMock{
-				CreateIdentityFunc: func(identity *models.Identity) error {
-					return nil
-				},
-			}
-
-			identityAPI := &IdentityAPI{
-				auditor:   auditMock,
-				dataStore: store.DataStore{Backend: mockStore},
+			identityAPI := &API{
+				auditor:         auditMock,
+				IdentityService: serviceMock,
 			}
 
 			newIdentity := &models.Identity{Name: "Eleven"}
@@ -117,8 +113,7 @@ func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 			})
 
 			Convey("and the identity is created", func() {
-				So(mockStore.CreateIdentityCalls(), ShouldHaveLength, 1)
-				So(mockStore.CreateIdentityCalls()[0].Identity, ShouldResemble, newIdentity)
+				So(serviceMock.CreateCalls(), ShouldHaveLength, 1)
 			})
 
 			Convey("and attempted and successful audit events are recorded", func() {
@@ -134,17 +129,16 @@ func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 	Convey("given create identity is successful", t, func() {
 		auditMock := auditortest.New()
+		serviceMock := &IdentityServiceMock{
+			CreateFunc: func(ctx context.Context, r *http.Request) error {
+				return nil
+			},
+		}
 
 		Convey("when createIdentity is called", func() {
-			mockStore := &storetest.StorerMock{
-				CreateIdentityFunc: func(identity *models.Identity) error {
-					return nil
-				},
-			}
-
-			identityAPI := &IdentityAPI{
-				auditor:   auditMock,
-				dataStore: store.DataStore{Backend: mockStore},
+			identityAPI := &API{
+				auditor:         auditMock,
+				IdentityService: serviceMock,
 			}
 
 			newIdentity := &models.Identity{Name: "Eleven"}
@@ -160,8 +154,7 @@ func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 			})
 
 			Convey("and the identity is created", func() {
-				So(mockStore.CreateIdentityCalls(), ShouldHaveLength, 1)
-				So(mockStore.CreateIdentityCalls()[0].Identity, ShouldResemble, newIdentity)
+				So(serviceMock.CreateCalls(), ShouldHaveLength, 1)
 			})
 
 			Convey("and attempted and successful audit events are recorded", func() {

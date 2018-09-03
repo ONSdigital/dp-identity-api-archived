@@ -4,54 +4,47 @@ import (
 	"github.com/gorilla/mux"
 	"time"
 
-	"github.com/ONSdigital/dp-identity-api/config"
-	"github.com/ONSdigital/dp-identity-api/store"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	"net/http"
 )
 
-type IdentityAPI struct {
-	dataStore          store.DataStore
-	host               string
-	router             *mux.Router
+const (
+	createIdentityAction = "createIdentity"
+)
+
+//API defines HTTP HandlerFunc's for the endpoints offered by the Identity API service.
+type API struct {
+	IdentityService    IdentityService
 	healthCheckTimeout time.Duration
 	auditor            audit.AuditorService
 }
 
-type apiError struct {
-	status  int
-	message string
+type apiError interface {
+	Error() string
+	GetStatus() int
+	GetMessage() string
 }
 
-func (err *apiError) Error() string {
-	return err.message
-}
-
-//New constructor function for creating a new instance of the IdentityAPI.
-func New(storer store.Storer, cfg config.Configuration, auditor audit.AuditorService) *IdentityAPI {
-	api := &IdentityAPI{
-		dataStore:          store.DataStore{Backend: storer},
-		host:               "http://localhost:" + cfg.BindAddr,
-		router:             mux.NewRouter(),
-		healthCheckTimeout: cfg.HealthCheckTimeout,
-		auditor:            auditor,
+//New is a constructor function for creating a new instance of the API.
+func New(identityService IdentityService, auditor audit.AuditorService) *API {
+	return &API{
+		IdentityService: identityService,
+		auditor:         auditor,
 	}
-
-	api.router.HandleFunc("/identity", api.CreateIdentityHandler).Methods("POST")
-	api.router.Path("/healthcheck").HandlerFunc(healthcheck.Do)
-
-	return api
 }
 
-func (api *IdentityAPI) GetRouter() *mux.Router {
-	return api.router
+//RegisterEndpoints provides a way to register the HandlerFunc's defined in the api package with a mux.Router.
+func (api *API) RegisterEndpoints(r *mux.Router) {
+	r.HandleFunc("/identity", api.CreateIdentityHandler).Methods("POST")
+	r.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 }
 
-//CreateIdentityHandler is a POST HTTP handler for creating a new Identity. Each request to the endpoint will audit 2
-// actions 1) create identity action was attempted. 2) create identity was successful or unsuccessful.
-func (api *IdentityAPI) CreateIdentityHandler(w http.ResponseWriter, r *http.Request) {
+//CreateIdentityHandler is a POST HTTP handler for creating a new Identity. A request to this endpoint will create an
+// audit event showing an attempt to create a new identity was made followed by another event - successful or unsuccessful
+// depending on outcome of processing the request.
+func (api *API) CreateIdentityHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if auditErr := api.auditor.Record(ctx, createIdentityAction, audit.Attempted, nil); auditErr != nil {
@@ -59,14 +52,15 @@ func (api *IdentityAPI) CreateIdentityHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	apiErr := api.createIdentity(ctx, r)
-	if apiErr != nil {
+	err := api.IdentityService.Create(ctx, r)
+
+	if err != nil {
 		api.auditor.Record(ctx, createIdentityAction, audit.Unsuccessful, nil)
-		http.Error(w, apiErr.message, apiErr.status)
+		writeErrorResponse(err, w)
 		return
 	}
 
-	err := api.auditor.Record(ctx, createIdentityAction, audit.Successful, nil)
+	err = api.auditor.Record(ctx, createIdentityAction, audit.Successful, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -74,4 +68,17 @@ func (api *IdentityAPI) CreateIdentityHandler(w http.ResponseWriter, r *http.Req
 
 	w.WriteHeader(http.StatusCreated)
 	log.InfoCtx(ctx, "createIdentity: identity created successfully", nil)
+}
+
+//writeErrorResponse writes a HTTP error back to the response writer. If the err can be cast to apiError then the values
+// of err.GetMessage() and err.GetStatus() will be used to set the response body and status code respectively otherwise
+// a default 500 status is used with err.Error() for the response body.
+func writeErrorResponse(err error, w http.ResponseWriter) {
+	msg := err.Error()
+	status := http.StatusInternalServerError
+
+	if apiErr, ok := err.(apiError); ok {
+		http.Error(w, apiErr.GetMessage(), apiErr.GetStatus())
+	}
+	http.Error(w, msg, status)
 }

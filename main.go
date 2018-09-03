@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ONSdigital/dp-identity-api/api"
 	"github.com/ONSdigital/dp-identity-api/config"
+	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
@@ -50,8 +51,13 @@ func main() {
 
 	apiErrors := make(chan error, 1)
 
-	identityAPI := api.New(mongodb, *cfg, auditor)
-	httpServer := startHTTPServer(cfg.BindAddr, identityAPI.GetRouter(), apiErrors)
+	identityService := &identity.Service{Persistence: mongodb}
+
+	router := mux.NewRouter()
+	identityAPI := api.New(identityService, auditor)
+	identityAPI.RegisterEndpoints(router)
+
+	httpServer := startHTTPServer(cfg.BindAddr, router, apiErrors)
 
 	for {
 		select {
