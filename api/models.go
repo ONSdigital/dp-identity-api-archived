@@ -13,6 +13,9 @@ import (
 
 const (
 	createIdentityAction = "createIdentity"
+	identityURIFormat    = "%s/identity/%s"
+	headerContentType    = "content-type"
+	mimeTypeJSON         = "application/json"
 )
 
 var (
@@ -30,12 +33,19 @@ var (
 
 //API defines HTTP HandlerFunc's for the endpoints offered by the Identity API service.
 type API struct {
+	Host               string
 	IdentityService    IdentityService
 	healthCheckTimeout time.Duration
 	auditor            audit.AuditorService
 }
 
+//IdentityCreated is the HTTP response entity for create identity success.
+type IdentityCreated struct {
+	ID  string `json:"id"`
+	URI string `json:"uri"`
+}
+
 //IdentityService is a service for creating, updating and deleting Identities.
 type IdentityService interface {
-	Create(ctx context.Context, i *identity.Model) error
+	Create(ctx context.Context, i *identity.Model) (string, error)
 }

@@ -12,5 +12,7 @@ build:
 	go build -o $(BUILD_ARCH)/$(BIN_DIR)/dp-identity-api main.go
 debug:
 	HUMAN_LOG=1 go run main.go
+acceptance: build
+	MONGODB_DATABASE=test HUMAN_LOG=1 go run main.go
 
 .PHONEY: test build debug

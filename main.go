@@ -53,7 +53,7 @@ func main() {
 
 	identityService := &identity.Service{Persistence: mongodb}
 
-	identityAPI := api.New(identityService, auditor)
+	identityAPI := api.New("http://localhost"+cfg.BindAddr, identityService, auditor) // TODO make Host config
 
 	router := mux.NewRouter()
 	identityAPI.RegisterEndpoints(router)

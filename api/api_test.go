@@ -7,11 +7,28 @@ import (
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/audit/auditortest"
+	"github.com/ONSdigital/go-ns/common"
+	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+)
+
+const (
+	ID = "666"
+
+	createIdentityURL = "http://localhost:23800/identity"
+)
+
+var (
+	expectedIdentity = IdentityCreated{
+		ID:  ID,
+		URI: "http://localhost:23800/identity/" + ID,
+	}
+
+	errTest = errors.New("boom!")
 )
 
 func TestIdentityAPI_CreateIdentityAuditAttemptedFailed(t *testing.T) {
@@ -25,7 +42,7 @@ func TestIdentityAPI_CreateIdentityAuditAttemptedFailed(t *testing.T) {
 				IdentityService: serviceMock,
 			}
 
-			r := httptest.NewRequest("POST", "http://localhost:23800/identity", nil)
+			r := httptest.NewRequest("POST", createIdentityURL, nil)
 			w := httptest.NewRecorder()
 			identityAPI.CreateIdentityHandler(w, r)
 
@@ -58,7 +75,7 @@ func TestIdentityAPI_CreateIdentityError(t *testing.T) {
 			b, err := json.Marshal([]int{1, 2, 3})
 			So(err, ShouldBeNil)
 
-			r := httptest.NewRequest("POST", "http://localhost:23800/identity", bytes.NewReader(b))
+			r := httptest.NewRequest("POST", createIdentityURL, bytes.NewReader(b))
 			w := httptest.NewRecorder()
 			identityAPI.CreateIdentityHandler(w, r)
 
@@ -84,8 +101,8 @@ func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 	Convey("given audit action successful returns an error", t, func() {
 		auditMock := auditortest.NewErroring(createIdentityAction, audit.Successful)
 		serviceMock := &IdentityServiceMock{
-			CreateFunc: func(ctx context.Context, i *identity.Model) error {
-				return nil
+			CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
+				return ID, nil
 			},
 		}
 
@@ -99,7 +116,7 @@ func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 			b, err := json.Marshal(newIdentity)
 			So(err, ShouldBeNil)
 
-			r := httptest.NewRequest("POST", "http://localhost:23800/identity", bytes.NewReader(b))
+			r := httptest.NewRequest("POST", createIdentityURL, bytes.NewReader(b))
 			w := httptest.NewRecorder()
 			identityAPI.CreateIdentityHandler(w, r)
 
@@ -114,7 +131,7 @@ func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 			Convey("and attempted and successful audit events are recorded", func() {
 				auditMock.AssertRecordCalls(
 					auditortest.Expected{Action: createIdentityAction, Result: audit.Attempted, Params: nil},
-					auditortest.Expected{Action: createIdentityAction, Result: audit.Successful, Params: nil},
+					auditortest.Expected{Action: createIdentityAction, Result: audit.Successful, Params: common.Params{"id": ID}},
 				)
 			})
 		})
@@ -125,13 +142,14 @@ func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 	Convey("given create identity is successful", t, func() {
 		auditMock := auditortest.New()
 		serviceMock := &IdentityServiceMock{
-			CreateFunc: func(ctx context.Context, i *identity.Model) error {
-				return nil
+			CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
+				return ID, nil
 			},
 		}
 
 		Convey("when createIdentity is called", func() {
 			identityAPI := &API{
+				Host:            "http://localhost:23800",
 				auditor:         auditMock,
 				IdentityService: serviceMock,
 			}
@@ -140,12 +158,18 @@ func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 			b, err := json.Marshal(newIdentity)
 			So(err, ShouldBeNil)
 
-			r := httptest.NewRequest("POST", "http://localhost:23800/identity", bytes.NewReader(b))
+			r := httptest.NewRequest("POST", createIdentityURL, bytes.NewReader(b))
 			w := httptest.NewRecorder()
 			identityAPI.CreateIdentityHandler(w, r)
 
 			Convey("then a HTTP 201 status is returned", func() {
-				assertErrorResponse(w.Code, http.StatusCreated, w.Body.String(), "")
+				So(w.Code, ShouldEqual, http.StatusCreated)
+
+				var actual IdentityCreated
+				err := json.Unmarshal(w.Body.Bytes(), &actual)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, expectedIdentity)
+
 			})
 
 			Convey("and the identity is created", func() {
@@ -155,10 +179,32 @@ func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 			Convey("and attempted and successful audit events are recorded", func() {
 				auditMock.AssertRecordCalls(
 					auditortest.Expected{Action: createIdentityAction, Result: audit.Attempted, Params: nil},
-					auditortest.Expected{Action: createIdentityAction, Result: audit.Successful, Params: nil},
+					auditortest.Expected{Action: createIdentityAction, Result: audit.Successful, Params: common.Params{"id": ID}},
 				)
 			})
 		})
+	})
+}
+
+func TestCreateIdentity_IdentityServiceError(t *testing.T) {
+	Convey("should return expected error if identityService returns an error", t, func() {
+		serviceMock := &IdentityServiceMock{
+			CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
+				return "", errTest
+			},
+		}
+
+		identityAPI := &API{IdentityService: serviceMock}
+
+		newIdentity := &identity.Model{Name: "Eleven"}
+		b, err := json.Marshal(newIdentity)
+		So(err, ShouldBeNil)
+
+		r := httptest.NewRequest("POST", createIdentityURL, bytes.NewReader(b))
+		i, err := identityAPI.createIdentity(context.Background(), r)
+		So(err, ShouldNotBeNil)
+		So(err, ShouldEqual, errTest)
+		So(i, ShouldBeNil)
 	})
 }
 

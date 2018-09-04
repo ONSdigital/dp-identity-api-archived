@@ -17,7 +17,7 @@ var (
 //
 //         // make and configure a mocked Persistence
 //         mockedPersistence := &PersistenceMock{
-//             CreateFunc: func(identity *Model) error {
+//             CreateFunc: func(identity *Model) (string, error) {
 // 	               panic("TODO: mock out the Create method")
 //             },
 //         }
@@ -28,7 +28,7 @@ var (
 //     }
 type PersistenceMock struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(identity *Model) error
+	CreateFunc func(identity *Model) (string, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -41,7 +41,7 @@ type PersistenceMock struct {
 }
 
 // Create calls CreateFunc.
-func (mock *PersistenceMock) Create(identity *Model) error {
+func (mock *PersistenceMock) Create(identity *Model) (string, error) {
 	if mock.CreateFunc == nil {
 		panic("moq: PersistenceMock.CreateFunc is nil but Persistence.Create was just called")
 	}

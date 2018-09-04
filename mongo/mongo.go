@@ -4,6 +4,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/globalsign/mgo"
+	"github.com/satori/go.uuid"
 	"time"
 
 	"errors"
@@ -50,19 +51,22 @@ func (m *Mongo) createSession() (session *mgo.Session, err error) {
 	return session, nil
 }
 
-func (m *Mongo) Create(identity *identity.Model) error {
+func (m *Mongo) Create(identity *identity.Model) (string, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
 	// NOTE - Upsert may be more appropriate than Insert. Consider "already exists" scenarios?
+	id := uuid.NewV4()
+	identity.ID = id.String()
+
 	err := s.DB(m.Database).C("identities").Insert(identity)
 	if err == mgo.ErrNotFound {
-		return errors.New("failed to post new identity document to mongo")
+		return "", errors.New("failed to post new identity document to mongo")
 	}
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return id.String(), nil
 }

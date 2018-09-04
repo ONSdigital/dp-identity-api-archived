@@ -13,7 +13,7 @@ var (
 
 // Persistence...
 type Persistence interface {
-	Create(identity *Model) error
+	Create(identity *Model) (string, error)
 }
 
 //Service encapsulates the logic for creating, updating and deleting identities

@@ -19,7 +19,7 @@ var (
 //
 //         // make and configure a mocked IdentityService
 //         mockedIdentityService := &IdentityServiceMock{
-//             CreateFunc: func(ctx context.Context, i *identity.Model) error {
+//             CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
 // 	               panic("TODO: mock out the Create method")
 //             },
 //         }
@@ -30,7 +30,7 @@ var (
 //     }
 type IdentityServiceMock struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(ctx context.Context, i *identity.Model) error
+	CreateFunc func(ctx context.Context, i *identity.Model) (string, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -45,7 +45,7 @@ type IdentityServiceMock struct {
 }
 
 // Create calls CreateFunc.
-func (mock *IdentityServiceMock) Create(ctx context.Context, i *identity.Model) error {
+func (mock *IdentityServiceMock) Create(ctx context.Context, i *identity.Model) (string, error) {
 	if mock.CreateFunc == nil {
 		panic("moq: IdentityServiceMock.CreateFunc is nil but IdentityService.Create was just called")
 	}

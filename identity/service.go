@@ -7,23 +7,27 @@ import (
 )
 
 //Create create a new user identity
-func (s *Service) Create(ctx context.Context, i *Model) error {
+func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 	if ctx == nil {
 		log.Error(errors.New("Create: failed mandatory context parameter was nil"), nil)
-		return ErrInvalidArguments
+		return "", ErrInvalidArguments
 	}
 
 	if i == nil {
 		log.ErrorCtx(ctx, errors.New("Create: failed mandatory identity parameter was nil"), nil)
-		return ErrInvalidArguments
+		return "", ErrInvalidArguments
 	}
 
-	err := s.Persistence.Create(i)
+	id, err := s.Persistence.Create(i)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "Create: failed to write data to mongo"), nil)
-		return ErrPersistence
+		return "", ErrPersistence
 	}
 
-	log.InfoCtx(ctx, "Create: new identity created successfully", log.Data{"name": i.Name, "email": i.Email})
-	return nil
+	log.InfoCtx(ctx, "Create: new identity created successfully", log.Data{
+		"id":    id,
+		"name":  i.Name,
+		"email": i.Email,
+	})
+	return id, nil
 }
