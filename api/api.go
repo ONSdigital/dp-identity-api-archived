@@ -1,3 +1,4 @@
+//Package provides HTTP Handlers/HandlerFunc's for creating, updating and deleting user identities
 package api
 
 import (
@@ -10,7 +11,6 @@ import (
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 )
@@ -56,7 +56,7 @@ func (api *API) CreateIdentityHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.writeJSONBody(ctx, w, response, http.StatusCreated)
+	writeJSONBody(ctx, w, response, http.StatusCreated)
 	log.InfoCtx(ctx, "createIdentity: identity created successfully", log.Data{"id": response.ID})
 }
 
@@ -81,30 +81,4 @@ func (api *API) createIdentity(ctx context.Context, r *http.Request) (*IdentityC
 		URI: fmt.Sprintf(identityURIFormat, api.Host, id),
 		ID:  id,
 	}, nil
-}
-
-func (api *API) writeJSONBody(ctx context.Context, w http.ResponseWriter, i interface{}, status int) {
-	b, err := json.Marshal(i)
-	if err != nil {
-		log.ErrorCtx(ctx, errors.Wrap(err, "failed to marshal object to JSON"), log.Data{"object": i})
-		writeErrorResponse(ctx, err, w)
-		return
-	}
-	w.Header().Set(headerContentType, mimeTypeJSON)
-	w.WriteHeader(status)
-	w.Write(b)
-}
-
-//writeErrorResponse writes a HTTP error back to the response writer. If the err can be cast to apiError then the values
-// of err.GetMessage() and err.GetStatus() will be used to set the response body and status code respectively otherwise
-// a default 500 status is used with err.Error() for the response body.
-func writeErrorResponse(ctx context.Context, err error, w http.ResponseWriter) {
-	status := http.StatusInternalServerError
-
-	if val, ok := errorStatusMapping[err]; ok {
-		status = val
-	}
-
-	log.ErrorCtx(ctx, errors.Wrap(err, "writing error response"), log.Data{"status": status})
-	http.Error(w, err.Error(), status)
 }

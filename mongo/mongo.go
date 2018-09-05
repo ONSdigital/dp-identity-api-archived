@@ -7,7 +7,7 @@ import (
 	"github.com/satori/go.uuid"
 	"time"
 
-	"errors"
+	"github.com/pkg/errors"
 )
 
 // Mongo represents a simplistic MongoDB configuration.
@@ -56,10 +56,13 @@ func (m *Mongo) Create(identity *identity.Model) (string, error) {
 	defer s.Close()
 
 	// NOTE - Upsert may be more appropriate than Insert. Consider "already exists" scenarios?
-	id := uuid.NewV4()
+	id, err := uuid.NewV4()
+	if err != nil {
+		return "", errors.Wrap(err, "error generating uuid")
+	}
 	identity.ID = id.String()
 
-	err := s.DB(m.Database).C("identities").Insert(identity)
+	err = s.DB(m.Database).C(m.Collection).Insert(identity)
 	if err == mgo.ErrNotFound {
 		return "", errors.New("failed to post new identity document to mongo")
 	}
