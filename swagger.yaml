@@ -39,6 +39,8 @@ paths:
       responses:
         201:
           description: "identity created successfully"
+          schema:
+            $ref: '#/definitions/IdentityCreated'
         500:
           description: "TODO"
 definitions:
@@ -48,18 +50,23 @@ definitions:
       id:
         type: string
         description: "unique identifier for user"
+        example: ""
       name:
         type: string
         description: "the name of the user"
+        example: "Peter Venkman"
       email:
         type: string
         description: "the email of the user"
+        example: "venkman@whoyougunnacall.com"
       password:
         type: string
         description: "the password of the user"
+        example: "There is no Dana only zuul!"
       temporary_password:
         type: string
         description: "temporary password for user identity"
+        example: ""
       migrated:
         type: boolean
         description: "true if the user has been migrated to identity API, false otherwise"
@@ -68,4 +75,16 @@ definitions:
         description: "flag to indicate if the user has been deleted"
       user_type:
         type: string
-        description: "the user type - TODO: need to define what these are."
+        description: "the user type - TODO: need to define what these are"
+        example: "publisher"
+  IdentityCreated:
+    type: object
+    properties:
+      id:
+        type: string
+        description: "the id of the created identity"
+        example: "9ba46688-03ed-4f62-b12a-a1744eb91f2c"
+      uri:
+        type: string
+        description: "the uri of the created identity"
+        example: "http://localhost:23800/identity/9ba46688-03ed-4f62-b12a-a1744eb91f2c"
