@@ -14,7 +14,11 @@ dp-identity-api
 
 ### Usage
 
-`make debug` to run locally.
+`make debug` to run locally
+
+### API Tests
+To run the **dp-api-tests** against the **dp-identity-api** run `make acceptance`. This will run the API against a 
+different (test) Mongo database which will be torn down after the tests. 
 
 ### DEV NOTES
 

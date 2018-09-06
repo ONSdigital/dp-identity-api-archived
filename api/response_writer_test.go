@@ -33,7 +33,6 @@ func Test_writeJSONBodySuccess(t *testing.T) {
 	})
 }
 
-
 func Test_writeJSONBodyMarshalError(t *testing.T) {
 	Convey("should write http 500 response if marshal returns an error", t, func() {
 		w := httptest.NewRecorder()

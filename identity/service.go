@@ -41,7 +41,10 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 		return "", ErrInvalidArguments
 	}
 
-	s.Validate(i)
+	if err := s.Validate(i); err != nil {
+		log.ErrorCtx(ctx, errors.Wrap(err, "Create: failed validation"), nil)
+		return "", err
+	}
 
 	id, err := s.Persistence.Create(i)
 	if err != nil {

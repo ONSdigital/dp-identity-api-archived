@@ -9,8 +9,9 @@ import (
 
 var (
 	newIdentity = &Model{
-		Name:  "Eleven",
-		Email: "11@StrangerThings.com",
+		Name:     "Eleven",
+		Email:    "11@StrangerThings.com",
+		Password: "WAFFLES",
 	}
 
 	ID = "666"
@@ -44,14 +45,25 @@ func TestCreateIdentity_DataStoreError(t *testing.T) {
 		}
 
 		s := &Service{Persistence: persistenceMock}
-		newIdentity := &Model{Name: "Eleven"}
-
 		id, err := s.Create(context.Background(), newIdentity)
 
 		So(err, ShouldEqual, ErrPersistence)
 		So(id, ShouldBeEmpty)
 		So(persistenceMock.CreateCalls(), ShouldHaveLength, 1)
 		So(persistenceMock.CreateCalls()[0].Identity, ShouldResemble, newIdentity)
+	})
+}
+
+func TestCreateIdentity_ValidationError(t *testing.T) {
+	Convey("should return expected error if validate returns an error", t, func() {
+		persistenceMock := &PersistenceMock{}
+		s := &Service{Persistence: persistenceMock}
+
+		id, err := s.Create(context.Background(), &Model{})
+
+		So(err, ShouldResemble, ErrNameValidation)
+		So(id, ShouldBeEmpty)
+		So(persistenceMock.CreateCalls(), ShouldHaveLength, 0)
 	})
 }
 

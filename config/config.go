@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/kelseyhightower/envconfig"
 	"github.com/ONSdigital/go-ns/log"
+	"github.com/kelseyhightower/envconfig"
 )
 
 // Configuration structure which hold information for configuring the import API
