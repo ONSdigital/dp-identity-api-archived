@@ -1,8 +1,8 @@
 swagger: "2.0"
 info:
-  description: "API for creating and authenticating user/service identities."
+  description: "API for creating and authenticating user identities."
   version: "1.0.0"
-  title: "TODO"
+  title: "dp-identity-api"
   license:
     name: "Open Government Licence v3.0"
     url: "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
@@ -12,12 +12,6 @@ tags:
 schemes:
 - "https"
 parameters:
-  id:
-    name: id
-    description: "The ID of a code list"
-    in: path
-    type: string
-    required: true
   new_identity:
     name: identity
     description: "A new identity"
@@ -41,6 +35,8 @@ paths:
           description: "identity created successfully"
           schema:
             $ref: '#/definitions/IdentityCreated'
+        400:
+          description: "identity invalid"
         500:
           description: "TODO"
 definitions:
