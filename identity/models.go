@@ -7,13 +7,21 @@ import (
 //go:generate moq -out generate_mocks.go -pkg identity . Persistence
 
 var (
-	ErrInvalidArguments             = errors.New("error while attempting create new identity")
-	ErrPersistence                  = errors.New("error while attempting to write data to mongo")
+	ErrInvalidArguments = errors.New("error while attempting create new identity")
+	ErrPersistence      = errors.New("error while attempting to write data to mongo")
 )
 
 // Persistence...
 type Persistence interface {
 	Create(identity *Model) (string, error)
+}
+
+type ValidationErr struct {
+	message string
+}
+
+func (e ValidationErr) Error() string {
+	return e.message
 }
 
 //Service encapsulates the logic for creating, updating and deleting identities

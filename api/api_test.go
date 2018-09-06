@@ -31,6 +31,15 @@ var (
 	errTest = errors.New("boom!")
 )
 
+//IOReaderErroring is an io.Reader for unit testing that returns the specified error when Read() is called.
+type IOReaderErroring struct {
+	err error
+}
+
+func (r *IOReaderErroring) Read(p []byte) (int, error) {
+	return 0, r.err
+}
+
 func TestIdentityAPI_CreateIdentityAuditAttemptedFailed(t *testing.T) {
 	Convey("given audit action attempted returns an error", t, func() {
 		auditMock := auditortest.NewErroring(createIdentityAction, audit.Attempted)
@@ -205,6 +214,32 @@ func TestCreateIdentity_IdentityServiceError(t *testing.T) {
 		So(err, ShouldNotBeNil)
 		So(err, ShouldEqual, errTest)
 		So(i, ShouldBeNil)
+	})
+}
+
+func TestCreateIdentity_ReadBodyErr(t *testing.T) {
+	Convey("should return expected error if reading the request body returns an error", t, func() {
+		serviceMock := &IdentityServiceMock{}
+		identityAPI := &API{IdentityService: serviceMock}
+
+		r := httptest.NewRequest("POST", createIdentityURL, &IOReaderErroring{err: errors.New("")})
+		i, err := identityAPI.createIdentity(context.Background(), r)
+		So(err, ShouldEqual, ErrFailedToReadRequestBody)
+		So(i, ShouldBeNil)
+		So(serviceMock.CreateCalls(), ShouldHaveLength, 0)
+	})
+}
+
+func TestCreateIdentity_BodyEmpty(t *testing.T) {
+	Convey("should return expected error if the request body is empty", t, func() {
+		serviceMock := &IdentityServiceMock{}
+		identityAPI := &API{IdentityService: serviceMock}
+
+		r := httptest.NewRequest("POST", createIdentityURL, bytes.NewReader([]byte{}))
+		i, err := identityAPI.createIdentity(context.Background(), r)
+		So(err, ShouldEqual, ErrRequestBodyNil)
+		So(i, ShouldBeNil)
+		So(serviceMock.CreateCalls(), ShouldHaveLength, 0)
 	})
 }
 

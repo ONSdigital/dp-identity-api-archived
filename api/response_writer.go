@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/ONSdigital/go-ns/log"
-	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -15,7 +15,7 @@ var (
 func writeJSONBody(ctx context.Context, w http.ResponseWriter, i interface{}, status int) {
 	b, err := json.Marshal(i)
 	if err != nil {
-		log.ErrorCtx(ctx, errors.Wrap(err, "failed to marshal object to JSON"), log.Data{"object": i})
+		log.ErrorCtx(ctx, errors.New("failed to marshal object to JSON"), log.Data{"object": i})
 		writeErrorResponse(ctx, ErrInternalServerError, w)
 		return
 	}
@@ -34,6 +34,6 @@ func writeErrorResponse(ctx context.Context, err error, w http.ResponseWriter) {
 		status = val
 	}
 
-	log.ErrorCtx(ctx, errors.Wrap(err, "writing error response"), log.Data{"status": status})
+	log.ErrorCtx(ctx, errors.New("writing error response"), log.Data{"status": status})
 	http.Error(w, err.Error(), status)
 }

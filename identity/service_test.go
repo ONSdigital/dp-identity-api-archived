@@ -88,3 +88,38 @@ func TestCreateIdentity_MissingParameters(t *testing.T) {
 		So(persistenceMock.CreateCalls(), ShouldHaveLength, 0)
 	})
 }
+
+func TestService_Validate(t *testing.T) {
+	s := Service{}
+
+	Convey("should not return error if identity is valid", t, func() {
+		i := &Model{
+			Name:     "Bucky O'Hare",
+			Email:    "captain@TheRighteousIndignation.com",
+			Password: "S.P.A.C.E",
+		}
+
+		err := s.Validate(i)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("should error if identity is nil", t, func() {
+		err := s.Validate(nil)
+		So(err, ShouldResemble, ErrIdentityNil)
+	})
+
+	Convey("should error if identity.name is nil", t, func() {
+		err := s.Validate(&Model{})
+		So(err, ShouldResemble, ErrNameValidation)
+	})
+
+	Convey("should error if identity.email is nil", t, func() {
+		err := s.Validate(&Model{Name: "Bucky O'Hare"})
+		So(err, ShouldResemble, ErrEmailValidation)
+	})
+
+	Convey("should error if identity.password is nil", t, func() {
+		err := s.Validate(&Model{Name: "Bucky O'Hare", Email: "captain@TheRighteousIndignation.com"})
+		So(err, ShouldResemble, ErrPasswordValidation)
+	})
+}

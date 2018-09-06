@@ -11,6 +11,7 @@ import (
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 )
@@ -45,6 +46,7 @@ func (api *API) CreateIdentityHandler(w http.ResponseWriter, r *http.Request) {
 	response, err := api.createIdentity(ctx, r)
 
 	if err != nil {
+		log.ErrorCtx(ctx, errors.Wrap(err, "createIdentity: error"), nil)
 		api.auditor.Record(ctx, createIdentityAction, audit.Unsuccessful, nil)
 		writeErrorResponse(ctx, err, w)
 		return
@@ -66,6 +68,10 @@ func (api *API) createIdentity(ctx context.Context, r *http.Request) (*IdentityC
 		return nil, ErrFailedToReadRequestBody
 	}
 	defer r.Body.Close()
+
+	if len(body) == 0 {
+		return nil, ErrRequestBodyNil
+	}
 
 	var i identity.Model
 	if err := json.Unmarshal(body, &i); err != nil {

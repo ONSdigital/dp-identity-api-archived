@@ -21,13 +21,19 @@ const (
 var (
 	ErrFailedToReadRequestBody      = errors.New("error while attempting to read request body")
 	ErrFailedToUnmarshalRequestBody = errors.New("error while attempting to unmarshal request body")
+	ErrRequestBodyNil               = errors.New("error expected request body but was empty")
 
-	//map identity errors to http status codes.
+	//map specific errors to http status codes.
 	errorStatusMapping = map[error]int{
 		ErrFailedToUnmarshalRequestBody: http.StatusInternalServerError,
 		ErrFailedToReadRequestBody:      http.StatusInternalServerError,
+		ErrRequestBodyNil:               http.StatusBadRequest,
 		identity.ErrInvalidArguments:    http.StatusInternalServerError,
 		identity.ErrPersistence:         http.StatusInternalServerError,
+		identity.ErrNameValidation:      http.StatusBadRequest,
+		identity.ErrEmailValidation:     http.StatusBadRequest,
+		identity.ErrPasswordValidation:  http.StatusBadRequest,
+		identity.ErrIdentityNil:         http.StatusBadRequest,
 	}
 )
 
