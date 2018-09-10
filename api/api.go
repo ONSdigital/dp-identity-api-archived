@@ -88,3 +88,32 @@ func (api *API) createIdentity(ctx context.Context, r *http.Request) (*IdentityC
 		ID:  id,
 	}, nil
 }
+
+func (api *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	if auditErr := api.auditor.Record(ctx, userLogin, audit.Attempted, nil); auditErr != nil {
+		http.Error(w, auditErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err := api.login()
+	if err != nil {
+		log.ErrorCtx(ctx, errors.Wrap(err, "login: returned error"), nil)
+		api.auditor.Record(ctx, userLogin, audit.Unsuccessful, nil)
+		writeErrorResponse(ctx, err, w)
+		return
+	}
+
+	err = api.auditor.Record(ctx, userLogin, audit.Successful, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	log.InfoCtx(ctx, "login: login request successful", nil)
+}
+
+func (api *API) login() error {
+	return nil
+}

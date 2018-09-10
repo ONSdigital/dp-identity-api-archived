@@ -13,6 +13,7 @@ import (
 
 const (
 	createIdentityAction = "createIdentity"
+	userLogin            = "userLogin"
 	identityURIFormat    = "%s/identity/%s"
 	headerContentType    = "content-type"
 	mimeTypeJSON         = "application/json"
