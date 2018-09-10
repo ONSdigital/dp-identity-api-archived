@@ -2,8 +2,10 @@ package identity
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -32,30 +34,48 @@ func (s *Service) Validate(i *Model) (err error) {
 //Create create a new user identity
 func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 	if ctx == nil {
-		log.Error(errors.New("Create: failed mandatory context parameter was nil"), nil)
-		return "", ErrInvalidArguments
-	}
-
-	if i == nil {
-		log.ErrorCtx(ctx, errors.New("Create: failed mandatory identity parameter was nil"), nil)
+		log.Error(errors.New("create: failed mandatory context parameter was nil"), nil)
 		return "", ErrInvalidArguments
 	}
 
 	if err := s.Validate(i); err != nil {
-		log.ErrorCtx(ctx, errors.Wrap(err, "Create: failed validation"), nil)
+		log.ErrorCtx(ctx, errors.Wrap(err, "create: failed validation"), nil)
 		return "", err
 	}
 
-	id, err := s.Persistence.Create(i)
+	pwd, err := s.encryptPassword(i)
 	if err != nil {
-		log.ErrorCtx(ctx, errors.WithMessage(err, "Create: failed to write data to mongo"), nil)
+		return "", err
+	}
+
+	newIdentity := mongo.Identity{
+		Name:              i.Name,
+		Email:             i.Email,
+		Password:          pwd,
+		TemporaryPassword: i.TemporaryPassword,
+		UserType:          i.UserType,
+		Migrated:          i.Migrated,
+		Deleted:           i.Deleted,
+	}
+
+	id, err := s.Persistence.Create(newIdentity)
+	if err != nil {
+		log.ErrorCtx(ctx, errors.WithMessage(err, "create: failed to write data to mongo"), nil)
 		return "", ErrPersistence
 	}
 
-	log.InfoCtx(ctx, "Create: new identity created successfully", log.Data{
+	log.InfoCtx(ctx, "create: new identity created successfully", log.Data{
 		"id":    id,
 		"name":  i.Name,
 		"email": i.Email,
 	})
 	return id, nil
+}
+
+func (s *Service) encryptPassword(i *Model) (string, error) {
+	pwd, err := s.Encryptor.GenerateFromPassword([]byte(i.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(pwd), err
 }

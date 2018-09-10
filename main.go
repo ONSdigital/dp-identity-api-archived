@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ONSdigital/dp-identity-api/api"
 	"github.com/ONSdigital/dp-identity-api/config"
+	"github.com/ONSdigital/dp-identity-api/encryption"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/go-ns/audit"
@@ -51,7 +52,10 @@ func main() {
 
 	apiErrors := make(chan error, 1)
 
-	identityService := &identity.Service{Persistence: mongodb}
+	identityService := &identity.Service{
+		Persistence: mongodb,
+		Encryptor: encryption.Service{},
+	}
 
 	identityAPI := api.New("http://localhost"+cfg.BindAddr, identityService, auditor) // TODO make Host config
 

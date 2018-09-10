@@ -4,6 +4,7 @@
 package identity
 
 import (
+	"github.com/ONSdigital/dp-identity-api/mongo"
 	"sync"
 )
 
@@ -17,7 +18,7 @@ var (
 //
 //         // make and configure a mocked Persistence
 //         mockedPersistence := &PersistenceMock{
-//             CreateFunc: func(identity *Model) (string, error) {
+//             CreateFunc: func(newIdentity mongo.Identity) (string, error) {
 // 	               panic("TODO: mock out the Create method")
 //             },
 //         }
@@ -28,45 +29,164 @@ var (
 //     }
 type PersistenceMock struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(identity *Model) (string, error)
+	CreateFunc func(newIdentity mongo.Identity) (string, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// Create holds details about calls to the Create method.
 		Create []struct {
-			// Identity is the identity argument value.
-			Identity *Model
+			// NewIdentity is the newIdentity argument value.
+			NewIdentity mongo.Identity
 		}
 	}
 }
 
 // Create calls CreateFunc.
-func (mock *PersistenceMock) Create(identity *Model) (string, error) {
+func (mock *PersistenceMock) Create(newIdentity mongo.Identity) (string, error) {
 	if mock.CreateFunc == nil {
 		panic("moq: PersistenceMock.CreateFunc is nil but Persistence.Create was just called")
 	}
 	callInfo := struct {
-		Identity *Model
+		NewIdentity mongo.Identity
 	}{
-		Identity: identity,
+		NewIdentity: newIdentity,
 	}
 	lockPersistenceMockCreate.Lock()
 	mock.calls.Create = append(mock.calls.Create, callInfo)
 	lockPersistenceMockCreate.Unlock()
-	return mock.CreateFunc(identity)
+	return mock.CreateFunc(newIdentity)
 }
 
 // CreateCalls gets all the calls that were made to Create.
 // Check the length with:
 //     len(mockedPersistence.CreateCalls())
 func (mock *PersistenceMock) CreateCalls() []struct {
-	Identity *Model
+	NewIdentity mongo.Identity
 } {
 	var calls []struct {
-		Identity *Model
+		NewIdentity mongo.Identity
 	}
 	lockPersistenceMockCreate.RLock()
 	calls = mock.calls.Create
 	lockPersistenceMockCreate.RUnlock()
+	return calls
+}
+
+var (
+	lockEncryptorMockCompareHashAndPassword sync.RWMutex
+	lockEncryptorMockGenerateFromPassword   sync.RWMutex
+)
+
+// EncryptorMock is a mock implementation of Encryptor.
+//
+//     func TestSomethingThatUsesEncryptor(t *testing.T) {
+//
+//         // make and configure a mocked Encryptor
+//         mockedEncryptor := &EncryptorMock{
+//             CompareHashAndPasswordFunc: func(hashedPassword []byte, password []byte) error {
+// 	               panic("TODO: mock out the CompareHashAndPassword method")
+//             },
+//             GenerateFromPasswordFunc: func(password []byte, cost int) ([]byte, error) {
+// 	               panic("TODO: mock out the GenerateFromPassword method")
+//             },
+//         }
+//
+//         // TODO: use mockedEncryptor in code that requires Encryptor
+//         //       and then make assertions.
+//
+//     }
+type EncryptorMock struct {
+	// CompareHashAndPasswordFunc mocks the CompareHashAndPassword method.
+	CompareHashAndPasswordFunc func(hashedPassword []byte, password []byte) error
+
+	// GenerateFromPasswordFunc mocks the GenerateFromPassword method.
+	GenerateFromPasswordFunc func(password []byte, cost int) ([]byte, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// CompareHashAndPassword holds details about calls to the CompareHashAndPassword method.
+		CompareHashAndPassword []struct {
+			// HashedPassword is the hashedPassword argument value.
+			HashedPassword []byte
+			// Password is the password argument value.
+			Password []byte
+		}
+		// GenerateFromPassword holds details about calls to the GenerateFromPassword method.
+		GenerateFromPassword []struct {
+			// Password is the password argument value.
+			Password []byte
+			// Cost is the cost argument value.
+			Cost int
+		}
+	}
+}
+
+// CompareHashAndPassword calls CompareHashAndPasswordFunc.
+func (mock *EncryptorMock) CompareHashAndPassword(hashedPassword []byte, password []byte) error {
+	if mock.CompareHashAndPasswordFunc == nil {
+		panic("moq: EncryptorMock.CompareHashAndPasswordFunc is nil but Encryptor.CompareHashAndPassword was just called")
+	}
+	callInfo := struct {
+		HashedPassword []byte
+		Password       []byte
+	}{
+		HashedPassword: hashedPassword,
+		Password:       password,
+	}
+	lockEncryptorMockCompareHashAndPassword.Lock()
+	mock.calls.CompareHashAndPassword = append(mock.calls.CompareHashAndPassword, callInfo)
+	lockEncryptorMockCompareHashAndPassword.Unlock()
+	return mock.CompareHashAndPasswordFunc(hashedPassword, password)
+}
+
+// CompareHashAndPasswordCalls gets all the calls that were made to CompareHashAndPassword.
+// Check the length with:
+//     len(mockedEncryptor.CompareHashAndPasswordCalls())
+func (mock *EncryptorMock) CompareHashAndPasswordCalls() []struct {
+	HashedPassword []byte
+	Password       []byte
+} {
+	var calls []struct {
+		HashedPassword []byte
+		Password       []byte
+	}
+	lockEncryptorMockCompareHashAndPassword.RLock()
+	calls = mock.calls.CompareHashAndPassword
+	lockEncryptorMockCompareHashAndPassword.RUnlock()
+	return calls
+}
+
+// GenerateFromPassword calls GenerateFromPasswordFunc.
+func (mock *EncryptorMock) GenerateFromPassword(password []byte, cost int) ([]byte, error) {
+	if mock.GenerateFromPasswordFunc == nil {
+		panic("moq: EncryptorMock.GenerateFromPasswordFunc is nil but Encryptor.GenerateFromPassword was just called")
+	}
+	callInfo := struct {
+		Password []byte
+		Cost     int
+	}{
+		Password: password,
+		Cost:     cost,
+	}
+	lockEncryptorMockGenerateFromPassword.Lock()
+	mock.calls.GenerateFromPassword = append(mock.calls.GenerateFromPassword, callInfo)
+	lockEncryptorMockGenerateFromPassword.Unlock()
+	return mock.GenerateFromPasswordFunc(password, cost)
+}
+
+// GenerateFromPasswordCalls gets all the calls that were made to GenerateFromPassword.
+// Check the length with:
+//     len(mockedEncryptor.GenerateFromPasswordCalls())
+func (mock *EncryptorMock) GenerateFromPasswordCalls() []struct {
+	Password []byte
+	Cost     int
+} {
+	var calls []struct {
+		Password []byte
+		Cost     int
+	}
+	lockEncryptorMockGenerateFromPassword.RLock()
+	calls = mock.calls.GenerateFromPassword
+	lockEncryptorMockGenerateFromPassword.RUnlock()
 	return calls
 }

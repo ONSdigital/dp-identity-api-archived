@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"github.com/ONSdigital/dp-identity-api/config"
-	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/globalsign/mgo"
 	"github.com/satori/go.uuid"
 	"time"
@@ -51,7 +50,7 @@ func (m *Mongo) createSession() (session *mgo.Session, err error) {
 	return session, nil
 }
 
-func (m *Mongo) Create(identity *identity.Model) (string, error) {
+func (m *Mongo) Create(identity Identity) (string, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
