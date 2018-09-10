@@ -2,9 +2,12 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -50,6 +53,30 @@ type API struct {
 type IdentityCreated struct {
 	ID  string `json:"id"`
 	URI string `json:"uri"`
+}
+
+type AuthenticateRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type AuthToken struct {
+	Token string `json:"token"`
+}
+
+func getAuthenticateRequest(r io.ReadCloser) (*AuthenticateRequest, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, ErrFailedToReadRequestBody
+	}
+
+	defer r.Close()
+
+	var authReq AuthenticateRequest
+	if err := json.Unmarshal(b, &authReq); err != nil {
+		return nil, ErrFailedToUnmarshalRequestBody
+	}
+	return &authReq, nil
 }
 
 //IdentityService is a service for creating, updating and deleting Identities.

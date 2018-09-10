@@ -28,6 +28,7 @@ func New(host string, identityService IdentityService, auditor audit.AuditorServ
 //RegisterEndpoints provides a way to register the HandlerFunc's defined in the api package with a mux.Router.
 func (api *API) RegisterEndpoints(r *mux.Router) {
 	r.HandleFunc("/identity", api.CreateIdentityHandler).Methods("POST")
+	r.HandleFunc("/authenticate", api.AuthenticationHandler).Methods("POST")
 	r.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 }
 
@@ -89,18 +90,29 @@ func (api *API) createIdentity(ctx context.Context, r *http.Request) (*IdentityC
 	}, nil
 }
 
-func (api *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (api *API) AuthenticationHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if auditErr := api.auditor.Record(ctx, userLogin, audit.Attempted, nil); auditErr != nil {
+	authReq, err := getAuthenticateRequest(r.Body)
+	if err != nil {
+		log.ErrorCtx(ctx, errors.Wrap(err, "authentication unsuccessful"), nil)
+		writeErrorResponse(ctx, err, w)
+		return
+	}
+
+	p := common.Params{"email": authReq.Email}
+	logD := log.Data{"email": authReq.Email}
+
+	if auditErr := api.auditor.Record(ctx, userLogin, audit.Attempted, p); auditErr != nil {
 		http.Error(w, auditErr.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err := api.login()
+	authToken, err := api.authenticate(authReq)
+
 	if err != nil {
-		log.ErrorCtx(ctx, errors.Wrap(err, "login: returned error"), nil)
-		api.auditor.Record(ctx, userLogin, audit.Unsuccessful, nil)
+		log.ErrorCtx(ctx, errors.Wrap(err, "authenticate: returned error"), logD)
+		api.auditor.Record(ctx, userLogin, audit.Unsuccessful, p)
 		writeErrorResponse(ctx, err, w)
 		return
 	}
@@ -111,9 +123,10 @@ func (api *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.InfoCtx(ctx, "login: login request successful", nil)
+	log.InfoCtx(ctx, "authenticate: request successful", logD)
+	writeJSONBody(ctx, w, authToken, http.StatusOK)
 }
 
-func (api *API) login() error {
-	return nil
+func (api *API) authenticate(authReq *AuthenticateRequest) (AuthToken, error) {
+	return AuthToken{Token: "1234567890"}, nil
 }
