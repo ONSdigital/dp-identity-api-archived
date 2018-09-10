@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 	"testing"
 )
 
@@ -112,7 +113,7 @@ func TestService_CreateEncryptPasswordError(t *testing.T) {
 
 		id, err := s.Create(context.Background(), newIdentity)
 
-		So(err, ShouldResemble, expectedErr)
+		So(strings.Contains(err.Error(), "create: error encrypting password"), ShouldBeTrue)
 		So(id, ShouldBeEmpty)
 		So(encryptorMock.GenerateFromPasswordCalls(), ShouldHaveLength, 1)
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))

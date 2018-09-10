@@ -45,7 +45,7 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 
 	pwd, err := s.encryptPassword(i)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "create: error encrypting password")
 	}
 
 	newIdentity := mongo.Identity{
