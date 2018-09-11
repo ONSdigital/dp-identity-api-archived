@@ -3,10 +3,15 @@ package mongo
 import (
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 	"github.com/satori/go.uuid"
 	"time"
 
 	"github.com/pkg/errors"
+)
+
+var (
+	ErrNotFound = errors.New("not found")
 )
 
 // Mongo represents a simplistic MongoDB configuration.
@@ -71,4 +76,25 @@ func (m *Mongo) Create(identity Identity) (string, error) {
 	}
 
 	return id.String(), nil
+}
+
+func (m *Mongo) GetIdentity(id string) (*Identity, error) {
+	s := m.Session.Copy()
+	defer s.Close()
+
+	count, err := s.DB(m.Database).C(m.Collection).Find(bson.M{"id": id}).Count()
+	if err != nil {
+		return nil, err
+	}
+
+	if count == 0 {
+		return nil, ErrNotFound
+	}
+
+	var i Identity
+	if err := s.DB(m.Database).C(m.Collection).Find(bson.M{"id": id}).One(&i); err != nil {
+		return nil, err
+	}
+
+	return &i, nil
 }

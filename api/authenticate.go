@@ -6,13 +6,19 @@ import (
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 	"net/http"
+)
+
+var (
+	ErrAuthRequestNil   = errors.New("authentication request invalid")
+	ErrAuthRequestIDNil = errors.New("authentication request invalid: id required but was empty")
 )
 
 func (api *API) AuthenticationHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	authReq, err := getAuthenticateRequest(r.Body)
+	authReq, err := getAuthenticateRequest(ctx, r.Body)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.Wrap(err, "authentication unsuccessful"), nil)
 		authenticateResponse.writeError(ctx, w, err)
@@ -23,26 +29,26 @@ func (api *API) AuthenticationHandler(w http.ResponseWriter, r *http.Request) {
 	logD := log.Data{"id": authReq.ID}
 
 	if auditErr := api.auditor.Record(ctx, authenticateAction, audit.Attempted, p); auditErr != nil {
-		http.Error(w, auditErr.Error(), http.StatusInternalServerError)
+		authenticateResponse.writeError(ctx, w, auditErr)
 		return
 	}
 
 	authToken, err := api.authenticate(ctx, authReq)
 
 	if err != nil {
-		log.ErrorCtx(ctx, errors.Wrap(err, "authenticateResponse: returned error"), logD)
+		log.ErrorCtx(ctx, errors.Wrap(err, "authenticate: returned error"), logD)
 		api.auditor.Record(ctx, authenticateAction, audit.Unsuccessful, p)
 		authenticateResponse.writeError(ctx, w, err)
 		return
 	}
 
-	err = api.auditor.Record(ctx, authenticateAction, audit.Successful, nil)
+	err = api.auditor.Record(ctx, authenticateAction, audit.Successful, p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.InfoCtx(ctx, "authenticateResponse: request successful", logD)
+	log.InfoCtx(ctx, "authenticate: request successful", logD)
 	authenticateResponse.writeEntity(ctx, w, authToken, http.StatusOK)
 }
 
@@ -55,6 +61,11 @@ func (api *API) authenticate(ctx context.Context, authReq *AuthenticateRequest) 
 		return nil, err
 	}
 
-	log.ErrorCtx(ctx, errors.Wrap(err, "authenticate: request successful"), logD)
-	return &AuthToken{Token: "1234567890"}, nil
+	token, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
+
+	log.InfoCtx(ctx, "authenticate: user credential successfully verified", logD)
+	return &AuthToken{Token: token.String()}, nil
 }

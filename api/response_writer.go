@@ -26,7 +26,10 @@ var (
 
 	authenticateResponse = JSONResponseWriter{
 		ErrRequestBodyNil:              http.StatusBadRequest,
+		ErrAuthRequestNil:              http.StatusBadRequest,
+		ErrAuthRequestIDNil:            http.StatusBadRequest,
 		identity.ErrAuthenticateFailed: http.StatusForbidden,
+		identity.ErrUserNotFound:       http.StatusNotFound,
 	}
 )
 
