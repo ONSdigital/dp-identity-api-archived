@@ -8,7 +8,6 @@ import (
 	"github.com/ONSdigital/go-ns/audit"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"time"
 )
 
@@ -16,7 +15,7 @@ import (
 
 const (
 	createIdentityAction = "createIdentity"
-	userLogin            = "userLogin"
+	authenticateAction   = "authenticateUser"
 	identityURIFormat    = "%s/identity/%s"
 	headerContentType    = "content-type"
 	mimeTypeJSON         = "application/json"
@@ -26,19 +25,6 @@ var (
 	ErrFailedToReadRequestBody      = errors.New("error while attempting to read request body")
 	ErrFailedToUnmarshalRequestBody = errors.New("error while attempting to unmarshal request body")
 	ErrRequestBodyNil               = errors.New("error expected request body but was empty")
-
-	//map specific errors to http status codes.
-	errorStatusMapping = map[error]int{
-		ErrFailedToUnmarshalRequestBody: http.StatusInternalServerError,
-		ErrFailedToReadRequestBody:      http.StatusInternalServerError,
-		ErrRequestBodyNil:               http.StatusBadRequest,
-		identity.ErrInvalidArguments:    http.StatusInternalServerError,
-		identity.ErrPersistence:         http.StatusInternalServerError,
-		identity.ErrNameValidation:      http.StatusBadRequest,
-		identity.ErrEmailValidation:     http.StatusBadRequest,
-		identity.ErrPasswordValidation:  http.StatusBadRequest,
-		identity.ErrIdentityNil:         http.StatusBadRequest,
-	}
 )
 
 //API defines HTTP HandlerFunc's for the endpoints offered by the Identity API service.
@@ -56,7 +42,7 @@ type IdentityCreated struct {
 }
 
 type AuthenticateRequest struct {
-	Email    string `json:"email"`
+	ID    string `json:"id"`
 	Password string `json:"password"`
 }
 
@@ -72,6 +58,10 @@ func getAuthenticateRequest(r io.ReadCloser) (*AuthenticateRequest, error) {
 
 	defer r.Close()
 
+	if len(b) == 0 {
+		return nil, ErrRequestBodyNil
+	}
+
 	var authReq AuthenticateRequest
 	if err := json.Unmarshal(b, &authReq); err != nil {
 		return nil, ErrFailedToUnmarshalRequestBody
@@ -82,4 +72,5 @@ func getAuthenticateRequest(r io.ReadCloser) (*AuthenticateRequest, error) {
 //IdentityService is a service for creating, updating and deleting Identities.
 type IdentityService interface {
 	Create(ctx context.Context, i *identity.Model) (string, error)
+	Authenticate(ctx context.Context, id string, password string) error
 }
