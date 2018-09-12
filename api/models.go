@@ -12,7 +12,6 @@ import (
 
 const (
 	createIdentityAction = "createIdentity"
-	authenticateAction   = "authenticateUser"
 	identityURIFormat    = "%s/identity/%s"
 	headerContentType    = "content-type"
 	mimeTypeJSON         = "application/json"
@@ -36,15 +35,6 @@ type API struct {
 type IdentityCreated struct {
 	ID  string `json:"id"`
 	URI string `json:"uri"`
-}
-
-type AuthenticateRequest struct {
-	ID       string `json:"id"`
-	Password string `json:"password"`
-}
-
-type AuthToken struct {
-	Token string `json:"token"`
 }
 
 //IdentityService is a service for creating, updating and deleting Identities.
