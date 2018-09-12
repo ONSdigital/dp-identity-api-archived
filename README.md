@@ -20,10 +20,6 @@ dp-identity-api
 To run the **dp-api-tests** against the **dp-identity-api** run `make acceptance`. This will run the API against a 
 different (test) Mongo database which will be torn down after the tests. 
 
-### DEV NOTES
-
-1.) Have added basic endpoint for CreateIdentity, `/identities'` with a very basic model.
-
 ### Configuration
 
 | Environment variable        | Default                                   | Description
