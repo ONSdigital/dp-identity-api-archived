@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	lockIdentityServiceMockAuthenticate sync.RWMutex
-	lockIdentityServiceMockCreate       sync.RWMutex
+	lockIdentityServiceMockCreate sync.RWMutex
 )
 
 // IdentityServiceMock is a mock implementation of IdentityService.
@@ -20,9 +19,6 @@ var (
 //
 //         // make and configure a mocked IdentityService
 //         mockedIdentityService := &IdentityServiceMock{
-//             AuthenticateFunc: func(ctx context.Context, id string, password string) error {
-// 	               panic("TODO: mock out the Authenticate method")
-//             },
 //             CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
 // 	               panic("TODO: mock out the Create method")
 //             },
@@ -33,23 +29,11 @@ var (
 //
 //     }
 type IdentityServiceMock struct {
-	// AuthenticateFunc mocks the Authenticate method.
-	AuthenticateFunc func(ctx context.Context, id string, password string) error
-
 	// CreateFunc mocks the Create method.
 	CreateFunc func(ctx context.Context, i *identity.Model) (string, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// Authenticate holds details about calls to the Authenticate method.
-		Authenticate []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// ID is the id argument value.
-			ID string
-			// Password is the password argument value.
-			Password string
-		}
 		// Create holds details about calls to the Create method.
 		Create []struct {
 			// Ctx is the ctx argument value.
@@ -58,45 +42,6 @@ type IdentityServiceMock struct {
 			I *identity.Model
 		}
 	}
-}
-
-// Authenticate calls AuthenticateFunc.
-func (mock *IdentityServiceMock) Authenticate(ctx context.Context, id string, password string) error {
-	if mock.AuthenticateFunc == nil {
-		panic("moq: IdentityServiceMock.AuthenticateFunc is nil but IdentityService.Authenticate was just called")
-	}
-	callInfo := struct {
-		Ctx      context.Context
-		ID       string
-		Password string
-	}{
-		Ctx:      ctx,
-		ID:       id,
-		Password: password,
-	}
-	lockIdentityServiceMockAuthenticate.Lock()
-	mock.calls.Authenticate = append(mock.calls.Authenticate, callInfo)
-	lockIdentityServiceMockAuthenticate.Unlock()
-	return mock.AuthenticateFunc(ctx, id, password)
-}
-
-// AuthenticateCalls gets all the calls that were made to Authenticate.
-// Check the length with:
-//     len(mockedIdentityService.AuthenticateCalls())
-func (mock *IdentityServiceMock) AuthenticateCalls() []struct {
-	Ctx      context.Context
-	ID       string
-	Password string
-} {
-	var calls []struct {
-		Ctx      context.Context
-		ID       string
-		Password string
-	}
-	lockIdentityServiceMockAuthenticate.RLock()
-	calls = mock.calls.Authenticate
-	lockIdentityServiceMockAuthenticate.RUnlock()
-	return calls
 }
 
 // Create calls CreateFunc.
