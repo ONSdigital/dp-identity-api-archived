@@ -50,5 +50,4 @@ type AuthToken struct {
 //IdentityService is a service for creating, updating and deleting Identities.
 type IdentityService interface {
 	Create(ctx context.Context, i *identity.Model) (string, error)
-	Authenticate(ctx context.Context, id string, password string) error
 }
