@@ -75,37 +75,7 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 }
 
 func (s *Service) Authenticate(ctx context.Context, id string, password string) error {
-	i, err := s.getIdentity(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	logD := log.Data{"id": id}
-
-	err = s.Encryptor.CompareHashAndPassword([]byte(i.Password), []byte(password))
-	if err != nil {
-		log.ErrorCtx(ctx, errors.Wrap(err, "password did not match stored value"), logD)
-		return ErrAuthenticateFailed
-	}
-
-	log.InfoCtx(ctx, "user authentication successful", logD)
 	return nil
-}
-
-func (s *Service) getIdentity(ctx context.Context, id string) (*mongo.Identity, error) {
-	logD := log.Data{"id": id}
-
-	i, err := s.Persistence.GetIdentity(id)
-	if err != nil {
-		if err == mongo.ErrNotFound {
-			log.ErrorCtx(ctx, errors.New("user not found"), logD)
-			return nil, ErrUserNotFound
-		}
-
-		log.ErrorCtx(ctx, errors.Wrap(err, "error getting identity from database"), logD)
-		return nil, err
-	}
-	return i, nil
 }
 
 func (s *Service) encryptPassword(i *Model) (string, error) {
