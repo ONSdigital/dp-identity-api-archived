@@ -15,7 +15,6 @@ var (
 // Persistence...
 type Persistence interface {
 	Create(newIdentity mongo.Identity) (string, error)
-	GetIdentity(id string) (*mongo.Identity, error)
 }
 
 type Encryptor interface {

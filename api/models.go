@@ -2,13 +2,9 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
-	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
-	"io"
-	"io/ioutil"
 	"time"
 )
 
@@ -49,33 +45,6 @@ type AuthenticateRequest struct {
 
 type AuthToken struct {
 	Token string `json:"token"`
-}
-
-func getAuthenticateRequest(ctx context.Context, r io.ReadCloser) (*AuthenticateRequest, error) {
-	b, err := ioutil.ReadAll(r)
-	if err != nil {
-		log.ErrorCtx(ctx, errors.Wrap(err, "error reading request body"), nil)
-		return nil, ErrFailedToReadRequestBody
-	}
-
-	defer r.Close()
-
-	if len(b) == 0 {
-		log.ErrorCtx(ctx, errors.Wrap(err, "authentication request body expected but was empty"), nil)
-		return nil, ErrRequestBodyNil
-	}
-
-	var authReq AuthenticateRequest
-	if err := json.Unmarshal(b, &authReq); err != nil {
-		log.ErrorCtx(ctx, errors.Wrap(err, "error unmarshaling authentication request body"), nil)
-		return nil, ErrFailedToUnmarshalRequestBody
-	}
-
-	if authReq.ID == "" {
-		log.ErrorCtx(ctx, errors.New("authentication request id expected but was empty"), nil)
-		return nil, ErrAuthRequestIDNil
-	}
-	return &authReq, nil
 }
 
 //IdentityService is a service for creating, updating and deleting Identities.

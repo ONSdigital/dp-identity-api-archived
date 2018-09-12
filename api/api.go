@@ -19,6 +19,5 @@ func New(host string, identityService IdentityService, auditor audit.AuditorServ
 //RegisterEndpoints provides a way to register the HandlerFunc's defined in the api package with a mux.Router.
 func (api *API) RegisterEndpoints(r *mux.Router) {
 	r.HandleFunc("/identity", api.CreateIdentityHandler).Methods("POST")
-	r.HandleFunc("/authenticate", api.AuthenticationHandler).Methods("POST")
 	r.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 }

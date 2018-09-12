@@ -23,14 +23,6 @@ var (
 		identity.ErrPasswordValidation:  http.StatusBadRequest,
 		identity.ErrIdentityNil:         http.StatusBadRequest,
 	}
-
-	authenticateResponse = JSONResponseWriter{
-		ErrRequestBodyNil:              http.StatusBadRequest,
-		ErrAuthRequestNil:              http.StatusBadRequest,
-		ErrAuthRequestIDNil:            http.StatusBadRequest,
-		identity.ErrAuthenticateFailed: http.StatusForbidden,
-		identity.ErrUserNotFound:       http.StatusNotFound,
-	}
 )
 
 type JSONResponseWriter map[error]int
