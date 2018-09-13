@@ -72,7 +72,7 @@ func getNewTokenRequest(ctx context.Context, r io.ReadCloser) (*NewTokenRequest,
 	}
 
 	if authReq.Email == "" {
-		log.ErrorCtx(ctx, errors.New("new token request id expected but was empty"), nil)
+		log.ErrorCtx(ctx, errors.New("new token request email expected but was empty"), nil)
 		return nil, ErrAuthRequestIDNil
 	}
 	return &authReq, nil
