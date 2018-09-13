@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	lockIdentityServiceMockCreate sync.RWMutex
+	lockIdentityServiceMockCreate      sync.RWMutex
+	lockIdentityServiceMockCreateToken sync.RWMutex
 )
 
 // IdentityServiceMock is a mock implementation of IdentityService.
@@ -22,6 +23,9 @@ var (
 //             CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
 // 	               panic("TODO: mock out the Create method")
 //             },
+//             CreateTokenFunc: func(ctx context.Context, email string, password string) error {
+// 	               panic("TODO: mock out the CreateToken method")
+//             },
 //         }
 //
 //         // TODO: use mockedIdentityService in code that requires IdentityService
@@ -32,6 +36,9 @@ type IdentityServiceMock struct {
 	// CreateFunc mocks the Create method.
 	CreateFunc func(ctx context.Context, i *identity.Model) (string, error)
 
+	// CreateTokenFunc mocks the CreateToken method.
+	CreateTokenFunc func(ctx context.Context, email string, password string) error
+
 	// calls tracks calls to the methods.
 	calls struct {
 		// Create holds details about calls to the Create method.
@@ -40,6 +47,15 @@ type IdentityServiceMock struct {
 			Ctx context.Context
 			// I is the i argument value.
 			I *identity.Model
+		}
+		// CreateToken holds details about calls to the CreateToken method.
+		CreateToken []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Email is the email argument value.
+			Email string
+			// Password is the password argument value.
+			Password string
 		}
 	}
 }
@@ -76,5 +92,44 @@ func (mock *IdentityServiceMock) CreateCalls() []struct {
 	lockIdentityServiceMockCreate.RLock()
 	calls = mock.calls.Create
 	lockIdentityServiceMockCreate.RUnlock()
+	return calls
+}
+
+// CreateToken calls CreateTokenFunc.
+func (mock *IdentityServiceMock) CreateToken(ctx context.Context, email string, password string) error {
+	if mock.CreateTokenFunc == nil {
+		panic("moq: IdentityServiceMock.CreateTokenFunc is nil but IdentityService.CreateToken was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		Email    string
+		Password string
+	}{
+		Ctx:      ctx,
+		Email:    email,
+		Password: password,
+	}
+	lockIdentityServiceMockCreateToken.Lock()
+	mock.calls.CreateToken = append(mock.calls.CreateToken, callInfo)
+	lockIdentityServiceMockCreateToken.Unlock()
+	return mock.CreateTokenFunc(ctx, email, password)
+}
+
+// CreateTokenCalls gets all the calls that were made to CreateToken.
+// Check the length with:
+//     len(mockedIdentityService.CreateTokenCalls())
+func (mock *IdentityServiceMock) CreateTokenCalls() []struct {
+	Ctx      context.Context
+	Email    string
+	Password string
+} {
+	var calls []struct {
+		Ctx      context.Context
+		Email    string
+		Password string
+	}
+	lockIdentityServiceMockCreateToken.RLock()
+	calls = mock.calls.CreateToken
+	lockIdentityServiceMockCreateToken.RUnlock()
 	return calls
 }

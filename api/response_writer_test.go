@@ -50,7 +50,7 @@ func Test_WriteErrorResolveUnsuccessful(t *testing.T) {
 		createIdentityResponse.writeError(context.Background(), w, expectedErr)
 
 		So(w.Header().Get(headerContentType), ShouldEqual, "text/plain; charset=utf-8")
-		assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), expectedErr.Error())
+		assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), ErrInternalServerError.Error())
 	})
 }
 
