@@ -16,7 +16,7 @@ import (
 
 const (
 	createIdentityAction = "createIdentity"
-	authenticateAction   = "authenticateUser"
+	createToken          = "createToken"
 	identityURIFormat    = "%s/identity/%s"
 	headerContentType    = "content-type"
 	mimeTypeJSON         = "application/json"
@@ -46,12 +46,12 @@ type AuthToken struct {
 	Token string `json:"token"`
 }
 
-type AuthenticateRequest struct {
-	ID       string `json:"id"`
+type NewTokenRequest struct {
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func getAuthenticateRequest(ctx context.Context, r io.ReadCloser) (*AuthenticateRequest, error) {
+func getNewTokenRequest(ctx context.Context, r io.ReadCloser) (*NewTokenRequest, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.Wrap(err, "error reading request body"), nil)
@@ -61,18 +61,18 @@ func getAuthenticateRequest(ctx context.Context, r io.ReadCloser) (*Authenticate
 	defer r.Close()
 
 	if len(b) == 0 {
-		log.ErrorCtx(ctx, errors.Wrap(err, "authentication request body expected but was empty"), nil)
+		log.ErrorCtx(ctx, errors.Wrap(err, "new token request body expected but was empty"), nil)
 		return nil, ErrRequestBodyNil
 	}
 
-	var authReq AuthenticateRequest
+	var authReq NewTokenRequest
 	if err := json.Unmarshal(b, &authReq); err != nil {
-		log.ErrorCtx(ctx, errors.Wrap(err, "error unmarshaling authentication request body"), nil)
+		log.ErrorCtx(ctx, errors.Wrap(err, "error unmarshaling new token request body"), nil)
 		return nil, ErrFailedToUnmarshalRequestBody
 	}
 
-	if authReq.ID == "" {
-		log.ErrorCtx(ctx, errors.New("authentication request id expected but was empty"), nil)
+	if authReq.Email == "" {
+		log.ErrorCtx(ctx, errors.New("new token request id expected but was empty"), nil)
 		return nil, ErrAuthRequestIDNil
 	}
 	return &authReq, nil
@@ -81,5 +81,5 @@ func getAuthenticateRequest(ctx context.Context, r io.ReadCloser) (*Authenticate
 //IdentityService is a service for creating, updating and deleting Identities.
 type IdentityService interface {
 	Create(ctx context.Context, i *identity.Model) (string, error)
-	Authenticate(ctx context.Context, id string, password string) error
+	CreateToken(ctx context.Context, email string, password string) error
 }

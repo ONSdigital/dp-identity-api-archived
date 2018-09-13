@@ -24,7 +24,7 @@ var (
 		identity.ErrIdentityNil:         http.StatusBadRequest,
 	}
 
-	authenticateResponse = JSONResponseWriter{
+	newTokenResponse = JSONResponseWriter{
 		ErrRequestBodyNil:              http.StatusBadRequest,
 		ErrAuthRequestNil:              http.StatusBadRequest,
 		ErrAuthRequestIDNil:            http.StatusBadRequest,

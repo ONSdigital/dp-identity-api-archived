@@ -74,7 +74,7 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 	return id, nil
 }
 
-func (s *Service) Authenticate(ctx context.Context, id string, password string) error {
+func (s *Service) CreateToken(ctx context.Context, email string, password string) error {
 	return nil
 }
 
