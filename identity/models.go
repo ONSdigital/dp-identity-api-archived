@@ -47,4 +47,3 @@ type Model struct {
 	Migrated          bool   `json:"migrated"`
 	Deleted           bool   `json:"deleted"`
 }
-

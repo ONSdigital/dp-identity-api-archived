@@ -1,13 +1,13 @@
 package api
 
 import (
-	"net/http"
-	"github.com/pkg/errors"
 	"context"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
-	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/common"
+	"github.com/ONSdigital/go-ns/log"
+	"github.com/pkg/errors"
+	"net/http"
 )
 
 // TODO - meaningful documentation
@@ -40,7 +40,6 @@ func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 	createIdentityResponse.writeEntity(ctx, w, response, http.StatusOK)
 	log.InfoCtx(ctx, "createIdentity: get identity successful", log.Data{"id": response.ID})
 }
-
 
 func (api *API) getIdentity(ctx context.Context, r *http.Request) (*identity.Model, error) {
 

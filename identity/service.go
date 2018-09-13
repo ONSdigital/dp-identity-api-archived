@@ -81,18 +81,17 @@ func (s *Service) CreateToken(ctx context.Context, email string, password string
 func (s *Service) Get(ctx context.Context) (*Model, error) {
 
 	defaultUser := &Model{
-		Name:"John Paul Jones",
-		Email:"blackdog@ons.gov.uk",
-		Password:"foo",
-		UserType:"bar",
-		TemporaryPassword:false,
-		Migrated:false,
-		Deleted:false,
+		Name:              "John Paul Jones",
+		Email:             "blackdog@ons.gov.uk",
+		Password:          "foo",
+		UserType:          "bar",
+		TemporaryPassword: false,
+		Migrated:          false,
+		Deleted:           false,
 	}
 
 	return defaultUser, nil
 }
-
 
 func (s *Service) encryptPassword(i *Model) (string, error) {
 	pwd, err := s.Encryptor.GenerateFromPassword([]byte(i.Password), bcrypt.DefaultCost)

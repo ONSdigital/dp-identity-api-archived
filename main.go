@@ -54,7 +54,7 @@ func main() {
 
 	identityService := &identity.Service{
 		Persistence: mongodb,
-		Encryptor: encryption.Service{},
+		Encryptor:   encryption.Service{},
 	}
 
 	identityAPI := api.New("http://localhost"+cfg.BindAddr, identityService, auditor) // TODO make Host config
