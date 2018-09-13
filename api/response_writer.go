@@ -14,7 +14,7 @@ var (
 
 	createIdentityResponse = JSONResponseWriter{
 		ErrFailedToUnmarshalRequestBody: http.StatusBadRequest,
-		ErrFailedToReadRequestBody:      http.StatusInternalServerError,
+		ErrFailedToReadRequestBody:      http.StatusBadRequest,
 		ErrRequestBodyNil:               http.StatusBadRequest,
 		identity.ErrInvalidArguments:    http.StatusInternalServerError,
 		identity.ErrPersistence:         http.StatusInternalServerError,
@@ -22,6 +22,14 @@ var (
 		identity.ErrEmailValidation:     http.StatusBadRequest,
 		identity.ErrPasswordValidation:  http.StatusBadRequest,
 		identity.ErrIdentityNil:         http.StatusBadRequest,
+	}
+
+	authenticateResponse = JSONResponseWriter{
+		ErrRequestBodyNil:              http.StatusBadRequest,
+		ErrAuthRequestNil:              http.StatusBadRequest,
+		ErrAuthRequestIDNil:            http.StatusBadRequest,
+		identity.ErrAuthenticateFailed: http.StatusForbidden,
+		identity.ErrUserNotFound:       http.StatusNotFound,
 	}
 )
 
@@ -41,6 +49,11 @@ func (e JSONResponseWriter) writeEntity(ctx context.Context, w http.ResponseWrit
 
 func (e JSONResponseWriter) writeError(ctx context.Context, w http.ResponseWriter, err error) {
 	status := e.resolveError(err)
+
+	if status == http.StatusInternalServerError {
+		err = ErrInternalServerError
+	}
+
 	log.ErrorCtx(ctx, errors.New("writing error response"), log.Data{"status": status})
 	http.Error(w, err.Error(), status)
 }
