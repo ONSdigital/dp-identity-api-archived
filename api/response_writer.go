@@ -13,7 +13,7 @@ var (
 	ErrInternalServerError = errors.New("internal server error")
 
 	createIdentityResponse = JSONResponseWriter{
-		ErrFailedToUnmarshalRequestBody: http.StatusInternalServerError,
+		ErrFailedToUnmarshalRequestBody: http.StatusBadRequest,
 		ErrFailedToReadRequestBody:      http.StatusInternalServerError,
 		ErrRequestBodyNil:               http.StatusBadRequest,
 		identity.ErrInvalidArguments:    http.StatusInternalServerError,
