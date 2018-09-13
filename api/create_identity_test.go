@@ -89,7 +89,7 @@ func TestIdentityAPI_CreateIdentityError(t *testing.T) {
 			identityAPI.CreateIdentityHandler(w, r)
 
 			Convey("then the expected error response is returned", func() {
-				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), ErrFailedToUnmarshalRequestBody.Error())
+				assertErrorResponse(w.Code, http.StatusBadRequest, w.Body.String(), ErrFailedToUnmarshalRequestBody.Error())
 			})
 
 			Convey("and identity service is never called", func() {

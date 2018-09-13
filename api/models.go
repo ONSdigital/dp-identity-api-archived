@@ -2,10 +2,9 @@ package api
 
 import (
 	"context"
-	"errors"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
-	"net/http"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -22,19 +21,6 @@ var (
 	ErrFailedToReadRequestBody      = errors.New("error while attempting to read request body")
 	ErrFailedToUnmarshalRequestBody = errors.New("error while attempting to unmarshal request body")
 	ErrRequestBodyNil               = errors.New("error expected request body but was empty")
-
-	//map specific errors to http status codes.
-	errorStatusMapping = map[error]int{
-		ErrFailedToUnmarshalRequestBody: http.StatusInternalServerError,
-		ErrFailedToReadRequestBody:      http.StatusInternalServerError,
-		ErrRequestBodyNil:               http.StatusBadRequest,
-		identity.ErrInvalidArguments:    http.StatusInternalServerError,
-		identity.ErrPersistence:         http.StatusInternalServerError,
-		identity.ErrNameValidation:      http.StatusBadRequest,
-		identity.ErrEmailValidation:     http.StatusBadRequest,
-		identity.ErrPasswordValidation:  http.StatusBadRequest,
-		identity.ErrIdentityNil:         http.StatusBadRequest,
-	}
 )
 
 //API defines HTTP HandlerFunc's for the endpoints offered by the Identity API service.

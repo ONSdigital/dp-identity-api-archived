@@ -4,36 +4,52 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/log"
 	"net/http"
 )
 
 var (
 	ErrInternalServerError = errors.New("internal server error")
+
+	createIdentityResponse = JSONResponseWriter{
+		ErrFailedToUnmarshalRequestBody: http.StatusBadRequest,
+		ErrFailedToReadRequestBody:      http.StatusInternalServerError,
+		ErrRequestBodyNil:               http.StatusBadRequest,
+		identity.ErrInvalidArguments:    http.StatusInternalServerError,
+		identity.ErrPersistence:         http.StatusInternalServerError,
+		identity.ErrNameValidation:      http.StatusBadRequest,
+		identity.ErrEmailValidation:     http.StatusBadRequest,
+		identity.ErrPasswordValidation:  http.StatusBadRequest,
+		identity.ErrIdentityNil:         http.StatusBadRequest,
+	}
 )
 
-func writeJSONBody(ctx context.Context, w http.ResponseWriter, i interface{}, status int) {
+type JSONResponseWriter map[error]int
+
+func (e JSONResponseWriter) writeEntity(ctx context.Context, w http.ResponseWriter, i interface{}, status int) {
 	b, err := json.Marshal(i)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.New("failed to marshal object to JSON"), log.Data{"object": i})
-		writeErrorResponse(ctx, ErrInternalServerError, w)
+		e.writeError(ctx, w, ErrInternalServerError)
 		return
 	}
 	w.Header().Set(headerContentType, mimeTypeJSON)
 	w.WriteHeader(status)
-	w.Write(b)
+	w.Write(b) // TODO handle error
 }
 
-//writeErrorResponse writes a HTTP error back to the response writer. If the err can be cast to apiError then the values
-// of err.GetMessage() and err.GetStatus() will be used to set the response body and status code respectively otherwise
-// a default 500 status is used with err.Error() for the response body.
-func writeErrorResponse(ctx context.Context, err error, w http.ResponseWriter) {
-	status := http.StatusInternalServerError
-
-	if val, ok := errorStatusMapping[err]; ok {
-		status = val
-	}
-
+func (e JSONResponseWriter) writeError(ctx context.Context, w http.ResponseWriter, err error) {
+	status := e.resolveError(err)
 	log.ErrorCtx(ctx, errors.New("writing error response"), log.Data{"status": status})
 	http.Error(w, err.Error(), status)
+}
+
+func (e JSONResponseWriter) resolveError(err error) int {
+	status := http.StatusInternalServerError
+
+	if val, ok := e[err]; ok {
+		status = val
+	}
+	return status
 }

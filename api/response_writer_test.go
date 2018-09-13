@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
@@ -10,39 +11,58 @@ import (
 	"testing"
 )
 
-func Test_writeJSONBodySuccess(t *testing.T) {
+func Test_WriteEntitySuccess(t *testing.T) {
 	Convey("should write expected values to http response", t, func() {
 		w := httptest.NewRecorder()
-
-		ident := identity.Model{
-			Name:     "Solid Snake",
-			Email:    "snake@mgs.com",
-			UserType: "FoxHound",
-			Password: "M3t4l G34r S0L1D",
+		entity := IdentityCreated{
+			ID:  ID,
+			URI: createIdentityURL,
 		}
 
-		writeJSONBody(context.Background(), w, ident, http.StatusCreated)
+		createIdentityResponse.writeEntity(context.Background(), w, entity, http.StatusCreated)
 
 		So(w.Code, ShouldEqual, http.StatusCreated)
 		So(w.Header().Get(headerContentType), ShouldEqual, mimeTypeJSON)
 
-		var body identity.Model
+		var body IdentityCreated
 		err := json.Unmarshal(w.Body.Bytes(), &body)
 		So(err, ShouldBeNil)
-		So(body, ShouldResemble, ident)
+		So(body, ShouldResemble, entity)
 	})
 }
 
-func Test_writeJSONBodyMarshalError(t *testing.T) {
-	Convey("should write http 500 response if marshal returns an error", t, func() {
+func Test_WriteErrorResolveSuccessful(t *testing.T) {
+	Convey("should write expected error status and message to http response", t, func() {
 		w := httptest.NewRecorder()
 
-		// pass in a channel to cause json.Marshal to return an error
-		input := make(chan int, 1)
+		createIdentityResponse.writeError(context.Background(), w, identity.ErrNameValidation)
 
-		writeJSONBody(context.Background(), w, input, http.StatusCreated)
-
-		So(w.Code, ShouldEqual, http.StatusInternalServerError)
 		So(w.Header().Get(headerContentType), ShouldEqual, "text/plain; charset=utf-8")
+		assertErrorResponse(w.Code, http.StatusBadRequest, w.Body.String(), identity.ErrNameValidation.Error())
+	})
+}
+
+func Test_WriteErrorResolveUnsuccessful(t *testing.T) {
+	Convey("should write expected error status and message to http response", t, func() {
+		w := httptest.NewRecorder()
+		expectedErr := errors.New("wibble")
+
+		createIdentityResponse.writeError(context.Background(), w, expectedErr)
+
+		So(w.Header().Get(headerContentType), ShouldEqual, "text/plain; charset=utf-8")
+		assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), expectedErr.Error())
+	})
+}
+
+func Test_WriteErrorMarshalError(t *testing.T) {
+	Convey("should write expected error status and message to http response", t, func() {
+		w := httptest.NewRecorder()
+
+		// pass a chan as the entity to cause a json.Marshal error ;-)
+		c := make(chan int, 1)
+		createIdentityResponse.writeEntity(context.Background(), w, c, http.StatusOK)
+
+		So(w.Header().Get(headerContentType), ShouldEqual, "text/plain; charset=utf-8")
+		assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), ErrInternalServerError.Error())
 	})
 }

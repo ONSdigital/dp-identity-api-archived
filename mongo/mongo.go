@@ -9,6 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	ErrNotFound = errors.New("not found")
+)
+
 // Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
 	Collection     string

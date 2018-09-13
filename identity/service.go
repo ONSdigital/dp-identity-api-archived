@@ -13,6 +13,8 @@ var (
 	ErrNameValidation     = ValidationErr{message: "mandatory field name was empty"}
 	ErrEmailValidation    = ValidationErr{message: "mandatory field email was empty"}
 	ErrPasswordValidation = ValidationErr{message: "mandatory field password was empty"}
+	ErrAuthenticateFailed = errors.New("authentication unsuccessful")
+	ErrUserNotFound       = errors.New("authentication unsuccessful user not found")
 )
 
 func (s *Service) Validate(i *Model) (err error) {
@@ -70,6 +72,10 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 		"email": i.Email,
 	})
 	return id, nil
+}
+
+func (s *Service) Authenticate(ctx context.Context, id string, password string) error {
+	return nil
 }
 
 func (s *Service) encryptPassword(i *Model) (string, error) {
