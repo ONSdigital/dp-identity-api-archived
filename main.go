@@ -53,7 +53,7 @@ func main() {
 	apiErrors := make(chan error, 1)
 
 	identityService := &identity.Service{
-		Persistence: mongodb,
+		DB:        mongodb,
 		Encryptor: encryption.Service{},
 	}
 

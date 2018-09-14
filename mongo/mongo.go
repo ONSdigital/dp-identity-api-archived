@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"github.com/ONSdigital/dp-identity-api/config"
+	"github.com/ONSdigital/dp-identity-api/persistence"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/satori/go.uuid"
@@ -13,7 +14,7 @@ import (
 var (
 	ErrNotFound  = errors.New("not found")
 	ErrNonUnique = errors.New("non unique")
-	nilIdentity = Identity{}
+	nilIdentity = persistence.Identity{}
 )
 
 // Mongo represents a simplistic MongoDB configuration.
@@ -57,11 +58,11 @@ func (m *Mongo) createSession() (session *mgo.Session, err error) {
 	return session, nil
 }
 
-func (m *Mongo) Create(identity Identity) (string, error) {
+func (m *Mongo) Create(identity persistence.Identity) (string, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
-	available, err := m.identityAvailable(s, identity.Email);
+	available, err := m.identityAvailable(s, identity.Email)
 	if err != nil {
 		return "", err
 	}
@@ -101,7 +102,7 @@ func (m *Mongo) identityAvailable(s *mgo.Session, email string) (bool, error) {
 	return count == 0, nil
 }
 
-func (m *Mongo) GetIdentity(email string) (Identity, error) {
+func (m *Mongo) GetIdentity(email string) (persistence.Identity, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
@@ -116,7 +117,7 @@ func (m *Mongo) GetIdentity(email string) (Identity, error) {
 		return nilIdentity, ErrNotFound
 	}
 
-	var i Identity
+	var i persistence.Identity
 	if err := s.DB(m.Database).C(m.Collection).Find(query).One(&i); err != nil {
 		return nilIdentity, err
 	}
