@@ -33,7 +33,7 @@ var (
 
 func newPersistenceMock(email string, err error) *persistencetest.DBMock {
 	return &persistencetest.DBMock{
-		CreateFunc: func(identity persistence.Identity) (string, error) {
+		SaveIdentityFunc: func(identity persistence.Identity) (string, error) {
 			return email, err
 		},
 	}
@@ -67,8 +67,8 @@ func TestCreate_Success(t *testing.T) {
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
 
-		So(persistenceMock.CreateCalls(), ShouldHaveLength, 1)
-		So(persistenceMock.CreateCalls()[0].NewIdentity, ShouldResemble, newDBIdentity)
+		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 1)
+		So(persistenceMock.SaveIdentityCalls()[0].NewIdentity, ShouldResemble, newDBIdentity)
 	})
 }
 
@@ -87,8 +87,8 @@ func TestCreate_DataStoreError(t *testing.T) {
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
 
-		So(persistenceMock.CreateCalls(), ShouldHaveLength, 1)
-		So(persistenceMock.CreateCalls()[0].NewIdentity, ShouldResemble, newDBIdentity)
+		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 1)
+		So(persistenceMock.SaveIdentityCalls()[0].NewIdentity, ShouldResemble, newDBIdentity)
 	})
 }
 
@@ -103,7 +103,7 @@ func TestCreate_ValidationError(t *testing.T) {
 		So(err, ShouldResemble, ErrNameValidation)
 		So(id, ShouldBeEmpty)
 		So(encryptorMock.GenerateFromPasswordCalls(), ShouldHaveLength, 0)
-		So(persistenceMock.CreateCalls(), ShouldHaveLength, 0)
+		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 0)
 	})
 }
 
@@ -123,7 +123,7 @@ func TestService_CreateEncryptPasswordError(t *testing.T) {
 		So(encryptorMock.GenerateFromPasswordCalls(), ShouldHaveLength, 1)
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
-		So(persistenceMock.CreateCalls(), ShouldHaveLength, 0)
+		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 0)
 	})
 }
 
@@ -139,7 +139,7 @@ func TestCreate_MissingParameters(t *testing.T) {
 		So(err, ShouldEqual, ErrInvalidArguments)
 		So(id, ShouldBeEmpty)
 		So(encryptorMock.GenerateFromPasswordCalls(), ShouldHaveLength, 0)
-		So(persistenceMock.CreateCalls(), ShouldHaveLength, 0)
+		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 0)
 	})
 
 	Convey("should return expected error if identity parameter is nil", t, func() {
@@ -153,7 +153,7 @@ func TestCreate_MissingParameters(t *testing.T) {
 		So(err, ShouldResemble, ErrIdentityNil)
 		So(id, ShouldBeEmpty)
 		So(encryptorMock.GenerateFromPasswordCalls(), ShouldHaveLength, 0)
-		So(persistenceMock.CreateCalls(), ShouldHaveLength, 0)
+		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 0)
 	})
 }
 
@@ -228,7 +228,7 @@ func TestService_EncryptPassword(t *testing.T) {
 func TestService_CreateEmailAlreadyInUse(t *testing.T) {
 	Convey("todo", t, func() {
 		persistenceMock := &persistencetest.DBMock{
-			CreateFunc: func(newIdentity persistence.Identity) (string, error) {
+			SaveIdentityFunc: func(newIdentity persistence.Identity) (string, error) {
 				return "", mongo.ErrNonUnique
 			},
 		}
@@ -243,8 +243,8 @@ func TestService_CreateEmailAlreadyInUse(t *testing.T) {
 
 		_, err := s.Create(context.Background(), newIdentity)
 		So(err, ShouldEqual, ErrEmailAlreadyExists)
-		So(persistenceMock.CreateCalls(), ShouldHaveLength, 1)
-		So(persistenceMock.CreateCalls()[0].NewIdentity, ShouldResemble, newDBIdentity)
+		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 1)
+		So(persistenceMock.SaveIdentityCalls()[0].NewIdentity, ShouldResemble, newDBIdentity)
 		So(enc.GenerateFromPasswordCalls(), ShouldHaveLength, 1)
 		So(enc.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
 		So(enc.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)

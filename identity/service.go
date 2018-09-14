@@ -67,7 +67,7 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 		Deleted:           false,
 	}
 
-	id, err := s.DB.Create(newIdentity)
+	id, err := s.DB.SaveIdentity(newIdentity)
 	if err != nil && err == mongo.ErrNonUnique {
 		log.ErrorCtx(ctx, errors.New("create: failed to create identity - an active identity with this email already exists"), logD)
 		return "", ErrEmailAlreadyExists

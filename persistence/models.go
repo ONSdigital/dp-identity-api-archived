@@ -13,7 +13,7 @@ var (
 
 // DB...
 type DB interface {
-	Create(newIdentity Identity) (string, error)
+	SaveIdentity(newIdentity Identity) (string, error)
 	GetIdentity(email string) (Identity, error)
 }
 

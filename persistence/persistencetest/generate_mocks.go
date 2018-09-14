@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	lockDBMockCreate      sync.RWMutex
-	lockDBMockGetIdentity sync.RWMutex
+	lockDBMockGetIdentity  sync.RWMutex
+	lockDBMockSaveIdentity sync.RWMutex
 )
 
 // DBMock is a mock implementation of DB.
@@ -19,11 +19,11 @@ var (
 //
 //         // make and configure a mocked DB
 //         mockedDB := &DBMock{
-//             CreateFunc: func(newIdentity persistence.Identity) (string, error) {
-// 	               panic("TODO: mock out the Create method")
-//             },
 //             GetIdentityFunc: func(email string) (persistence.Identity, error) {
 // 	               panic("TODO: mock out the GetIdentity method")
+//             },
+//             SaveIdentityFunc: func(newIdentity persistence.Identity) (string, error) {
+// 	               panic("TODO: mock out the SaveIdentity method")
 //             },
 //         }
 //
@@ -32,56 +32,25 @@ var (
 //
 //     }
 type DBMock struct {
-	// CreateFunc mocks the Create method.
-	CreateFunc func(newIdentity persistence.Identity) (string, error)
-
 	// GetIdentityFunc mocks the GetIdentity method.
 	GetIdentityFunc func(email string) (persistence.Identity, error)
 
+	// SaveIdentityFunc mocks the SaveIdentity method.
+	SaveIdentityFunc func(newIdentity persistence.Identity) (string, error)
+
 	// calls tracks calls to the methods.
 	calls struct {
-		// Create holds details about calls to the Create method.
-		Create []struct {
-			// NewIdentity is the newIdentity argument value.
-			NewIdentity persistence.Identity
-		}
 		// GetIdentity holds details about calls to the GetIdentity method.
 		GetIdentity []struct {
 			// Email is the email argument value.
 			Email string
 		}
+		// SaveIdentity holds details about calls to the SaveIdentity method.
+		SaveIdentity []struct {
+			// NewIdentity is the newIdentity argument value.
+			NewIdentity persistence.Identity
+		}
 	}
-}
-
-// Create calls CreateFunc.
-func (mock *DBMock) Create(newIdentity persistence.Identity) (string, error) {
-	if mock.CreateFunc == nil {
-		panic("moq: DBMock.CreateFunc is nil but DB.Create was just called")
-	}
-	callInfo := struct {
-		NewIdentity persistence.Identity
-	}{
-		NewIdentity: newIdentity,
-	}
-	lockDBMockCreate.Lock()
-	mock.calls.Create = append(mock.calls.Create, callInfo)
-	lockDBMockCreate.Unlock()
-	return mock.CreateFunc(newIdentity)
-}
-
-// CreateCalls gets all the calls that were made to Create.
-// Check the length with:
-//     len(mockedDB.CreateCalls())
-func (mock *DBMock) CreateCalls() []struct {
-	NewIdentity persistence.Identity
-} {
-	var calls []struct {
-		NewIdentity persistence.Identity
-	}
-	lockDBMockCreate.RLock()
-	calls = mock.calls.Create
-	lockDBMockCreate.RUnlock()
-	return calls
 }
 
 // GetIdentity calls GetIdentityFunc.
@@ -112,5 +81,36 @@ func (mock *DBMock) GetIdentityCalls() []struct {
 	lockDBMockGetIdentity.RLock()
 	calls = mock.calls.GetIdentity
 	lockDBMockGetIdentity.RUnlock()
+	return calls
+}
+
+// SaveIdentity calls SaveIdentityFunc.
+func (mock *DBMock) SaveIdentity(newIdentity persistence.Identity) (string, error) {
+	if mock.SaveIdentityFunc == nil {
+		panic("moq: DBMock.SaveIdentityFunc is nil but DB.SaveIdentity was just called")
+	}
+	callInfo := struct {
+		NewIdentity persistence.Identity
+	}{
+		NewIdentity: newIdentity,
+	}
+	lockDBMockSaveIdentity.Lock()
+	mock.calls.SaveIdentity = append(mock.calls.SaveIdentity, callInfo)
+	lockDBMockSaveIdentity.Unlock()
+	return mock.SaveIdentityFunc(newIdentity)
+}
+
+// SaveIdentityCalls gets all the calls that were made to SaveIdentity.
+// Check the length with:
+//     len(mockedDB.SaveIdentityCalls())
+func (mock *DBMock) SaveIdentityCalls() []struct {
+	NewIdentity persistence.Identity
+} {
+	var calls []struct {
+		NewIdentity persistence.Identity
+	}
+	lockDBMockSaveIdentity.RLock()
+	calls = mock.calls.SaveIdentity
+	lockDBMockSaveIdentity.RUnlock()
 	return calls
 }
