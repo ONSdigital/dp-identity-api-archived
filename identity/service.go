@@ -15,7 +15,7 @@ var (
 	ErrPasswordValidation = ValidationErr{message: "mandatory field password was empty"}
 	ErrAuthenticateFailed = errors.New("authentication unsuccessful")
 	ErrEmailAlreadyExists = errors.New("active identity already exists with email")
-	ErrIdentityNotFound   = errors.New("authentication unsuccessful identity not found")
+	ErrIdentityNotFound   = errors.New("authentication unsuccessful user not found")
 )
 
 func (s *Service) Validate(i *Model) (err error) {
