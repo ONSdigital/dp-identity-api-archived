@@ -14,7 +14,6 @@ import (
 //
 //
 func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
-
 	ctx := r.Context()
 
 	if auditErr := api.auditor.Record(ctx, getIdentityAction, audit.Attempted, nil); auditErr != nil {
@@ -22,7 +21,7 @@ func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := api.getIdentity(ctx)
+	response, err := api.getIdentity(ctx, r)
 
 	if err != nil {
 		log.ErrorCtx(ctx, errors.Wrap(err, "getIdentity: error"), nil)
@@ -41,14 +40,16 @@ func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 	log.InfoCtx(ctx, "createIdentity: get identity successful", log.Data{"id": response.ID})
 }
 
-func (api *API) getIdentity(ctx context.Context) (*identity.Model, error) {
+func (api *API) getIdentity(ctx context.Context, r *http.Request) (*identity.Model, error) {
 
-	tokenStr, ok := ctx.Value("token").(string)
-	if !ok {
-		return nil, identity.ErrNoTokenProvided
+	tokenStr := r.Header.Get("token")
+	if tokenStr == "" {
+		return nil, ErrNoTokenProvided
 	}
 
-	i, err := api.IdentityService.Get(tokenStr)
+	ctx = context.WithValue(ctx, "token", tokenStr)
+
+	i, err := api.IdentityService.Get(ctx)
 	if err != nil {
 		return nil, err
 	}

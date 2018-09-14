@@ -15,7 +15,6 @@ var (
 	ErrPasswordValidation = ValidationErr{message: "mandatory field password was empty"}
 	ErrAuthenticateFailed = errors.New("authentication unsuccessful")
 	ErrUserNotFound       = errors.New("authentication unsuccessful user not found")
-	ErrNoTokenProvided = errors.New("mandatory token was not provided.")
 )
 
 func (s *Service) Validate(i *Model) (err error) {
@@ -79,7 +78,7 @@ func (s *Service) CreateToken(ctx context.Context, email string, password string
 	return nil
 }
 
-func (s *Service) Get(tokenStr string) (*Model, error) {
+func (s *Service) Get(ctx context.Context) (*Model, error) {
 
 	// TODO - has token expired?
 	// TODO - token to get id from cache
