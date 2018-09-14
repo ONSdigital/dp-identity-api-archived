@@ -30,7 +30,7 @@ var (
 		ErrAuthRequestNil:              http.StatusBadRequest,
 		ErrAuthRequestIDNil:            http.StatusBadRequest,
 		identity.ErrAuthenticateFailed: http.StatusForbidden,
-		identity.ErrUserNotFound:       http.StatusNotFound,
+		identity.ErrIdentityNotFound:   http.StatusNotFound,
 	}
 )
 

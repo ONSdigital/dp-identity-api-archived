@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	lockPersistenceMockCreate sync.RWMutex
+	lockPersistenceMockCreate      sync.RWMutex
+	lockPersistenceMockGetIdentity sync.RWMutex
 )
 
 // PersistenceMock is a mock implementation of Persistence.
@@ -21,6 +22,9 @@ var (
 //             CreateFunc: func(newIdentity mongo.Identity) (string, error) {
 // 	               panic("TODO: mock out the Create method")
 //             },
+//             GetIdentityFunc: func(email string) (mongo.Identity, error) {
+// 	               panic("TODO: mock out the GetIdentity method")
+//             },
 //         }
 //
 //         // TODO: use mockedPersistence in code that requires Persistence
@@ -31,12 +35,20 @@ type PersistenceMock struct {
 	// CreateFunc mocks the Create method.
 	CreateFunc func(newIdentity mongo.Identity) (string, error)
 
+	// GetIdentityFunc mocks the GetIdentity method.
+	GetIdentityFunc func(email string) (mongo.Identity, error)
+
 	// calls tracks calls to the methods.
 	calls struct {
 		// Create holds details about calls to the Create method.
 		Create []struct {
 			// NewIdentity is the newIdentity argument value.
 			NewIdentity mongo.Identity
+		}
+		// GetIdentity holds details about calls to the GetIdentity method.
+		GetIdentity []struct {
+			// Email is the email argument value.
+			Email string
 		}
 	}
 }
@@ -69,6 +81,37 @@ func (mock *PersistenceMock) CreateCalls() []struct {
 	lockPersistenceMockCreate.RLock()
 	calls = mock.calls.Create
 	lockPersistenceMockCreate.RUnlock()
+	return calls
+}
+
+// GetIdentity calls GetIdentityFunc.
+func (mock *PersistenceMock) GetIdentity(email string) (mongo.Identity, error) {
+	if mock.GetIdentityFunc == nil {
+		panic("moq: PersistenceMock.GetIdentityFunc is nil but Persistence.GetIdentity was just called")
+	}
+	callInfo := struct {
+		Email string
+	}{
+		Email: email,
+	}
+	lockPersistenceMockGetIdentity.Lock()
+	mock.calls.GetIdentity = append(mock.calls.GetIdentity, callInfo)
+	lockPersistenceMockGetIdentity.Unlock()
+	return mock.GetIdentityFunc(email)
+}
+
+// GetIdentityCalls gets all the calls that were made to GetIdentity.
+// Check the length with:
+//     len(mockedPersistence.GetIdentityCalls())
+func (mock *PersistenceMock) GetIdentityCalls() []struct {
+	Email string
+} {
+	var calls []struct {
+		Email string
+	}
+	lockPersistenceMockGetIdentity.RLock()
+	calls = mock.calls.GetIdentity
+	lockPersistenceMockGetIdentity.RUnlock()
 	return calls
 }
 

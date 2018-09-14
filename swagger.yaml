@@ -19,6 +19,13 @@ parameters:
     required: true
     schema:
       $ref: '#/definitions/Identity'
+  new_token_request:
+    name: newTokenRequest
+    description: "The user's credentials"
+    in: body
+    required: true
+    schema:
+      $ref: '#/definitions/NewTokenRequest'
 paths:
   /identity:
     post:
@@ -36,9 +43,32 @@ paths:
           schema:
             $ref: '#/definitions/IdentityCreated'
         400:
-          description: "identity invalid"
+          description: "invalid request body"
         500:
-          description: "TODO"
+          description: "internal server error"
+  /token:
+    post:
+      tags:
+      - "Token"
+      summary: "Request a new auth token"
+      description: "Verifies the user email and password and returns an auth token if successful, or appropriate error if unsuccessful"
+      parameters:
+      - $ref: '#/parameters/new_token_request'
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "The user's credentials were successfully verified"
+          schema:
+            $ref: '#/definitions/Token'
+        400:
+          description: "invalid request body"
+        403:
+          description: "credentials verification failed"
+        404:
+          description: "identity not found"
+        500:
+          description: "internal server error"
 definitions:
   Identity:
     type: object
@@ -84,3 +114,21 @@ definitions:
         type: string
         description: "the uri of the created identity"
         example: "http://localhost:23800/identity/9ba46688-03ed-4f62-b12a-a1744eb91f2c"
+  NewTokenRequest:
+    type: object
+    properties:
+      email:
+        type: string
+        description: "the email of the user"
+        example: "venkman@whoyougunnacall.com"
+      password:
+        type: string
+        description: "the users password"
+        example: "There is no Dana only zuul!"
+  Token:
+    type: object
+    properties:
+      token:
+        type: string
+        description: "a auth token"
+        example: "9ba46688-03ed-4f62-b12a-a1744eb91f2c"
