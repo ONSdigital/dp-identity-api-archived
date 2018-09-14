@@ -22,6 +22,7 @@ var (
 		identity.ErrEmailValidation:     http.StatusBadRequest,
 		identity.ErrPasswordValidation:  http.StatusBadRequest,
 		identity.ErrIdentityNil:         http.StatusBadRequest,
+		identity.ErrEmailAlreadyExists:  http.StatusBadRequest,
 	}
 
 	newTokenResponse = JSONResponseWriter{

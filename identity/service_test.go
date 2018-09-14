@@ -219,3 +219,29 @@ func TestService_EncryptPassword(t *testing.T) {
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
 	})
 }
+
+func TestService_CreateEmailAlreadyInUse(t *testing.T) {
+	Convey("todo", t, func() {
+		persistenceMock := &PersistenceMock{
+			CreateFunc: func(newIdentity mongo.Identity) (string, error) {
+				return "", mongo.ErrNonUnique
+			},
+		}
+
+		enc := &EncryptorMock{
+			GenerateFromPasswordFunc: func(password []byte, cost int) ([]byte, error) {
+				return []byte("WAFFLES"), nil
+			},
+		}
+
+		s := Service{Persistence: persistenceMock, Encryptor: enc}
+
+		_, err := s.Create(context.Background(), newIdentity)
+		So(err, ShouldEqual, ErrEmailAlreadyExists)
+		So(persistenceMock.CreateCalls(), ShouldHaveLength, 1)
+		So(persistenceMock.CreateCalls()[0].NewIdentity, ShouldResemble, newMongoIdentity)
+		So(enc.GenerateFromPasswordCalls(), ShouldHaveLength, 1)
+		So(enc.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
+		So(enc.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
+	})
+}
