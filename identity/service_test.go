@@ -23,13 +23,15 @@ var (
 		Password: "WAFFLES",
 	}
 
-	ID = "666"
+	EMAIL = "666@ironmaiden.com"
+
+	errTest = errors.New("mongo error")
 )
 
-func newPersistenceMock(id string, err error) *PersistenceMock {
+func newPersistenceMock(email string, err error) *PersistenceMock {
 	return &PersistenceMock{
 		CreateFunc: func(identity mongo.Identity) (string, error) {
-			return id, err
+			return email, err
 		},
 	}
 }
@@ -48,7 +50,7 @@ func newEncryptorMock(pwd []byte, generate, compare error) *EncryptorMock {
 
 func TestCreate_Success(t *testing.T) {
 	Convey("should return no error if successful", t, func() {
-		persistenceMock := newPersistenceMock(ID, nil)
+		persistenceMock := newPersistenceMock(EMAIL, nil)
 		encryptorMock := newEncryptorMock([]byte(newIdentity.Password), nil, nil)
 
 		s := &Service{Persistence: persistenceMock, Encryptor: encryptorMock}
@@ -56,7 +58,7 @@ func TestCreate_Success(t *testing.T) {
 		id, err := s.Create(context.Background(), newIdentity)
 
 		So(err, ShouldBeNil)
-		So(id, ShouldEqual, ID)
+		So(id, ShouldEqual, EMAIL)
 
 		So(encryptorMock.GenerateFromPasswordCalls(), ShouldHaveLength, 1)
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
@@ -217,5 +219,119 @@ func TestService_EncryptPassword(t *testing.T) {
 		So(encryptorMock.GenerateFromPasswordCalls(), ShouldHaveLength, 1)
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
+	})
+}
+
+func TestService_CreateEmailAlreadyInUse(t *testing.T) {
+	Convey("todo", t, func() {
+		persistenceMock := &PersistenceMock{
+			CreateFunc: func(newIdentity mongo.Identity) (string, error) {
+				return "", mongo.ErrNonUnique
+			},
+		}
+
+		enc := &EncryptorMock{
+			GenerateFromPasswordFunc: func(password []byte, cost int) ([]byte, error) {
+				return []byte("WAFFLES"), nil
+			},
+		}
+
+		s := Service{Persistence: persistenceMock, Encryptor: enc}
+
+		_, err := s.Create(context.Background(), newIdentity)
+		So(err, ShouldEqual, ErrEmailAlreadyExists)
+		So(persistenceMock.CreateCalls(), ShouldHaveLength, 1)
+		So(persistenceMock.CreateCalls()[0].NewIdentity, ShouldResemble, newMongoIdentity)
+		So(enc.GenerateFromPasswordCalls(), ShouldHaveLength, 1)
+		So(enc.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
+		So(enc.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
+
+	})
+}
+
+func TestService_VerifyPassword(t *testing.T) {
+	Convey("should not return error is password is correct", t, func() {
+		p := &PersistenceMock{
+			GetIdentityFunc: func(email string) (mongo.Identity, error) {
+				return newMongoIdentity, nil
+			},
+		}
+
+		e := newEncryptorMock([]byte(newMongoIdentity.Password), nil, nil)
+
+		s := Service{Persistence: p, Encryptor: e}
+
+		err := s.VerifyPassword(context.Background(), newMongoIdentity.Email, newMongoIdentity.Password)
+
+		So(err, ShouldBeNil)
+		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
+		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newMongoIdentity.Email)
+		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 1)
+		So(e.CompareHashAndPasswordCalls()[0].Password, ShouldResemble, []byte(newMongoIdentity.Password))
+		So(e.CompareHashAndPasswordCalls()[0].HashedPassword, ShouldResemble, []byte(newMongoIdentity.Password))
+	})
+}
+
+func TestService_VerifyPasswordIdentityNotFound(t *testing.T) {
+	Convey("should return error if identity is not found", t, func() {
+		p := &PersistenceMock{
+			GetIdentityFunc: func(email string) (mongo.Identity, error) {
+				return mongo.Identity{}, mongo.ErrNotFound
+			},
+		}
+
+		e := newEncryptorMock([]byte(newMongoIdentity.Password), nil, nil)
+
+		s := Service{Persistence: p, Encryptor: e}
+
+		err := s.VerifyPassword(context.Background(), newMongoIdentity.Email, newMongoIdentity.Password)
+
+		So(err, ShouldEqual, ErrIdentityNotFound)
+		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
+		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newMongoIdentity.Email)
+		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 0)
+	})
+}
+
+func TestService_VerifyPasswordPersistenceErr(t *testing.T) {
+	Convey("should return error if identity is not found", t, func() {
+		p := &PersistenceMock{
+			GetIdentityFunc: func(email string) (mongo.Identity, error) {
+				return mongo.Identity{}, errTest
+			},
+		}
+
+		e := newEncryptorMock([]byte(newMongoIdentity.Password), nil, nil)
+
+		s := Service{Persistence: p, Encryptor: e}
+
+		err := s.VerifyPassword(context.Background(), newMongoIdentity.Email, newMongoIdentity.Password)
+
+		So(err, ShouldEqual, errTest)
+		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
+		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newMongoIdentity.Email)
+		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 0)
+	})
+}
+
+func TestService_VerifyPasswordPasswordIncorrect(t *testing.T) {
+	Convey("should return error if provided password is incorrect", t, func() {
+		p := &PersistenceMock{
+			GetIdentityFunc: func(email string) (mongo.Identity, error) {
+				return newMongoIdentity, nil
+			},
+		}
+
+		e := newEncryptorMock([]byte(newMongoIdentity.Password), nil, errTest)
+
+		s := Service{Persistence: p, Encryptor: e}
+
+		err := s.VerifyPassword(context.Background(), newMongoIdentity.Email, newMongoIdentity.Password)
+
+		So(err, ShouldEqual, ErrAuthenticateFailed)
+		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
+		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newMongoIdentity.Email)
+		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 1)
+		So(e.CompareHashAndPasswordCalls()[0].Password, ShouldResemble, []byte(newMongoIdentity.Password))
 	})
 }

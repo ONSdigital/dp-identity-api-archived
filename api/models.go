@@ -27,7 +27,7 @@ var (
 	ErrFailedToReadRequestBody      = errors.New("error while attempting to read request body")
 	ErrFailedToUnmarshalRequestBody = errors.New("error while attempting to unmarshal request body")
 	ErrRequestBodyNil               = errors.New("error expected request body but was empty")
-	ErrNoTokenProvided = errors.New("error expected token was not provided.")
+	ErrNoTokenProvided              = errors.New("error expected token was not provided.")
 )
 
 //API defines HTTP HandlerFunc's for the endpoints offered by the Identity API service.
@@ -85,4 +85,5 @@ type IdentityService interface {
 	Create(ctx context.Context, i *identity.Model) (string, error)
 	Get(ctx context.Context) (*identity.Model, error)
 	CreateToken(ctx context.Context, email string, password string) error
+	VerifyPassword(ctx context.Context, email string, password string) error
 }

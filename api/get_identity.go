@@ -1,13 +1,13 @@
 package api
 
 import (
+	"context"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
 	"net/http"
-	"context"
 )
 
 // TODO - meaningful documentation

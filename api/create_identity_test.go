@@ -243,6 +243,47 @@ func TestCreateIdentity_BodyEmpty(t *testing.T) {
 	})
 }
 
+func TestAPI_CreateIdentityHandlerEmailAlreadyInUse(t *testing.T) {
+	Convey("should return bad request if email already in use", t, func() {
+		serviceMock := &IdentityServiceMock{
+			CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
+				return "", identity.ErrEmailAlreadyExists
+			},
+		}
+
+		auitorMock := auditortest.New()
+
+		identityAPI := &API{
+			IdentityService: serviceMock,
+			auditor:         auitorMock,
+		}
+
+		newIdentity := &identity.Model{
+			Name:  "Jamie",
+			Email: "JamieLannister@GOT.com",
+		}
+		b, err := json.Marshal(newIdentity)
+		So(err, ShouldBeNil)
+
+		r := httptest.NewRequest("POST", createIdentityURL, bytes.NewReader(b))
+		w := httptest.NewRecorder()
+
+		identityAPI.CreateIdentityHandler(w, r)
+
+		So(w.Code, ShouldEqual, http.StatusBadRequest)
+		So(strings.TrimSpace(w.Body.String()), ShouldEqual, identity.ErrEmailAlreadyExists.Error())
+
+		So(serviceMock.CreateCalls(), ShouldHaveLength, 1)
+		So(serviceMock.CreateCalls()[0].I.Name, ShouldEqual, "Jamie")
+		So(serviceMock.CreateCalls()[0].I.Email, ShouldEqual, "JamieLannister@GOT.com")
+
+		auitorMock.AssertRecordCalls(
+			auditortest.Expected{Action: createIdentityAction, Result: audit.Attempted, Params: nil},
+			auditortest.Expected{Action: createIdentityAction, Result: audit.Unsuccessful, Params: nil},
+		)
+	})
+}
+
 func assertErrorResponse(actualStatus int, expectedStatus int, actualBody string, expectedBody string) {
 	So(actualStatus, ShouldEqual, expectedStatus)
 	So(strings.TrimSpace(actualBody), ShouldEqual, expectedBody)

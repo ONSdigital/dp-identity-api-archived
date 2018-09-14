@@ -14,7 +14,8 @@ var (
 	ErrEmailValidation    = ValidationErr{message: "mandatory field email was empty"}
 	ErrPasswordValidation = ValidationErr{message: "mandatory field password was empty"}
 	ErrAuthenticateFailed = errors.New("authentication unsuccessful")
-	ErrUserNotFound       = errors.New("authentication unsuccessful user not found")
+	ErrEmailAlreadyExists = errors.New("active identity already exists with email")
+	ErrIdentityNotFound   = errors.New("authentication unsuccessful user not found")
 )
 
 func (s *Service) Validate(i *Model) (err error) {
@@ -45,6 +46,11 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 		return "", err
 	}
 
+	logD := log.Data{
+		"name":  i.Name,
+		"email": i.Email,
+	}
+
 	pwd, err := s.encryptPassword(i)
 	if err != nil {
 		return "", errors.Wrap(err, "create: error encrypting password")
@@ -61,22 +67,39 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 	}
 
 	id, err := s.Persistence.Create(newIdentity)
+	if err != nil && err == mongo.ErrNonUnique {
+		log.ErrorCtx(ctx, errors.New("create: failed to create identity - an active identity with this email already exists"), logD)
+		return "", ErrEmailAlreadyExists
+	}
+
 	if err != nil {
-		log.ErrorCtx(ctx, errors.WithMessage(err, "create: failed to write data to mongo"), nil)
+		log.ErrorCtx(ctx, errors.WithMessage(err, "create: failed to write data to mongo"), logD)
 		return "", ErrPersistence
 	}
 
-	log.InfoCtx(ctx, "create: new identity created successfully", log.Data{
-		"id":    id,
-		"name":  i.Name,
-		"email": i.Email,
-	})
+	logD["id"] = id
+	log.InfoCtx(ctx, "create: new identity created successfully", logD)
 	return id, nil
 }
 
-func (s *Service) CreateToken(ctx context.Context, email string, password string) error {
+func (s *Service) VerifyPassword(ctx context.Context, email string, password string) error {
+	i, err := s.getIdentity(ctx, email)
+	if err != nil {
+		return err
+	}
+
+	logD := log.Data{"email": email}
+
+	err = s.Encryptor.CompareHashAndPassword([]byte(i.Password), []byte(password))
+	if err != nil {
+		log.ErrorCtx(ctx, errors.Wrap(err, "password did not match stored value"), logD)
+		return ErrAuthenticateFailed
+	}
+
+	log.InfoCtx(ctx, "user authentication successful", logD)
 	return nil
 }
+
 
 func (s *Service) Get(ctx context.Context) (*Model, error) {
 
@@ -95,6 +118,23 @@ func (s *Service) Get(ctx context.Context) (*Model, error) {
 	}
 
 	return defaultUser, nil
+}
+
+func (s *Service) getIdentity(ctx context.Context, email string) (*mongo.Identity, error) {
+	logD := log.Data{"email": email}
+
+	i, err := s.Persistence.GetIdentity(email)
+	if err != nil {
+		if err == mongo.ErrNotFound {
+			log.ErrorCtx(ctx, errors.New("user not found"), logD)
+			return nil, ErrIdentityNotFound
+		}
+
+		log.ErrorCtx(ctx, errors.Wrap(err, "error getting identity from database"), logD)
+		return nil, err
+	}
+	return &i, nil
+
 }
 
 func (s *Service) encryptPassword(i *Model) (string, error) {

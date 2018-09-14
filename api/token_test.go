@@ -43,7 +43,7 @@ func TestAPI_AuthenticateEmptyRequestBody(t *testing.T) {
 
 		assertErrorResponse(w.Code, http.StatusBadRequest, w.Body.String(), ErrRequestBodyNil.Error())
 		a.AssertRecordCalls()
-		So(s.CreateTokenCalls(), ShouldHaveLength, 0)
+		So(s.VerifyPasswordCalls(), ShouldHaveLength, 0)
 	})
 }
 
@@ -51,7 +51,7 @@ func TestAPI_AuthenticationUnsuccessful(t *testing.T) {
 	Convey("should return expected error status createToken unsuccessful", t, func() {
 		a := auditortest.New()
 		s := &IdentityServiceMock{
-			CreateTokenFunc: func(ctx context.Context, id string, password string) error {
+			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return identity.ErrAuthenticateFailed
 			},
 		}
@@ -75,9 +75,9 @@ func TestAPI_AuthenticationUnsuccessful(t *testing.T) {
 			auditortest.Expected{Action: createToken, Result: audit.Attempted, Params: expectedParams},
 			auditortest.Expected{Action: createToken, Result: audit.Unsuccessful, Params: expectedParams},
 		)
-		So(s.CreateTokenCalls(), ShouldHaveLength, 1)
-		So(s.CreateTokenCalls()[0].Email, ShouldEqual, testAuthReq.Email)
-		So(s.CreateTokenCalls()[0].Password, ShouldEqual, testAuthReq.Password)
+		So(s.VerifyPasswordCalls(), ShouldHaveLength, 1)
+		So(s.VerifyPasswordCalls()[0].Email, ShouldEqual, testAuthReq.Email)
+		So(s.VerifyPasswordCalls()[0].Password, ShouldEqual, testAuthReq.Password)
 	})
 }
 
@@ -85,7 +85,7 @@ func TestAPI_AuthenticationHandlerIdentityServiceError(t *testing.T) {
 	Convey("should return 403 status status if authentication is unsuccessful", t, func() {
 		a := auditortest.New()
 		s := &IdentityServiceMock{
-			CreateTokenFunc: func(ctx context.Context, id string, password string) error {
+			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return identity.ErrAuthenticateFailed
 			},
 		}
@@ -108,9 +108,9 @@ func TestAPI_AuthenticationHandlerIdentityServiceError(t *testing.T) {
 			auditortest.Expected{Action: createToken, Result: audit.Attempted, Params: expectedParams},
 			auditortest.Expected{Action: createToken, Result: audit.Unsuccessful, Params: expectedParams},
 		)
-		So(s.CreateTokenCalls(), ShouldHaveLength, 1)
-		So(s.CreateTokenCalls()[0].Email, ShouldEqual, testAuthReq.Email)
-		So(s.CreateTokenCalls()[0].Password, ShouldEqual, testAuthReq.Password)
+		So(s.VerifyPasswordCalls(), ShouldHaveLength, 1)
+		So(s.VerifyPasswordCalls()[0].Email, ShouldEqual, testAuthReq.Email)
+		So(s.VerifyPasswordCalls()[0].Password, ShouldEqual, testAuthReq.Password)
 	})
 }
 
@@ -118,8 +118,8 @@ func TestAPI_AuthenticationHandlerUserNotFound(t *testing.T) {
 	Convey("should return 404 status status if user not found", t, func() {
 		a := auditortest.New()
 		s := &IdentityServiceMock{
-			CreateTokenFunc: func(ctx context.Context, id string, password string) error {
-				return identity.ErrUserNotFound
+			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
+				return identity.ErrIdentityNotFound
 			},
 		}
 
@@ -136,14 +136,14 @@ func TestAPI_AuthenticationHandlerUserNotFound(t *testing.T) {
 
 		authAPI.CreateTokenHandler(w, r)
 
-		assertErrorResponse(w.Code, http.StatusNotFound, w.Body.String(), identity.ErrUserNotFound.Error())
+		assertErrorResponse(w.Code, http.StatusNotFound, w.Body.String(), identity.ErrIdentityNotFound.Error())
 		a.AssertRecordCalls(
 			auditortest.Expected{Action: createToken, Result: audit.Attempted, Params: expectedParams},
 			auditortest.Expected{Action: createToken, Result: audit.Unsuccessful, Params: expectedParams},
 		)
-		So(s.CreateTokenCalls(), ShouldHaveLength, 1)
-		So(s.CreateTokenCalls()[0].Email, ShouldEqual, testAuthReq.Email)
-		So(s.CreateTokenCalls()[0].Password, ShouldEqual, testAuthReq.Password)
+		So(s.VerifyPasswordCalls(), ShouldHaveLength, 1)
+		So(s.VerifyPasswordCalls()[0].Email, ShouldEqual, testAuthReq.Email)
+		So(s.VerifyPasswordCalls()[0].Password, ShouldEqual, testAuthReq.Password)
 	})
 }
 
@@ -151,7 +151,7 @@ func TestAPI_AuthenticationHandlerSuccess(t *testing.T) {
 	Convey("should return 200 status status if authentication successful", t, func() {
 		a := auditortest.New()
 		s := &IdentityServiceMock{
-			CreateTokenFunc: func(ctx context.Context, id string, password string) error {
+			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return nil
 			},
 		}
@@ -180,9 +180,9 @@ func TestAPI_AuthenticationHandlerSuccess(t *testing.T) {
 			auditortest.Expected{Action: createToken, Result: audit.Attempted, Params: expectedParams},
 			auditortest.Expected{Action: createToken, Result: audit.Successful, Params: expectedParams},
 		)
-		So(s.CreateTokenCalls(), ShouldHaveLength, 1)
-		So(s.CreateTokenCalls()[0].Email, ShouldEqual, testAuthReq.Email)
-		So(s.CreateTokenCalls()[0].Password, ShouldEqual, testAuthReq.Password)
+		So(s.VerifyPasswordCalls(), ShouldHaveLength, 1)
+		So(s.VerifyPasswordCalls()[0].Email, ShouldEqual, testAuthReq.Email)
+		So(s.VerifyPasswordCalls()[0].Password, ShouldEqual, testAuthReq.Password)
 	})
 }
 
@@ -209,7 +209,7 @@ func TestAPI_AuthenticateAuditAttemptedError(t *testing.T) {
 			Result: audit.Attempted,
 			Params: expectedParams,
 		})
-		So(s.CreateTokenCalls(), ShouldHaveLength, 0)
+		So(s.VerifyPasswordCalls(), ShouldHaveLength, 0)
 	})
 }
 
@@ -217,7 +217,7 @@ func TestAPI_AuthenticationUnsuccessfulAuditUnsuccessfulError(t *testing.T) {
 	Convey("should return expected error status if audit action unsuccessful returns an error", t, func() {
 		a := auditortest.NewErroring(createToken, audit.Unsuccessful)
 		s := &IdentityServiceMock{
-			CreateTokenFunc: func(ctx context.Context, id string, password string) error {
+			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return identity.ErrAuthenticateFailed
 			},
 		}
@@ -241,9 +241,9 @@ func TestAPI_AuthenticationUnsuccessfulAuditUnsuccessfulError(t *testing.T) {
 			auditortest.Expected{Action: createToken, Result: audit.Attempted, Params: expectedParams},
 			auditortest.Expected{Action: createToken, Result: audit.Unsuccessful, Params: expectedParams},
 		)
-		So(s.CreateTokenCalls(), ShouldHaveLength, 1)
-		So(s.CreateTokenCalls()[0].Email, ShouldEqual, testAuthReq.Email)
-		So(s.CreateTokenCalls()[0].Password, ShouldEqual, testAuthReq.Password)
+		So(s.VerifyPasswordCalls(), ShouldHaveLength, 1)
+		So(s.VerifyPasswordCalls()[0].Email, ShouldEqual, testAuthReq.Email)
+		So(s.VerifyPasswordCalls()[0].Password, ShouldEqual, testAuthReq.Password)
 	})
 }
 
@@ -251,7 +251,7 @@ func TestAPI_AuthenticationUnsuccessfulAuditSuccessfulError(t *testing.T) {
 	Convey("should return expected error status if audit action successful returns an error", t, func() {
 		a := auditortest.NewErroring(createToken, audit.Successful)
 		s := &IdentityServiceMock{
-			CreateTokenFunc: func(ctx context.Context, id string, password string) error {
+			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return nil
 			},
 		}
@@ -275,8 +275,8 @@ func TestAPI_AuthenticationUnsuccessfulAuditSuccessfulError(t *testing.T) {
 			auditortest.Expected{Action: createToken, Result: audit.Attempted, Params: expectedParams},
 			auditortest.Expected{Action: createToken, Result: audit.Successful, Params: expectedParams},
 		)
-		So(s.CreateTokenCalls(), ShouldHaveLength, 1)
-		So(s.CreateTokenCalls()[0].Email, ShouldEqual, testAuthReq.Email)
-		So(s.CreateTokenCalls()[0].Password, ShouldEqual, testAuthReq.Password)
+		So(s.VerifyPasswordCalls(), ShouldHaveLength, 1)
+		So(s.VerifyPasswordCalls()[0].Email, ShouldEqual, testAuthReq.Email)
+		So(s.VerifyPasswordCalls()[0].Password, ShouldEqual, testAuthReq.Password)
 	})
 }

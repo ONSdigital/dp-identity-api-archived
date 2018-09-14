@@ -22,10 +22,11 @@ var (
 		identity.ErrEmailValidation:     http.StatusBadRequest,
 		identity.ErrPasswordValidation:  http.StatusBadRequest,
 		identity.ErrIdentityNil:         http.StatusBadRequest,
+		identity.ErrEmailAlreadyExists:  http.StatusBadRequest,
 	}
 
 	getIdentityResponse = JSONResponseWriter{
-		ErrNoTokenProvided:	http.StatusNotFound,
+		ErrNoTokenProvided: http.StatusNotFound,
 	}
 
 	newTokenResponse = JSONResponseWriter{
@@ -33,7 +34,7 @@ var (
 		ErrAuthRequestNil:              http.StatusBadRequest,
 		ErrAuthRequestIDNil:            http.StatusBadRequest,
 		identity.ErrAuthenticateFailed: http.StatusForbidden,
-		identity.ErrUserNotFound:       http.StatusNotFound,
+		identity.ErrIdentityNotFound:   http.StatusNotFound,
 	}
 )
 
