@@ -24,6 +24,10 @@ var (
 		identity.ErrIdentityNil:         http.StatusBadRequest,
 	}
 
+	getIdentityResponse = JSONResponseWriter{
+		identity.ErrNoTokenProvided:	http.StatusNotFound,
+	}
+
 	newTokenResponse = JSONResponseWriter{
 		ErrRequestBodyNil:              http.StatusBadRequest,
 		ErrAuthRequestNil:              http.StatusBadRequest,
