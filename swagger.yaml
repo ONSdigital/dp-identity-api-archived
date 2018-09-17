@@ -46,6 +46,22 @@ paths:
           description: "invalid request body"
         500:
           description: "internal server error"
+    get:
+      tags:
+      - "Identity"
+      summary: "Get an identity"
+      description: "Get an identity"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "A json object for a single Identity"
+          schema:
+            $ref: '#/definitions/Identity'
+        404:
+          description: "identity not found"
+        500:
+          description: "internal server error"
   /token:
     post:
       tags:
