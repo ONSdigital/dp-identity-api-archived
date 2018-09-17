@@ -26,7 +26,7 @@ var (
 	}
 
 	getIdentityResponse = JSONResponseWriter{
-		ErrNoTokenProvided: http.StatusNotFound,
+		ErrNoTokenProvided: http.StatusUnauthorized,
 	}
 
 	newTokenResponse = JSONResponseWriter{

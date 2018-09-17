@@ -5,9 +5,11 @@ import (
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/log"
+	"github.com/ONSdigital/go-ns/token"
 	"github.com/pkg/errors"
 	"net/http"
 )
+
 
 // GetIdentityHandler is a GET HTTP handler for retrieving an Identity using a token provided in the request header.
 // A request to this endpoint will create audit event showing an attempt to get an identity was made followed by another
@@ -42,8 +44,9 @@ func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) getIdentity(ctx context.Context, r *http.Request) (*identity.Model, error) {
 
-	tokenStr := r.Header.Get("token")
-	if tokenStr == "" {
+	tokenStr, err := token.GetToken(r)
+	if err != nil {
+		log.ErrorCtx(ctx, err, nil)
 		return nil, ErrNoTokenProvided
 	}
 
