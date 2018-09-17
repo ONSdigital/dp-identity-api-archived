@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/ONSdigital/dp-identity-api/api/apitest"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/audit/auditortest"
@@ -30,7 +31,7 @@ var (
 func TestAPI_AuthenticateEmptyRequestBody(t *testing.T) {
 	Convey("should return expected error status if request body is empty", t, func() {
 		a := auditortest.New()
-		s := &IdentityServiceMock{}
+		s := &apitest.IdentityServiceMock{}
 
 		r := httptest.NewRequest(http.MethodPost, authenticateURL, nil)
 		w := httptest.NewRecorder()
@@ -50,7 +51,7 @@ func TestAPI_AuthenticateEmptyRequestBody(t *testing.T) {
 func TestAPI_AuthenticationUnsuccessful(t *testing.T) {
 	Convey("should return expected error status createToken unsuccessful", t, func() {
 		a := auditortest.New()
-		s := &IdentityServiceMock{
+		s := &apitest.IdentityServiceMock{
 			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return identity.ErrAuthenticateFailed
 			},
@@ -84,7 +85,7 @@ func TestAPI_AuthenticationUnsuccessful(t *testing.T) {
 func TestAPI_AuthenticationHandlerIdentityServiceError(t *testing.T) {
 	Convey("should return 403 status status if authentication is unsuccessful", t, func() {
 		a := auditortest.New()
-		s := &IdentityServiceMock{
+		s := &apitest.IdentityServiceMock{
 			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return identity.ErrAuthenticateFailed
 			},
@@ -117,7 +118,7 @@ func TestAPI_AuthenticationHandlerIdentityServiceError(t *testing.T) {
 func TestAPI_AuthenticationHandlerUserNotFound(t *testing.T) {
 	Convey("should return 404 status status if user not found", t, func() {
 		a := auditortest.New()
-		s := &IdentityServiceMock{
+		s := &apitest.IdentityServiceMock{
 			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return identity.ErrIdentityNotFound
 			},
@@ -150,7 +151,7 @@ func TestAPI_AuthenticationHandlerUserNotFound(t *testing.T) {
 func TestAPI_AuthenticationHandlerSuccess(t *testing.T) {
 	Convey("should return 200 status status if authentication successful", t, func() {
 		a := auditortest.New()
-		s := &IdentityServiceMock{
+		s := &apitest.IdentityServiceMock{
 			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return nil
 			},
@@ -189,7 +190,7 @@ func TestAPI_AuthenticationHandlerSuccess(t *testing.T) {
 func TestAPI_AuthenticateAuditAttemptedError(t *testing.T) {
 	Convey("should return expected error status if audit action attempted errors", t, func() {
 		a := auditortest.NewErroring(createToken, audit.Attempted)
-		s := &IdentityServiceMock{}
+		s := &apitest.IdentityServiceMock{}
 
 		b, err := json.Marshal(testAuthReq)
 		So(err, ShouldBeNil)
@@ -216,7 +217,7 @@ func TestAPI_AuthenticateAuditAttemptedError(t *testing.T) {
 func TestAPI_AuthenticationUnsuccessfulAuditUnsuccessfulError(t *testing.T) {
 	Convey("should return expected error status if audit action unsuccessful returns an error", t, func() {
 		a := auditortest.NewErroring(createToken, audit.Unsuccessful)
-		s := &IdentityServiceMock{
+		s := &apitest.IdentityServiceMock{
 			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return identity.ErrAuthenticateFailed
 			},
@@ -250,7 +251,7 @@ func TestAPI_AuthenticationUnsuccessfulAuditUnsuccessfulError(t *testing.T) {
 func TestAPI_AuthenticationUnsuccessfulAuditSuccessfulError(t *testing.T) {
 	Convey("should return expected error status if audit action successful returns an error", t, func() {
 		a := auditortest.NewErroring(createToken, audit.Successful)
-		s := &IdentityServiceMock{
+		s := &apitest.IdentityServiceMock{
 			VerifyPasswordFunc: func(ctx context.Context, id string, password string) error {
 				return nil
 			},

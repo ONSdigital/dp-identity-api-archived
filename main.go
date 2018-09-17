@@ -53,8 +53,8 @@ func main() {
 	apiErrors := make(chan error, 1)
 
 	identityService := &identity.Service{
-		Persistence: mongodb,
-		Encryptor:   encryption.Service{},
+		DB:        mongodb,
+		Encryptor: encryption.Service{},
 	}
 
 	identityAPI := api.New("http://localhost"+cfg.BindAddr, identityService, auditor) // TODO make Host config

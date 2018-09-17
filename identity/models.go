@@ -2,21 +2,15 @@ package identity
 
 import (
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/mongo"
+	"github.com/ONSdigital/dp-identity-api/persistence"
 )
 
-//go:generate moq -out generate_mocks.go -pkg identity . Persistence Encryptor
+//go:generate moq -out identitytest/generate_mocks.go -pkg identitytest . Encryptor
 
 var (
 	ErrInvalidArguments = errors.New("error while attempting create new identity")
 	ErrPersistence      = errors.New("error while attempting to write data to mongo")
 )
-
-// Persistence...
-type Persistence interface {
-	Create(newIdentity mongo.Identity) (string, error)
-	GetIdentity(email string) (mongo.Identity, error)
-}
 
 type Encryptor interface {
 	GenerateFromPassword(password []byte, cost int) ([]byte, error)
@@ -33,8 +27,8 @@ func (e ValidationErr) Error() string {
 
 //Service encapsulates the logic for creating, updating and deleting identities
 type Service struct {
-	Persistence Persistence
-	Encryptor   Encryptor
+	DB        persistence.DB
+	Encryptor Encryptor
 }
 
 //Model is an object representation of a user identity.

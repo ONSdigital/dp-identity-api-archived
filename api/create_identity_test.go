@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/ONSdigital/dp-identity-api/api/apitest"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/audit/auditortest"
@@ -43,7 +44,7 @@ func (r *IOReaderErroring) Read(p []byte) (int, error) {
 func TestIdentityAPI_CreateIdentityAuditAttemptedFailed(t *testing.T) {
 	Convey("given audit action attempted returns an error", t, func() {
 		auditMock := auditortest.NewErroring(createIdentityAction, audit.Attempted)
-		serviceMock := &IdentityServiceMock{}
+		serviceMock := &apitest.IdentityServiceMock{}
 
 		Convey("when createIdentity is called", func() {
 			identityAPI := &API{
@@ -73,7 +74,7 @@ func TestIdentityAPI_CreateIdentityAuditAttemptedFailed(t *testing.T) {
 func TestIdentityAPI_CreateIdentityError(t *testing.T) {
 	Convey("given createIdentity returns an error", t, func() {
 		auditMock := auditortest.New()
-		serviceMock := &IdentityServiceMock{}
+		serviceMock := &apitest.IdentityServiceMock{}
 
 		Convey("when createIdentity is called", func() {
 			identityAPI := &API{
@@ -109,7 +110,7 @@ func TestIdentityAPI_CreateIdentityError(t *testing.T) {
 func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 	Convey("given audit action successful returns an error", t, func() {
 		auditMock := auditortest.NewErroring(createIdentityAction, audit.Successful)
-		serviceMock := &IdentityServiceMock{
+		serviceMock := &apitest.IdentityServiceMock{
 			CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
 				return ID, nil
 			},
@@ -150,7 +151,7 @@ func TestIdentityAPI_CreateIdentityAuditSuccessfulError(t *testing.T) {
 func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 	Convey("given create identity is successful", t, func() {
 		auditMock := auditortest.New()
-		serviceMock := &IdentityServiceMock{
+		serviceMock := &apitest.IdentityServiceMock{
 			CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
 				return ID, nil
 			},
@@ -197,7 +198,7 @@ func TestIdentityAPI_CreateIdentitySuccess(t *testing.T) {
 
 func TestCreateIdentity_IdentityServiceError(t *testing.T) {
 	Convey("should return expected error if identityService returns an error", t, func() {
-		serviceMock := &IdentityServiceMock{
+		serviceMock := &apitest.IdentityServiceMock{
 			CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
 				return "", errTest
 			},
@@ -219,7 +220,7 @@ func TestCreateIdentity_IdentityServiceError(t *testing.T) {
 
 func TestCreateIdentity_ReadBodyErr(t *testing.T) {
 	Convey("should return expected error if reading the request body returns an error", t, func() {
-		serviceMock := &IdentityServiceMock{}
+		serviceMock := &apitest.IdentityServiceMock{}
 		identityAPI := &API{IdentityService: serviceMock}
 
 		r := httptest.NewRequest("POST", createIdentityURL, &IOReaderErroring{err: errors.New("")})
@@ -232,7 +233,7 @@ func TestCreateIdentity_ReadBodyErr(t *testing.T) {
 
 func TestCreateIdentity_BodyEmpty(t *testing.T) {
 	Convey("should return expected error if the request body is empty", t, func() {
-		serviceMock := &IdentityServiceMock{}
+		serviceMock := &apitest.IdentityServiceMock{}
 		identityAPI := &API{IdentityService: serviceMock}
 
 		r := httptest.NewRequest("POST", createIdentityURL, bytes.NewReader([]byte{}))
@@ -245,7 +246,7 @@ func TestCreateIdentity_BodyEmpty(t *testing.T) {
 
 func TestAPI_CreateIdentityHandlerEmailAlreadyInUse(t *testing.T) {
 	Convey("should return bad request if email already in use", t, func() {
-		serviceMock := &IdentityServiceMock{
+		serviceMock := &apitest.IdentityServiceMock{
 			CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
 				return "", identity.ErrEmailAlreadyExists
 			},

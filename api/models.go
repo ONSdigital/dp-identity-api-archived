@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-//go:generate moq -out generate_mocks.go -pkg api . IdentityService
+//go:generate moq -out apitest/generate_mocks.go -pkg apitest . IdentityService
 
 const (
 	getIdentityAction    = "getIdentity"

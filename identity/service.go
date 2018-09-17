@@ -3,6 +3,7 @@ package identity
 import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/mongo"
+	"github.com/ONSdigital/dp-identity-api/persistence"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -56,17 +57,17 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 		return "", errors.Wrap(err, "create: error encrypting password")
 	}
 
-	newIdentity := mongo.Identity{
+	newIdentity := persistence.Identity{
 		Name:              i.Name,
 		Email:             i.Email,
 		Password:          pwd,
 		TemporaryPassword: i.TemporaryPassword,
 		UserType:          i.UserType,
 		Migrated:          i.Migrated,
-		Deleted:           i.Deleted,
+		Deleted:           false,
 	}
 
-	id, err := s.Persistence.Create(newIdentity)
+	id, err := s.DB.SaveIdentity(newIdentity)
 	if err != nil && err == mongo.ErrNonUnique {
 		log.ErrorCtx(ctx, errors.New("create: failed to create identity - an active identity with this email already exists"), logD)
 		return "", ErrEmailAlreadyExists
@@ -100,7 +101,6 @@ func (s *Service) VerifyPassword(ctx context.Context, email string, password str
 	return nil
 }
 
-
 func (s *Service) Get(ctx context.Context) (*Model, error) {
 
 	// TODO - has token expired?
@@ -120,10 +120,11 @@ func (s *Service) Get(ctx context.Context) (*Model, error) {
 	return defaultUser, nil
 }
 
-func (s *Service) getIdentity(ctx context.Context, email string) (*mongo.Identity, error) {
+
+func (s *Service) getIdentity(ctx context.Context, email string) (*persistence.Identity, error) {
 	logD := log.Data{"email": email}
 
-	i, err := s.Persistence.GetIdentity(email)
+	i, err := s.DB.GetIdentity(email)
 	if err != nil {
 		if err == mongo.ErrNotFound {
 			log.ErrorCtx(ctx, errors.New("user not found"), logD)
