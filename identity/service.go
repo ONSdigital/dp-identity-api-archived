@@ -101,7 +101,7 @@ func (s *Service) VerifyPassword(ctx context.Context, email string, password str
 	return nil
 }
 
-func (s *Service) Get(ctx context.Context) (*Model, error) {
+func (s *Service) Get(ctx context.Context, tokenStr string) (*Model, error) {
 
 	// TODO - has token expired?
 	// TODO - token to get id from cache

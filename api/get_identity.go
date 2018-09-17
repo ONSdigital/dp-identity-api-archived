@@ -47,9 +47,7 @@ func (api *API) getIdentity(ctx context.Context, r *http.Request) (*identity.Mod
 		return nil, ErrNoTokenProvided
 	}
 
-	ctx = context.WithValue(ctx, "token", tokenStr)
-
-	i, err := api.IdentityService.Get(ctx)
+	i, err := api.IdentityService.Get(ctx, tokenStr)
 	if err != nil {
 		return nil, err
 	}

@@ -83,6 +83,6 @@ func getNewTokenRequest(ctx context.Context, r io.ReadCloser) (*NewTokenRequest,
 //IdentityService is a service for creating, updating and deleting Identities.
 type IdentityService interface {
 	Create(ctx context.Context, i *identity.Model) (string, error)
-	Get(ctx context.Context) (*identity.Model, error)
+	Get(ctx context.Context, tokenStr string) (*identity.Model, error)
 	VerifyPassword(ctx context.Context, email string, password string) error
 }
