@@ -101,6 +101,25 @@ func (s *Service) VerifyPassword(ctx context.Context, email string, password str
 	return nil
 }
 
+func (s *Service) Get(ctx context.Context) (*Model, error) {
+
+	// TODO - has token expired?
+	// TODO - token to get id from cache
+	// TODO - id to get requested identity
+
+	defaultUser := &Model{
+		Name:              "John Paul Jones",
+		Email:             "blackdog@ons.gov.uk",
+		Password:          "foo",
+		UserType:          "bar",
+		TemporaryPassword: false,
+		Migrated:          false,
+		Deleted:           false,
+	}
+
+	return defaultUser, nil
+}
+
 func (s *Service) getIdentity(ctx context.Context, email string) (*persistence.Identity, error) {
 	logD := log.Data{"email": email}
 
@@ -115,6 +134,7 @@ func (s *Service) getIdentity(ctx context.Context, email string) (*persistence.I
 		return nil, err
 	}
 	return &i, nil
+
 }
 
 func (s *Service) encryptPassword(i *Model) (string, error) {

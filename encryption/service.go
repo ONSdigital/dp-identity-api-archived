@@ -12,4 +12,3 @@ func (s Service) GenerateFromPassword(password []byte, cost int) ([]byte, error)
 func (s Service) CompareHashAndPassword(hashedPassword, password []byte) error {
 	return bcrypt.CompareHashAndPassword(hashedPassword, password)
 }
-

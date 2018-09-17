@@ -11,6 +11,7 @@ import (
 
 var (
 	lockIdentityServiceMockCreate         sync.RWMutex
+	lockIdentityServiceMockGet            sync.RWMutex
 	lockIdentityServiceMockVerifyPassword sync.RWMutex
 )
 
@@ -22,6 +23,9 @@ var (
 //         mockedIdentityService := &IdentityServiceMock{
 //             CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
 // 	               panic("TODO: mock out the Create method")
+//             },
+//             GetFunc: func(ctx context.Context) (*identity.Model, error) {
+// 	               panic("TODO: mock out the Get method")
 //             },
 //             VerifyPasswordFunc: func(ctx context.Context, email string, password string) error {
 // 	               panic("TODO: mock out the VerifyPassword method")
@@ -36,6 +40,9 @@ type IdentityServiceMock struct {
 	// CreateFunc mocks the Create method.
 	CreateFunc func(ctx context.Context, i *identity.Model) (string, error)
 
+	// GetFunc mocks the Get method.
+	GetFunc func(ctx context.Context) (*identity.Model, error)
+
 	// VerifyPasswordFunc mocks the VerifyPassword method.
 	VerifyPasswordFunc func(ctx context.Context, email string, password string) error
 
@@ -47,6 +54,11 @@ type IdentityServiceMock struct {
 			Ctx context.Context
 			// I is the i argument value.
 			I *identity.Model
+		}
+		// Get holds details about calls to the Get method.
+		Get []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
 		}
 		// VerifyPassword holds details about calls to the VerifyPassword method.
 		VerifyPassword []struct {
@@ -92,6 +104,37 @@ func (mock *IdentityServiceMock) CreateCalls() []struct {
 	lockIdentityServiceMockCreate.RLock()
 	calls = mock.calls.Create
 	lockIdentityServiceMockCreate.RUnlock()
+	return calls
+}
+
+// Get calls GetFunc.
+func (mock *IdentityServiceMock) Get(ctx context.Context) (*identity.Model, error) {
+	if mock.GetFunc == nil {
+		panic("moq: IdentityServiceMock.GetFunc is nil but IdentityService.Get was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	lockIdentityServiceMockGet.Lock()
+	mock.calls.Get = append(mock.calls.Get, callInfo)
+	lockIdentityServiceMockGet.Unlock()
+	return mock.GetFunc(ctx)
+}
+
+// GetCalls gets all the calls that were made to Get.
+// Check the length with:
+//     len(mockedIdentityService.GetCalls())
+func (mock *IdentityServiceMock) GetCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	lockIdentityServiceMockGet.RLock()
+	calls = mock.calls.Get
+	lockIdentityServiceMockGet.RUnlock()
 	return calls
 }
 

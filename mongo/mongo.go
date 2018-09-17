@@ -14,7 +14,7 @@ import (
 var (
 	ErrNotFound  = errors.New("not found")
 	ErrNonUnique = errors.New("non unique")
-	nilIdentity = persistence.Identity{}
+	nilIdentity  = persistence.Identity{}
 )
 
 // Mongo represents a simplistic MongoDB configuration.

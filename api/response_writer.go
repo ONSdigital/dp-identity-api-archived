@@ -25,6 +25,10 @@ var (
 		identity.ErrEmailAlreadyExists:  http.StatusBadRequest,
 	}
 
+	getIdentityResponse = JSONResponseWriter{
+		ErrNoTokenProvided: http.StatusNotFound,
+	}
+
 	newTokenResponse = JSONResponseWriter{
 		ErrRequestBodyNil:              http.StatusBadRequest,
 		ErrAuthRequestNil:              http.StatusBadRequest,
