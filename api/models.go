@@ -84,6 +84,5 @@ func getNewTokenRequest(ctx context.Context, r io.ReadCloser) (*NewTokenRequest,
 type IdentityService interface {
 	Create(ctx context.Context, i *identity.Model) (string, error)
 	Get(ctx context.Context) (*identity.Model, error)
-	CreateToken(ctx context.Context, email string, password string) error
 	VerifyPassword(ctx context.Context, email string, password string) error
 }
