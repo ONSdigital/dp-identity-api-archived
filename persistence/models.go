@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"errors"
+	"time"
 )
 
 //go:generate moq -out persistencetest/generate_mocks.go -pkg persistencetest . DB
@@ -26,4 +27,5 @@ type Identity struct {
 	TemporaryPassword bool      `bson:"temporary_password"`
 	Migrated          bool      `bson:"migrated"`
 	Deleted           bool      `bson:"deleted"`
+	CreatedDate       time.Time `bson:"createdDate"`
 }
