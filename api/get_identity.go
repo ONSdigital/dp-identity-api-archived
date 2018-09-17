@@ -9,9 +9,10 @@ import (
 	"net/http"
 )
 
-// TODO - meaningful documentation
-//
-//
+// GetIdentityHandler is a GET HTTP handler for retrieving an Identity using a token provided in the request header.
+// A request to this endpoint will create audit event showing an attempt to get an identity was made followed by another
+// event - successful or unsuccessful depending on outcome of processing the request. If a request is successful the
+// retrieved identity will be returned in the response.
 func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
