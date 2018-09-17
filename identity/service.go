@@ -120,7 +120,6 @@ func (s *Service) Get(ctx context.Context) (*Model, error) {
 	return defaultUser, nil
 }
 
-
 func (s *Service) getIdentity(ctx context.Context, email string) (*persistence.Identity, error) {
 	logD := log.Data{"email": email}
 

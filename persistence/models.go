@@ -18,12 +18,12 @@ type DB interface {
 }
 
 type Identity struct {
-	ID                string    `bson:"id"`
-	Name              string    `bson:"name"`
-	Email             string    `bson:"email"`
-	Password          string    `bson:"password"`
-	UserType          string    `bson:"user_type"`
-	TemporaryPassword bool      `bson:"temporary_password"`
-	Migrated          bool      `bson:"migrated"`
-	Deleted           bool      `bson:"deleted"`
+	ID                string `bson:"id"`
+	Name              string `bson:"name"`
+	Email             string `bson:"email"`
+	Password          string `bson:"password"`
+	UserType          string `bson:"user_type"`
+	TemporaryPassword bool   `bson:"temporary_password"`
+	Migrated          bool   `bson:"migrated"`
+	Deleted           bool   `bson:"deleted"`
 }
