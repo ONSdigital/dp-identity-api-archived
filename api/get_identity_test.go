@@ -28,7 +28,7 @@ const getIdentityURL = "http://localhost:23800/identity"
 
 func TestIdentityAPI_GetIdentityAuditAttemptedFailed(t *testing.T) {
 	Convey("given audit action attempted returns an error", t, func() {
-		auditMock := auditortest.NewErroring(getIdentityURL, audit.Attempted)
+		auditMock := auditortest.NewErroring(getIdentityAction, audit.Attempted)
 		serviceMock := &apitest.IdentityServiceMock{}
 
 		Convey("when getIdentity is called", func() {
@@ -45,16 +45,15 @@ func TestIdentityAPI_GetIdentityAuditAttemptedFailed(t *testing.T) {
 				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), auditortest.ErrAudit.Error())
 			})
 
-			Convey("and no identity is retrieved", func() {
+			Convey("and no identity is created", func() {
 				So(serviceMock.GetCalls(), ShouldHaveLength, 0)
 			})
 
 			Convey("and an unsuccessful audit event is recorded", func() {
-				auditMock.AssertRecordCalls(auditortest.Expected{Action: getIdentityURL, Result: audit.Attempted, Params: nil})
+				auditMock.AssertRecordCalls(auditortest.Expected{Action: getIdentityAction, Result: audit.Attempted, Params: nil})
 			})
 		})
 	})
-
 }
 
 func TestIdentityAPI_GetIdentityError(t *testing.T) {
@@ -106,6 +105,7 @@ func TestIdentityAPI_GetIdentityAuditSuccessfulError(t *testing.T) {
 			}
 
 			r := httptest.NewRequest("GET", getIdentityURL, nil)
+			r.Header.Set("token", "1234")
 			w := httptest.NewRecorder()
 			identityAPI.GetIdentityHandler(w, r)
 
@@ -144,7 +144,7 @@ func TestIdentityAPI_GetIdentitySuccess(t *testing.T) {
 			}
 
 			r := httptest.NewRequest("GET", getIdentityURL, nil)
-			r.Header.Set("token","1234")
+			r.Header.Set("token", "1234")
 			w := httptest.NewRecorder()
 			identityAPI.GetIdentityHandler(w, r)
 
