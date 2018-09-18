@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ONSdigital/dp-identity-api/api"
+	"github.com/ONSdigital/dp-identity-api/cache"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/encryption"
 	"github.com/ONSdigital/dp-identity-api/identity"
@@ -52,12 +53,15 @@ func main() {
 
 	apiErrors := make(chan error, 1)
 
+	cache := cache.New(":6379")
+
 	identityService := &identity.Service{
 		DB:        mongodb,
 		Encryptor: encryption.Service{},
 	}
 
 	identityAPI := api.New("http://localhost"+cfg.BindAddr, identityService, auditor) // TODO make Host config
+	identityAPI.Cache = cache
 
 	router := mux.NewRouter()
 	identityAPI.RegisterEndpoints(router)
@@ -68,10 +72,10 @@ func main() {
 		select {
 		case err := <-apiErrors:
 			log.ErrorC("api error received shutting down service", err, nil)
-			gracefulShutdown(cfg.GracefulShutdownTimeout, httpServer, healthTicker, mongodb.Session)
+			gracefulShutdown(cfg.GracefulShutdownTimeout, httpServer, healthTicker, mongodb.Session, cache)
 		case s := <-signals:
 			log.Debug("os signal received shutting down service", log.Data{"signal": s.String()})
-			gracefulShutdown(cfg.GracefulShutdownTimeout, httpServer, healthTicker, mongodb.Session)
+			gracefulShutdown(cfg.GracefulShutdownTimeout, httpServer, healthTicker, mongodb.Session, cache)
 		}
 	}
 }
@@ -91,7 +95,7 @@ func startHTTPServer(bindAddr string, router *mux.Router, errorChan chan error) 
 }
 
 //gracefulShutdown attempts to gracefully shutdown the service resources before existing.
-func gracefulShutdown(timeout time.Duration, httpServer *server.Server, healthTicker *healthcheck.Ticker, mongoSess *mgo.Session) {
+func gracefulShutdown(timeout time.Duration, httpServer *server.Server, healthTicker *healthcheck.Ticker, mongoSess *mgo.Session, cache *cache.IdentityCache) {
 	log.Info(fmt.Sprintf("shutdown with timeout: %s", timeout), nil)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
@@ -104,6 +108,10 @@ func gracefulShutdown(timeout time.Duration, httpServer *server.Server, healthTi
 
 	if err := mongolib.Close(ctx, mongoSess); err != nil {
 		log.Error(err, nil)
+	}
+
+	if err := cache.Close(ctx); err != nil {
+		log.ErrorCtx(ctx, err, nil)
 	}
 
 	log.Info("shutdown complete", nil)
