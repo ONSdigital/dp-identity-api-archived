@@ -20,5 +20,6 @@ func New(host string, identityService IdentityService, auditor audit.AuditorServ
 func (api *API) RegisterEndpoints(r *mux.Router) {
 	r.HandleFunc("/identity", api.CreateIdentityHandler).Methods("POST")
 	r.HandleFunc("/token", api.CreateTokenHandler).Methods("POST")
+	r.HandleFunc("/token/{token}", api.ping).Methods("POST")
 	r.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 }

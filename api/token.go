@@ -57,7 +57,7 @@ func (api *API) CreateTokenHandler(w http.ResponseWriter, r *http.Request) {
 func (api *API) createToken(ctx context.Context, tokenReq *NewTokenRequest) (*AuthToken, error) {
 	logD := log.Data{"email": tokenReq.Email}
 
-	err := api.IdentityService.VerifyPassword(ctx, tokenReq.Email, tokenReq.Password)
+	i, err := api.IdentityService.VerifyPassword(ctx, tokenReq.Email, tokenReq.Password)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.Wrap(err, "createToken: request unsuccessful"), logD)
 		return nil, err
@@ -67,6 +67,8 @@ func (api *API) createToken(ctx context.Context, tokenReq *NewTokenRequest) (*Au
 	if err != nil {
 		return nil, err
 	}
+
+	api.Cache.Set(token.String(), *i)
 
 	log.InfoCtx(ctx, "createToken: user credential successfully verified", logD)
 	return &AuthToken{Token: token.String()}, nil

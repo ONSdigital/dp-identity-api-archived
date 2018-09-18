@@ -27,8 +27,8 @@ func (e ValidationErr) Error() string {
 
 //Service encapsulates the logic for creating, updating and deleting identities
 type Service struct {
-	DB        persistence.DB
-	Encryptor Encryptor
+	DB         persistence.DB
+	Encryptor  Encryptor
 }
 
 //Model is an object representation of a user identity.

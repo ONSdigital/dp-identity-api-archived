@@ -34,6 +34,7 @@ type API struct {
 	IdentityService    IdentityService
 	healthCheckTimeout time.Duration
 	auditor            audit.AuditorService
+	Cache              Cache
 }
 
 //IdentityCreated is the HTTP response entity for create identity success.
@@ -81,5 +82,10 @@ func getNewTokenRequest(ctx context.Context, r io.ReadCloser) (*NewTokenRequest,
 //IdentityService is a service for creating, updating and deleting Identities.
 type IdentityService interface {
 	Create(ctx context.Context, i *identity.Model) (string, error)
-	VerifyPassword(ctx context.Context, email string, password string) error
+	VerifyPassword(ctx context.Context, email string, password string) (*identity.Model, error)
+}
+
+type Cache interface {
+	Set(token string, i identity.Model) error
+	Get(token string) (*identity.Model, error)
 }

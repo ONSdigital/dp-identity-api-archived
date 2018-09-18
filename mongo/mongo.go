@@ -14,7 +14,7 @@ import (
 var (
 	ErrNotFound  = errors.New("not found")
 	ErrNonUnique = errors.New("non unique")
-	nilIdentity = persistence.Identity{}
+	nilIdentity  = persistence.Identity{}
 )
 
 // Mongo represents a simplistic MongoDB configuration.
@@ -78,6 +78,7 @@ func (m *Mongo) SaveIdentity(identity persistence.Identity) (string, error) {
 	}
 
 	identity.ID = id.String()
+	identity.CreatedDate = time.Now()
 
 	err = s.DB(m.Database).C(m.Collection).Insert(identity)
 	if err == mgo.ErrNotFound {
