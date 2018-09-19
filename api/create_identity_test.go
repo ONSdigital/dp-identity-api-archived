@@ -272,7 +272,7 @@ func TestAPI_CreateIdentityHandlerEmailAlreadyInUse(t *testing.T) {
 
 		identityAPI.CreateIdentityHandler(w, r)
 
-		So(w.Code, ShouldEqual, http.StatusBadRequest)
+		So(w.Code, ShouldEqual, http.StatusConflict)
 		So(strings.TrimSpace(w.Body.String()), ShouldEqual, identity.ErrEmailAlreadyExists.Error())
 
 		So(serviceMock.CreateCalls(), ShouldHaveLength, 1)

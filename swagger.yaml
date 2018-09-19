@@ -44,6 +44,8 @@ paths:
             $ref: '#/definitions/IdentityCreated'
         400:
           description: "invalid request body"
+        409:
+          description: "email address is already associated with an active identity"
         500:
           description: "internal server error"
   /token:

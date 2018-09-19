@@ -23,7 +23,7 @@ var (
 		schema.ErrEmailValidation:       http.StatusBadRequest,
 		schema.ErrPasswordValidation:    http.StatusBadRequest,
 		schema.ErrIdentityNil:           http.StatusBadRequest,
-		identity.ErrEmailAlreadyExists:  http.StatusBadRequest,
+		identity.ErrEmailAlreadyExists:  http.StatusConflict,
 	}
 
 	newTokenResponse = JSONResponseWriter{
