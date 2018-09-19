@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/ONSdigital/dp-identity-api/identity"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/ONSdigital/go-ns/log"
 	"net/http"
 )
@@ -18,10 +19,10 @@ var (
 		ErrRequestBodyNil:               http.StatusBadRequest,
 		identity.ErrInvalidArguments:    http.StatusInternalServerError,
 		identity.ErrPersistence:         http.StatusInternalServerError,
-		identity.ErrNameValidation:      http.StatusBadRequest,
-		identity.ErrEmailValidation:     http.StatusBadRequest,
-		identity.ErrPasswordValidation:  http.StatusBadRequest,
-		identity.ErrIdentityNil:         http.StatusBadRequest,
+		schema.ErrNameValidation:        http.StatusBadRequest,
+		schema.ErrEmailValidation:       http.StatusBadRequest,
+		schema.ErrPasswordValidation:    http.StatusBadRequest,
+		schema.ErrIdentityNil:           http.StatusBadRequest,
 		identity.ErrEmailAlreadyExists:  http.StatusBadRequest,
 	}
 

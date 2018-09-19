@@ -4,7 +4,7 @@
 package persistencetest
 
 import (
-	"github.com/ONSdigital/dp-identity-api/persistence"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"sync"
 )
 
@@ -19,10 +19,10 @@ var (
 //
 //         // make and configure a mocked DB
 //         mockedDB := &DBMock{
-//             GetIdentityFunc: func(email string) (persistence.Identity, error) {
+//             GetIdentityFunc: func(email string) (schema.Identity, error) {
 // 	               panic("TODO: mock out the GetIdentity method")
 //             },
-//             SaveIdentityFunc: func(newIdentity persistence.Identity) (string, error) {
+//             SaveIdentityFunc: func(newIdentity schema.Identity) (string, error) {
 // 	               panic("TODO: mock out the SaveIdentity method")
 //             },
 //         }
@@ -33,10 +33,10 @@ var (
 //     }
 type DBMock struct {
 	// GetIdentityFunc mocks the GetIdentity method.
-	GetIdentityFunc func(email string) (persistence.Identity, error)
+	GetIdentityFunc func(email string) (schema.Identity, error)
 
 	// SaveIdentityFunc mocks the SaveIdentity method.
-	SaveIdentityFunc func(newIdentity persistence.Identity) (string, error)
+	SaveIdentityFunc func(newIdentity schema.Identity) (string, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -48,13 +48,13 @@ type DBMock struct {
 		// SaveIdentity holds details about calls to the SaveIdentity method.
 		SaveIdentity []struct {
 			// NewIdentity is the newIdentity argument value.
-			NewIdentity persistence.Identity
+			NewIdentity schema.Identity
 		}
 	}
 }
 
 // GetIdentity calls GetIdentityFunc.
-func (mock *DBMock) GetIdentity(email string) (persistence.Identity, error) {
+func (mock *DBMock) GetIdentity(email string) (schema.Identity, error) {
 	if mock.GetIdentityFunc == nil {
 		panic("moq: DBMock.GetIdentityFunc is nil but DB.GetIdentity was just called")
 	}
@@ -85,12 +85,12 @@ func (mock *DBMock) GetIdentityCalls() []struct {
 }
 
 // SaveIdentity calls SaveIdentityFunc.
-func (mock *DBMock) SaveIdentity(newIdentity persistence.Identity) (string, error) {
+func (mock *DBMock) SaveIdentity(newIdentity schema.Identity) (string, error) {
 	if mock.SaveIdentityFunc == nil {
 		panic("moq: DBMock.SaveIdentityFunc is nil but DB.SaveIdentity was just called")
 	}
 	callInfo := struct {
-		NewIdentity persistence.Identity
+		NewIdentity schema.Identity
 	}{
 		NewIdentity: newIdentity,
 	}
@@ -104,10 +104,10 @@ func (mock *DBMock) SaveIdentity(newIdentity persistence.Identity) (string, erro
 // Check the length with:
 //     len(mockedDB.SaveIdentityCalls())
 func (mock *DBMock) SaveIdentityCalls() []struct {
-	NewIdentity persistence.Identity
+	NewIdentity schema.Identity
 } {
 	var calls []struct {
-		NewIdentity persistence.Identity
+		NewIdentity schema.Identity
 	}
 	lockDBMockSaveIdentity.RLock()
 	calls = mock.calls.SaveIdentity
