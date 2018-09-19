@@ -3,18 +3,13 @@ package mongo
 import (
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/persistence"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/satori/go.uuid"
 	"time"
 
 	"github.com/pkg/errors"
-)
-
-var (
-	ErrNotFound  = errors.New("not found")
-	ErrNonUnique = errors.New("non unique")
-	nilIdentity = persistence.Identity{}
 )
 
 // Mongo represents a simplistic MongoDB configuration.
@@ -58,7 +53,7 @@ func (m *Mongo) createSession() (session *mgo.Session, err error) {
 	return session, nil
 }
 
-func (m *Mongo) SaveIdentity(identity persistence.Identity) (string, error) {
+func (m *Mongo) SaveIdentity(identity schema.Identity) (string, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
@@ -68,7 +63,7 @@ func (m *Mongo) SaveIdentity(identity persistence.Identity) (string, error) {
 	}
 
 	if !available {
-		return "", ErrNonUnique
+		return "", persistence.ErrNonUnique
 	}
 
 	// NOTE - Upsert may be more appropriate than Insert. Consider "already exists" scenarios?
@@ -102,7 +97,7 @@ func (m *Mongo) identityAvailable(s *mgo.Session, email string) (bool, error) {
 	return count == 0, nil
 }
 
-func (m *Mongo) GetIdentity(email string) (persistence.Identity, error) {
+func (m *Mongo) GetIdentity(email string) (schema.Identity, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
@@ -110,16 +105,16 @@ func (m *Mongo) GetIdentity(email string) (persistence.Identity, error) {
 
 	count, err := s.DB(m.Database).C(m.Collection).Find(query).Count()
 	if err != nil {
-		return nilIdentity, err
+		return schema.NilIdentity, err
 	}
 
 	if count == 0 {
-		return nilIdentity, ErrNotFound
+		return schema.NilIdentity, persistence.ErrNotFound
 	}
 
-	var i persistence.Identity
+	var i schema.Identity
 	if err := s.DB(m.Database).C(m.Collection).Find(query).One(&i); err != nil {
-		return nilIdentity, err
+		return schema.NilIdentity, err
 	}
 	return i, nil
 }

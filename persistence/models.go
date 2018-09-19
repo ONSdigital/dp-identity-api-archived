@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"errors"
+	"github.com/ONSdigital/dp-identity-api/schema"
 )
 
 //go:generate moq -out persistencetest/generate_mocks.go -pkg persistencetest . DB
@@ -13,17 +14,6 @@ var (
 
 // DB...
 type DB interface {
-	SaveIdentity(newIdentity Identity) (string, error)
-	GetIdentity(email string) (Identity, error)
-}
-
-type Identity struct {
-	ID                string    `bson:"id"`
-	Name              string    `bson:"name"`
-	Email             string    `bson:"email"`
-	Password          string    `bson:"password"`
-	UserType          string    `bson:"user_type"`
-	TemporaryPassword bool      `bson:"temporary_password"`
-	Migrated          bool      `bson:"migrated"`
-	Deleted           bool      `bson:"deleted"`
+	SaveIdentity(newIdentity schema.Identity) (string, error)
+	GetIdentity(email string) (schema.Identity, error)
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/ONSdigital/dp-identity-api/identity"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
@@ -35,10 +35,10 @@ func Test_WriteErrorResolveSuccessful(t *testing.T) {
 	Convey("should write expected error status and message to http response", t, func() {
 		w := httptest.NewRecorder()
 
-		createIdentityResponse.writeError(context.Background(), w, identity.ErrNameValidation)
+		createIdentityResponse.writeError(context.Background(), w, schema.ErrNameValidation)
 
 		So(w.Header().Get(headerContentType), ShouldEqual, "text/plain; charset=utf-8")
-		assertErrorResponse(w.Code, http.StatusBadRequest, w.Body.String(), identity.ErrNameValidation.Error())
+		assertErrorResponse(w.Code, http.StatusBadRequest, w.Body.String(), schema.ErrNameValidation.Error())
 	})
 }
 

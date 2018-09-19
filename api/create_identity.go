@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/dp-identity-api/identity"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/go-ns/log"
@@ -55,7 +55,7 @@ func (api *API) createIdentity(ctx context.Context, r *http.Request) (*IdentityC
 		return nil, ErrRequestBodyNil
 	}
 
-	var i identity.Model
+	var i schema.Identity
 	if err := json.Unmarshal(body, &i); err != nil {
 		return nil, ErrFailedToUnmarshalRequestBody
 	}
