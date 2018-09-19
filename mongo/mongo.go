@@ -12,11 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	ErrNotFound  = errors.New("not found")
-	ErrNonUnique = errors.New("non unique")
-)
-
 // Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
 	Collection     string
