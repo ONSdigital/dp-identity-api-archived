@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/log"
-	"github.com/ONSdigital/go-ns/token"
 	"github.com/pkg/errors"
 	"net/http"
 	"github.com/ONSdigital/dp-identity-api/schema"
@@ -44,9 +43,9 @@ func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) getIdentity(ctx context.Context, r *http.Request) (*schema.Identity, error) {
 
-	tokenStr, err := token.GetToken(r)
-	if err != nil {
-		log.ErrorCtx(ctx, err, nil)
+	tokenStr := r.Header.Get(token)
+	if tokenStr == "" {
+		log.ErrorCtx(ctx, ErrNoTokenProvided, nil)
 		return nil, ErrNoTokenProvided
 	}
 
