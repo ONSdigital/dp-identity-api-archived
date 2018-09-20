@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 func TestIdentity_Validate(t *testing.T) {
 	Convey("should not return error if identity is valid", t, func() {
 		i := &Identity{

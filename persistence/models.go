@@ -17,4 +17,3 @@ type DB interface {
 	SaveIdentity(newIdentity schema.Identity) (string, error)
 	GetIdentity(email string) (schema.Identity, error)
 }
-

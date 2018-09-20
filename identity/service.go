@@ -92,7 +92,6 @@ func (s *Service) Get(ctx context.Context, tokenStr string) (*schema.Identity, e
 	return defaultUser, nil
 }
 
-
 func (s *Service) getIdentity(ctx context.Context, email string) (*schema.Identity, error) {
 	logD := log.Data{"email": email}
 

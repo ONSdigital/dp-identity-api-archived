@@ -12,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-
 // Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
 	Collection     string

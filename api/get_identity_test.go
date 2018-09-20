@@ -3,13 +3,13 @@ package api
 import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/api/apitest"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/audit/auditortest"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"github.com/ONSdigital/dp-identity-api/schema"
 )
 
 var (

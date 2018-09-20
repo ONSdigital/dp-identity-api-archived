@@ -2,13 +2,12 @@ package api
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
 	"net/http"
-	"github.com/ONSdigital/dp-identity-api/schema"
 )
-
 
 // GetIdentityHandler is a GET HTTP handler for retrieving an Identity using a token provided in the request header.
 // A request to this endpoint will create audit event showing an attempt to get an identity was made followed by another
