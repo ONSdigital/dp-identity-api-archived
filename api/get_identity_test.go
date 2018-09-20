@@ -3,17 +3,17 @@ package api
 import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/api/apitest"
-	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/audit/auditortest"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"github.com/ONSdigital/dp-identity-api/schema"
 )
 
 var (
-	defaultUser = &identity.Model{
+	defaultUser = &schema.Identity{
 		Name:              "John Paul Jones",
 		Email:             "blackdog@ons.gov.uk",
 		Password:          "foo",
@@ -72,7 +72,7 @@ func TestIdentityAPI_GetIdentityError(t *testing.T) {
 			identityAPI.GetIdentityHandler(w, r)
 
 			Convey("then the expected error response is returned", func() {
-				assertErrorResponse(w.Code, http.StatusNotFound, w.Body.String(), ErrNoTokenProvided.Error())
+				assertErrorResponse(w.Code, http.StatusUnauthorized, w.Body.String(), ErrNoTokenProvided.Error())
 			})
 
 			Convey("and identity service is never called", func() {
@@ -93,7 +93,7 @@ func TestIdentityAPI_GetIdentityAuditSuccessfulError(t *testing.T) {
 	Convey("given audit action successful returns an error", t, func() {
 		auditMock := auditortest.NewErroring(getIdentityAction, audit.Successful)
 		serviceMock := &apitest.IdentityServiceMock{
-			GetFunc: func(ctx context.Context) (*identity.Model, error) {
+			GetFunc: func(ctx context.Context, tokenStr string) (*schema.Identity, error) {
 				return defaultUser, nil
 			},
 		}
@@ -131,7 +131,7 @@ func TestIdentityAPI_GetIdentitySuccess(t *testing.T) {
 	Convey("given create identity is successful", t, func() {
 		auditMock := auditortest.New()
 		serviceMock := &apitest.IdentityServiceMock{
-			GetFunc: func(ctx context.Context) (*identity.Model, error) {
+			GetFunc: func(ctx context.Context, tokenStr string) (*schema.Identity, error) {
 				return defaultUser, nil
 			},
 		}
@@ -169,7 +169,7 @@ func TestIdentityAPI_GetIdentitySuccess(t *testing.T) {
 func TestGetIdentity_IdentityServiceError(t *testing.T) {
 	Convey("should return expected error if identityService returns an error", t, func() {
 		serviceMock := &apitest.IdentityServiceMock{
-			GetFunc: func(ctx context.Context) (*identity.Model, error) {
+			GetFunc: func(ctx context.Context, tokenStr string) (*schema.Identity, error) {
 				return nil, errTest
 			},
 		}
