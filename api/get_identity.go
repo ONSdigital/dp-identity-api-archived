@@ -37,12 +37,12 @@ func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getIdentityResponse.writeEntity(ctx, w, response, http.StatusOK)
-	log.InfoCtx(ctx, "getIdentity: get identity successful", nil)
+	log.InfoCtx(ctx, "getIdentity: get identity successful", log.Data{"ID": response.ID})
 }
 
 func (api *API) getIdentity(ctx context.Context, r *http.Request) (*schema.Identity, error) {
 
-	tokenStr := r.Header.Get(token)
+	tokenStr := r.Header.Get(tokenHeaderKey)
 	if tokenStr == "" {
 		log.ErrorCtx(ctx, ErrNoTokenProvided, nil)
 		return nil, ErrNoTokenProvided

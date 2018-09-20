@@ -21,7 +21,7 @@ const (
 	identityURIFormat    = "%s/identity/%s"
 	headerContentType    = "content-type"
 	mimeTypeJSON         = "application/json"
-	token                = "token"
+	tokenHeaderKey       = "token"
 )
 
 var (
