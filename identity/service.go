@@ -2,47 +2,27 @@ package identity
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/dp-identity-api/persistence"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	ErrIdentityNil        = ValidationErr{message: "identity required but was nil"}
-	ErrNameValidation     = ValidationErr{message: "mandatory field name was empty"}
-	ErrEmailValidation    = ValidationErr{message: "mandatory field email was empty"}
-	ErrPasswordValidation = ValidationErr{message: "mandatory field password was empty"}
 	ErrAuthenticateFailed = errors.New("authentication unsuccessful")
 	ErrEmailAlreadyExists = errors.New("active identity already exists with email")
 	ErrIdentityNotFound   = errors.New("authentication unsuccessful user not found")
 )
 
-func (s *Service) Validate(i *Model) (err error) {
-	if i == nil {
-		return ErrIdentityNil
-	}
-	if i.Name == "" {
-		return ErrNameValidation
-	}
-	if i.Email == "" {
-		return ErrEmailValidation
-	}
-	if i.Password == "" {
-		return ErrPasswordValidation
-	}
-	return nil
-}
-
 //Create create a new user identity
-func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
+func (s *Service) Create(ctx context.Context, i *schema.Identity) (string, error) {
 	if ctx == nil {
 		log.Error(errors.New("create: failed mandatory context parameter was nil"), nil)
 		return "", ErrInvalidArguments
 	}
 
-	if err := s.Validate(i); err != nil {
+	if err := i.Validate(); err != nil {
 		log.ErrorCtx(ctx, errors.Wrap(err, "create: failed validation"), nil)
 		return "", err
 	}
@@ -57,18 +37,10 @@ func (s *Service) Create(ctx context.Context, i *Model) (string, error) {
 		return "", errors.Wrap(err, "create: error encrypting password")
 	}
 
-	newIdentity := persistence.Identity{
-		Name:              i.Name,
-		Email:             i.Email,
-		Password:          pwd,
-		TemporaryPassword: i.TemporaryPassword,
-		UserType:          i.UserType,
-		Migrated:          i.Migrated,
-		Deleted:           false,
-	}
+	i.Password = pwd
 
-	id, err := s.DB.SaveIdentity(newIdentity)
-	if err != nil && err == mongo.ErrNonUnique {
+	id, err := s.DB.SaveIdentity(*i)
+	if err != nil && err == persistence.ErrNonUnique {
 		log.ErrorCtx(ctx, errors.New("create: failed to create identity - an active identity with this email already exists"), logD)
 		return "", ErrEmailAlreadyExists
 	}
@@ -101,13 +73,13 @@ func (s *Service) VerifyPassword(ctx context.Context, email string, password str
 	return nil
 }
 
-func (s *Service) Get(ctx context.Context, tokenStr string) (*Model, error) {
+func (s *Service) Get(ctx context.Context, tokenStr string) (*schema.Identity, error) {
 
 	// TODO - has token expired?
 	// TODO - token to get id from cache
 	// TODO - id to get requested identity
 
-	defaultUser := &Model{
+	defaultUser := &schema.Identity{
 		Name:              "John Paul Jones",
 		Email:             "blackdog@ons.gov.uk",
 		Password:          "foo",
@@ -120,12 +92,13 @@ func (s *Service) Get(ctx context.Context, tokenStr string) (*Model, error) {
 	return defaultUser, nil
 }
 
-func (s *Service) getIdentity(ctx context.Context, email string) (*persistence.Identity, error) {
+
+func (s *Service) getIdentity(ctx context.Context, email string) (*schema.Identity, error) {
 	logD := log.Data{"email": email}
 
 	i, err := s.DB.GetIdentity(email)
 	if err != nil {
-		if err == mongo.ErrNotFound {
+		if err == persistence.ErrNotFound {
 			log.ErrorCtx(ctx, errors.New("user not found"), logD)
 			return nil, ErrIdentityNotFound
 		}
@@ -137,7 +110,7 @@ func (s *Service) getIdentity(ctx context.Context, email string) (*persistence.I
 
 }
 
-func (s *Service) encryptPassword(i *Model) (string, error) {
+func (s *Service) encryptPassword(i *schema.Identity) (string, error) {
 	pwd, err := s.Encryptor.GenerateFromPassword([]byte(i.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err

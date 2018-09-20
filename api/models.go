@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/ONSdigital/dp-identity-api/identity"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
@@ -82,7 +82,7 @@ func getNewTokenRequest(ctx context.Context, r io.ReadCloser) (*NewTokenRequest,
 
 //IdentityService is a service for creating, updating and deleting Identities.
 type IdentityService interface {
-	Create(ctx context.Context, i *identity.Model) (string, error)
-	Get(ctx context.Context, tokenStr string) (*identity.Model, error)
+	Get(ctx context.Context, tokenStr string) (*schema.Identity, error)
+	Create(ctx context.Context, i *schema.Identity) (string, error)
 	VerifyPassword(ctx context.Context, email string, password string) error
 }

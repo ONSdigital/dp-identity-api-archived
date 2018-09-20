@@ -2,12 +2,12 @@ package api
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/token"
 	"github.com/pkg/errors"
 	"net/http"
+	"github.com/ONSdigital/dp-identity-api/schema"
 )
 
 
@@ -42,7 +42,7 @@ func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 	log.InfoCtx(ctx, "getIdentity: get identity successful", nil)
 }
 
-func (api *API) getIdentity(ctx context.Context, r *http.Request) (*identity.Model, error) {
+func (api *API) getIdentity(ctx context.Context, r *http.Request) (*schema.Identity, error) {
 
 	tokenStr, err := token.GetToken(r)
 	if err != nil {

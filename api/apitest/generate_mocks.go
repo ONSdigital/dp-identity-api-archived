@@ -5,7 +5,7 @@ package apitest
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-identity-api/identity"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"sync"
 )
 
@@ -21,10 +21,10 @@ var (
 //
 //         // make and configure a mocked IdentityService
 //         mockedIdentityService := &IdentityServiceMock{
-//             CreateFunc: func(ctx context.Context, i *identity.Model) (string, error) {
+//             CreateFunc: func(ctx context.Context, i *schema.Identity) (string, error) {
 // 	               panic("TODO: mock out the Create method")
 //             },
-//             GetFunc: func(ctx context.Context) (*identity.Model, error) {
+//             GetFunc: func(ctx context.Context, tokenStr string) (*schema.Identity, error) {
 // 	               panic("TODO: mock out the Get method")
 //             },
 //             VerifyPasswordFunc: func(ctx context.Context, email string, password string) error {
@@ -38,10 +38,10 @@ var (
 //     }
 type IdentityServiceMock struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(ctx context.Context, i *identity.Model) (string, error)
+	CreateFunc func(ctx context.Context, i *schema.Identity) (string, error)
 
 	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context) (*identity.Model, error)
+	GetFunc func(ctx context.Context, tokenStr string) (*schema.Identity, error)
 
 	// VerifyPasswordFunc mocks the VerifyPassword method.
 	VerifyPasswordFunc func(ctx context.Context, email string, password string) error
@@ -53,12 +53,14 @@ type IdentityServiceMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// I is the i argument value.
-			I *identity.Model
+			I *schema.Identity
 		}
 		// Get holds details about calls to the Get method.
 		Get []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
+			// TokenStr is the tokenStr argument value.
+			TokenStr string
 		}
 		// VerifyPassword holds details about calls to the VerifyPassword method.
 		VerifyPassword []struct {
@@ -73,13 +75,13 @@ type IdentityServiceMock struct {
 }
 
 // Create calls CreateFunc.
-func (mock *IdentityServiceMock) Create(ctx context.Context, i *identity.Model) (string, error) {
+func (mock *IdentityServiceMock) Create(ctx context.Context, i *schema.Identity) (string, error) {
 	if mock.CreateFunc == nil {
 		panic("moq: IdentityServiceMock.CreateFunc is nil but IdentityService.Create was just called")
 	}
 	callInfo := struct {
 		Ctx context.Context
-		I   *identity.Model
+		I   *schema.Identity
 	}{
 		Ctx: ctx,
 		I:   i,
@@ -95,11 +97,11 @@ func (mock *IdentityServiceMock) Create(ctx context.Context, i *identity.Model) 
 //     len(mockedIdentityService.CreateCalls())
 func (mock *IdentityServiceMock) CreateCalls() []struct {
 	Ctx context.Context
-	I   *identity.Model
+	I   *schema.Identity
 } {
 	var calls []struct {
 		Ctx context.Context
-		I   *identity.Model
+		I   *schema.Identity
 	}
 	lockIdentityServiceMockCreate.RLock()
 	calls = mock.calls.Create
@@ -108,29 +110,33 @@ func (mock *IdentityServiceMock) CreateCalls() []struct {
 }
 
 // Get calls GetFunc.
-func (mock *IdentityServiceMock) Get(ctx context.Context) (*identity.Model, error) {
+func (mock *IdentityServiceMock) Get(ctx context.Context, tokenStr string) (*schema.Identity, error) {
 	if mock.GetFunc == nil {
 		panic("moq: IdentityServiceMock.GetFunc is nil but IdentityService.Get was just called")
 	}
 	callInfo := struct {
-		Ctx context.Context
+		Ctx      context.Context
+		TokenStr string
 	}{
-		Ctx: ctx,
+		Ctx:      ctx,
+		TokenStr: tokenStr,
 	}
 	lockIdentityServiceMockGet.Lock()
 	mock.calls.Get = append(mock.calls.Get, callInfo)
 	lockIdentityServiceMockGet.Unlock()
-	return mock.GetFunc(ctx)
+	return mock.GetFunc(ctx, tokenStr)
 }
 
 // GetCalls gets all the calls that were made to Get.
 // Check the length with:
 //     len(mockedIdentityService.GetCalls())
 func (mock *IdentityServiceMock) GetCalls() []struct {
-	Ctx context.Context
+	Ctx      context.Context
+	TokenStr string
 } {
 	var calls []struct {
-		Ctx context.Context
+		Ctx      context.Context
+		TokenStr string
 	}
 	lockIdentityServiceMockGet.RLock()
 	calls = mock.calls.Get

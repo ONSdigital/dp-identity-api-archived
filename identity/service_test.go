@@ -3,9 +3,9 @@ package identity
 import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/identity/identitytest"
-	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/dp-identity-api/persistence"
 	"github.com/ONSdigital/dp-identity-api/persistence/persistencetest"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"golang.org/x/crypto/bcrypt"
@@ -14,13 +14,7 @@ import (
 )
 
 var (
-	newIdentity = &Model{
-		Name:     "Eleven",
-		Email:    "11@StrangerThings.com",
-		Password: "WAFFLES",
-	}
-
-	newDBIdentity = persistence.Identity{
+	newIdentity = &schema.Identity{
 		Name:     "Eleven",
 		Email:    "11@StrangerThings.com",
 		Password: "WAFFLES",
@@ -33,7 +27,7 @@ var (
 
 func newPersistenceMock(email string, err error) *persistencetest.DBMock {
 	return &persistencetest.DBMock{
-		SaveIdentityFunc: func(identity persistence.Identity) (string, error) {
+		SaveIdentityFunc: func(identity schema.Identity) (string, error) {
 			return email, err
 		},
 	}
@@ -68,7 +62,7 @@ func TestCreate_Success(t *testing.T) {
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
 
 		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 1)
-		So(persistenceMock.SaveIdentityCalls()[0].NewIdentity, ShouldResemble, newDBIdentity)
+		So(persistenceMock.SaveIdentityCalls()[0].NewIdentity, ShouldResemble, *newIdentity)
 	})
 }
 
@@ -88,7 +82,7 @@ func TestCreate_DataStoreError(t *testing.T) {
 		So(encryptorMock.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
 
 		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 1)
-		So(persistenceMock.SaveIdentityCalls()[0].NewIdentity, ShouldResemble, newDBIdentity)
+		So(persistenceMock.SaveIdentityCalls()[0].NewIdentity, ShouldResemble, *newIdentity)
 	})
 }
 
@@ -98,9 +92,9 @@ func TestCreate_ValidationError(t *testing.T) {
 		encryptorMock := &identitytest.EncryptorMock{}
 		s := &Service{DB: persistenceMock, Encryptor: encryptorMock}
 
-		id, err := s.Create(context.Background(), &Model{})
+		id, err := s.Create(context.Background(), &schema.Identity{})
 
-		So(err, ShouldResemble, ErrNameValidation)
+		So(err, ShouldResemble, schema.ErrNameValidation)
 		So(id, ShouldBeEmpty)
 		So(encryptorMock.GenerateFromPasswordCalls(), ShouldHaveLength, 0)
 		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 0)
@@ -150,45 +144,10 @@ func TestCreate_MissingParameters(t *testing.T) {
 
 		id, err := s.Create(context.Background(), nil)
 
-		So(err, ShouldResemble, ErrIdentityNil)
+		So(err, ShouldResemble, schema.ErrIdentityNil)
 		So(id, ShouldBeEmpty)
 		So(encryptorMock.GenerateFromPasswordCalls(), ShouldHaveLength, 0)
 		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 0)
-	})
-}
-
-func TestService_Validate(t *testing.T) {
-	s := Service{}
-
-	Convey("should not return error if identity is valid", t, func() {
-		i := &Model{
-			Name:     "Bucky O'Hare",
-			Email:    "captain@TheRighteousIndignation.com",
-			Password: "S.P.A.C.E",
-		}
-
-		err := s.Validate(i)
-		So(err, ShouldBeNil)
-	})
-
-	Convey("should error if identity is nil", t, func() {
-		err := s.Validate(nil)
-		So(err, ShouldResemble, ErrIdentityNil)
-	})
-
-	Convey("should error if identity.name is nil", t, func() {
-		err := s.Validate(&Model{})
-		So(err, ShouldResemble, ErrNameValidation)
-	})
-
-	Convey("should error if identity.email is nil", t, func() {
-		err := s.Validate(&Model{Name: "Bucky O'Hare"})
-		So(err, ShouldResemble, ErrEmailValidation)
-	})
-
-	Convey("should error if identity.password is nil", t, func() {
-		err := s.Validate(&Model{Name: "Bucky O'Hare", Email: "captain@TheRighteousIndignation.com"})
-		So(err, ShouldResemble, ErrPasswordValidation)
 	})
 }
 
@@ -228,8 +187,8 @@ func TestService_EncryptPassword(t *testing.T) {
 func TestService_CreateEmailAlreadyInUse(t *testing.T) {
 	Convey("todo", t, func() {
 		persistenceMock := &persistencetest.DBMock{
-			SaveIdentityFunc: func(newIdentity persistence.Identity) (string, error) {
-				return "", mongo.ErrNonUnique
+			SaveIdentityFunc: func(newIdentity schema.Identity) (string, error) {
+				return "", persistence.ErrNonUnique
 			},
 		}
 
@@ -244,7 +203,7 @@ func TestService_CreateEmailAlreadyInUse(t *testing.T) {
 		_, err := s.Create(context.Background(), newIdentity)
 		So(err, ShouldEqual, ErrEmailAlreadyExists)
 		So(persistenceMock.SaveIdentityCalls(), ShouldHaveLength, 1)
-		So(persistenceMock.SaveIdentityCalls()[0].NewIdentity, ShouldResemble, newDBIdentity)
+		So(persistenceMock.SaveIdentityCalls()[0].NewIdentity, ShouldResemble, *newIdentity)
 		So(enc.GenerateFromPasswordCalls(), ShouldHaveLength, 1)
 		So(enc.GenerateFromPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
 		So(enc.GenerateFromPasswordCalls()[0].Cost, ShouldEqual, bcrypt.DefaultCost)
@@ -255,43 +214,43 @@ func TestService_CreateEmailAlreadyInUse(t *testing.T) {
 func TestService_VerifyPassword(t *testing.T) {
 	Convey("should not return error is password is correct", t, func() {
 		p := &persistencetest.DBMock{
-			GetIdentityFunc: func(email string) (persistence.Identity, error) {
-				return newDBIdentity, nil
+			GetIdentityFunc: func(email string) (schema.Identity, error) {
+				return *newIdentity, nil
 			},
 		}
 
-		e := newEncryptorMock([]byte(newDBIdentity.Password), nil, nil)
+		e := newEncryptorMock([]byte(newIdentity.Password), nil, nil)
 
 		s := Service{DB: p, Encryptor: e}
 
-		err := s.VerifyPassword(context.Background(), newDBIdentity.Email, newDBIdentity.Password)
+		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
 		So(err, ShouldBeNil)
 		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
-		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newDBIdentity.Email)
+		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newIdentity.Email)
 		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 1)
-		So(e.CompareHashAndPasswordCalls()[0].Password, ShouldResemble, []byte(newDBIdentity.Password))
-		So(e.CompareHashAndPasswordCalls()[0].HashedPassword, ShouldResemble, []byte(newDBIdentity.Password))
+		So(e.CompareHashAndPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
+		So(e.CompareHashAndPasswordCalls()[0].HashedPassword, ShouldResemble, []byte(newIdentity.Password))
 	})
 }
 
 func TestService_VerifyPasswordIdentityNotFound(t *testing.T) {
 	Convey("should return error if identity is not found", t, func() {
 		p := &persistencetest.DBMock{
-			GetIdentityFunc: func(email string) (persistence.Identity, error) {
-				return persistence.Identity{}, mongo.ErrNotFound
+			GetIdentityFunc: func(email string) (schema.Identity, error) {
+				return schema.Identity{}, persistence.ErrNotFound
 			},
 		}
 
-		e := newEncryptorMock([]byte(newDBIdentity.Password), nil, nil)
+		e := newEncryptorMock([]byte(newIdentity.Password), nil, nil)
 
 		s := Service{DB: p, Encryptor: e}
 
-		err := s.VerifyPassword(context.Background(), newDBIdentity.Email, newDBIdentity.Password)
+		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
 		So(err, ShouldEqual, ErrIdentityNotFound)
 		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
-		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newDBIdentity.Email)
+		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newIdentity.Email)
 		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 0)
 	})
 }
@@ -299,20 +258,20 @@ func TestService_VerifyPasswordIdentityNotFound(t *testing.T) {
 func TestService_VerifyPasswordPersistenceErr(t *testing.T) {
 	Convey("should return error if identity is not found", t, func() {
 		p := &persistencetest.DBMock{
-			GetIdentityFunc: func(email string) (persistence.Identity, error) {
-				return persistence.Identity{}, errTest
+			GetIdentityFunc: func(email string) (schema.Identity, error) {
+				return schema.Identity{}, errTest
 			},
 		}
 
-		e := newEncryptorMock([]byte(newDBIdentity.Password), nil, nil)
+		e := newEncryptorMock([]byte(newIdentity.Password), nil, nil)
 
 		s := Service{DB: p, Encryptor: e}
 
-		err := s.VerifyPassword(context.Background(), newDBIdentity.Email, newDBIdentity.Password)
+		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
 		So(err, ShouldEqual, errTest)
 		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
-		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newDBIdentity.Email)
+		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newIdentity.Email)
 		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 0)
 	})
 }
@@ -320,21 +279,21 @@ func TestService_VerifyPasswordPersistenceErr(t *testing.T) {
 func TestService_VerifyPasswordPasswordIncorrect(t *testing.T) {
 	Convey("should return error if provided password is incorrect", t, func() {
 		p := &persistencetest.DBMock{
-			GetIdentityFunc: func(email string) (persistence.Identity, error) {
-				return newDBIdentity, nil
+			GetIdentityFunc: func(email string) (schema.Identity, error) {
+				return *newIdentity, nil
 			},
 		}
 
-		e := newEncryptorMock([]byte(newDBIdentity.Password), nil, errTest)
+		e := newEncryptorMock([]byte(newIdentity.Password), nil, errTest)
 
 		s := Service{DB: p, Encryptor: e}
 
-		err := s.VerifyPassword(context.Background(), newDBIdentity.Email, newDBIdentity.Password)
+		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
 		So(err, ShouldEqual, ErrAuthenticateFailed)
 		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
-		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newDBIdentity.Email)
+		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newIdentity.Email)
 		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 1)
-		So(e.CompareHashAndPasswordCalls()[0].Password, ShouldResemble, []byte(newDBIdentity.Password))
+		So(e.CompareHashAndPasswordCalls()[0].Password, ShouldResemble, []byte(newIdentity.Password))
 	})
 }
