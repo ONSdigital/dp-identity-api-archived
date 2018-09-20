@@ -2,14 +2,15 @@ package persistence
 
 import (
 	"github.com/ONSdigital/dp-identity-api/schema"
+	"time"
 )
 
 var nilID = ""
 
 type Cache interface {
-	Set(key string, i interface{}) error
-	Get(key string, i interface{}) error
-	Delete(key string) error
+	Set(key string, i schema.Identity, ttl time.Duration) error
+	Get(key string) (*schema.Identity, error)
+	Delete(key string) (bool, error)
 }
 
 type CacheWrapper struct {
@@ -23,23 +24,20 @@ func (c *CacheWrapper) SaveIdentity(newIdentity schema.Identity) (string, error)
 		return nilID, err
 	}
 
-	c.IdentityCache.Set(id, newIdentity)
+	c.IdentityCache.Set(id, newIdentity, 0)
 	return id, nil
 }
 
 func (c *CacheWrapper) GetIdentity(email string) (schema.Identity, error) {
-	// First attempt to get the identity from the cache.
-	var i schema.Identity
-	err := c.IdentityCache.Get(email, &i)
+	i, err := c.IdentityCache.Get(email)
 	if err != nil {
 		return schema.NilIdentity, err
 	}
 
-	// If a not empty return
-	if i == schema.NilIdentity {
-		return c.Database.GetIdentity(email)
+	if i != nil {
+		return *i, nil
 	}
 
 	// otherwise request the identity from the database.
-	return schema.NilIdentity, nil
+	return c.Database.GetIdentity(email)
 }
