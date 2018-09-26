@@ -17,7 +17,7 @@ func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if auditErr := api.auditor.Record(ctx, getIdentityAction, audit.Attempted, nil); auditErr != nil {
-		http.Error(w, auditErr.Error(), http.StatusInternalServerError)
+		getIdentityResponse.writeError(ctx, w, auditErr)
 		return
 	}
 
@@ -32,7 +32,7 @@ func (api *API) GetIdentityHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = api.auditor.Record(ctx, getIdentityAction, audit.Successful, nil)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		getIdentityResponse.writeError(ctx, w, err)
 		return
 	}
 

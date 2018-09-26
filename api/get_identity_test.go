@@ -42,7 +42,7 @@ func TestIdentityAPI_GetIdentityAuditAttemptedFailed(t *testing.T) {
 			identityAPI.GetIdentityHandler(w, r)
 
 			Convey("then the expected error response is returned", func() {
-				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), auditortest.ErrAudit.Error())
+				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), ErrInternalServerError.Error())
 			})
 
 			Convey("and no identity is created", func() {
@@ -110,7 +110,7 @@ func TestIdentityAPI_GetIdentityAuditSuccessfulError(t *testing.T) {
 			identityAPI.GetIdentityHandler(w, r)
 
 			Convey("then the expected error response is returned", func() {
-				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), auditortest.ErrAudit.Error())
+				assertErrorResponse(w.Code, http.StatusInternalServerError, w.Body.String(), ErrInternalServerError.Error())
 			})
 
 			Convey("and the identity is created", func() {
