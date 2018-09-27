@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/ONSdigital/dp-identity-api/api"
+	"github.com/ONSdigital/dp-identity-api/cache"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/encryption"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/dp-identity-api/mongo"
+	"github.com/ONSdigital/dp-identity-api/persistence"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
@@ -49,11 +51,17 @@ func main() {
 
 	// use Nop until kafka is added to environment
 	auditor := &audit.NopAuditor{}
+	nopCache := &cache.NOPCache{}
+
+	db := &persistence.CacheWrapper{
+		IdentityCache: nopCache,
+		Database:      mongodb,
+	}
 
 	apiErrors := make(chan error, 1)
 
 	identityService := &identity.Service{
-		DB:        mongodb,
+		DB:        db,
 		Encryptor: encryption.Service{},
 	}
 
