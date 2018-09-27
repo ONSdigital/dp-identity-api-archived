@@ -6,11 +6,14 @@ package persistencetest
 import (
 	"github.com/ONSdigital/dp-identity-api/schema"
 	"sync"
+	"time"
 )
 
 var (
 	lockDBMockGetIdentity  sync.RWMutex
+	lockDBMockGetToken     sync.RWMutex
 	lockDBMockSaveIdentity sync.RWMutex
+	lockDBMockStoreToken   sync.RWMutex
 )
 
 // DBMock is a mock implementation of DB.
@@ -22,8 +25,14 @@ var (
 //             GetIdentityFunc: func(email string) (schema.Identity, error) {
 // 	               panic("TODO: mock out the GetIdentity method")
 //             },
+//             GetTokenFunc: func(token string, identityID string) (time.Duration, error) {
+// 	               panic("TODO: mock out the GetToken method")
+//             },
 //             SaveIdentityFunc: func(newIdentity schema.Identity) (string, error) {
 // 	               panic("TODO: mock out the SaveIdentity method")
+//             },
+//             StoreTokenFunc: func(token string, identityID string) (time.Duration, error) {
+// 	               panic("TODO: mock out the StoreToken method")
 //             },
 //         }
 //
@@ -35,8 +44,14 @@ type DBMock struct {
 	// GetIdentityFunc mocks the GetIdentity method.
 	GetIdentityFunc func(email string) (schema.Identity, error)
 
+	// GetTokenFunc mocks the GetToken method.
+	GetTokenFunc func(token string, identityID string) (time.Duration, error)
+
 	// SaveIdentityFunc mocks the SaveIdentity method.
 	SaveIdentityFunc func(newIdentity schema.Identity) (string, error)
+
+	// StoreTokenFunc mocks the StoreToken method.
+	StoreTokenFunc func(token string, identityID string) (time.Duration, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -45,10 +60,24 @@ type DBMock struct {
 			// Email is the email argument value.
 			Email string
 		}
+		// GetToken holds details about calls to the GetToken method.
+		GetToken []struct {
+			// Token is the token argument value.
+			Token string
+			// IdentityID is the identityID argument value.
+			IdentityID string
+		}
 		// SaveIdentity holds details about calls to the SaveIdentity method.
 		SaveIdentity []struct {
 			// NewIdentity is the newIdentity argument value.
 			NewIdentity schema.Identity
+		}
+		// StoreToken holds details about calls to the StoreToken method.
+		StoreToken []struct {
+			// Token is the token argument value.
+			Token string
+			// IdentityID is the identityID argument value.
+			IdentityID string
 		}
 	}
 }
@@ -84,6 +113,41 @@ func (mock *DBMock) GetIdentityCalls() []struct {
 	return calls
 }
 
+// GetToken calls GetTokenFunc.
+func (mock *DBMock) GetToken(token string, identityID string) (time.Duration, error) {
+	if mock.GetTokenFunc == nil {
+		panic("moq: DBMock.GetTokenFunc is nil but DB.GetToken was just called")
+	}
+	callInfo := struct {
+		Token      string
+		IdentityID string
+	}{
+		Token:      token,
+		IdentityID: identityID,
+	}
+	lockDBMockGetToken.Lock()
+	mock.calls.GetToken = append(mock.calls.GetToken, callInfo)
+	lockDBMockGetToken.Unlock()
+	return mock.GetTokenFunc(token, identityID)
+}
+
+// GetTokenCalls gets all the calls that were made to GetToken.
+// Check the length with:
+//     len(mockedDB.GetTokenCalls())
+func (mock *DBMock) GetTokenCalls() []struct {
+	Token      string
+	IdentityID string
+} {
+	var calls []struct {
+		Token      string
+		IdentityID string
+	}
+	lockDBMockGetToken.RLock()
+	calls = mock.calls.GetToken
+	lockDBMockGetToken.RUnlock()
+	return calls
+}
+
 // SaveIdentity calls SaveIdentityFunc.
 func (mock *DBMock) SaveIdentity(newIdentity schema.Identity) (string, error) {
 	if mock.SaveIdentityFunc == nil {
@@ -112,5 +176,40 @@ func (mock *DBMock) SaveIdentityCalls() []struct {
 	lockDBMockSaveIdentity.RLock()
 	calls = mock.calls.SaveIdentity
 	lockDBMockSaveIdentity.RUnlock()
+	return calls
+}
+
+// StoreToken calls StoreTokenFunc.
+func (mock *DBMock) StoreToken(token string, identityID string) (time.Duration, error) {
+	if mock.StoreTokenFunc == nil {
+		panic("moq: DBMock.StoreTokenFunc is nil but DB.StoreToken was just called")
+	}
+	callInfo := struct {
+		Token      string
+		IdentityID string
+	}{
+		Token:      token,
+		IdentityID: identityID,
+	}
+	lockDBMockStoreToken.Lock()
+	mock.calls.StoreToken = append(mock.calls.StoreToken, callInfo)
+	lockDBMockStoreToken.Unlock()
+	return mock.StoreTokenFunc(token, identityID)
+}
+
+// StoreTokenCalls gets all the calls that were made to StoreToken.
+// Check the length with:
+//     len(mockedDB.StoreTokenCalls())
+func (mock *DBMock) StoreTokenCalls() []struct {
+	Token      string
+	IdentityID string
+} {
+	var calls []struct {
+		Token      string
+		IdentityID string
+	}
+	lockDBMockStoreToken.RLock()
+	calls = mock.calls.StoreToken
+	lockDBMockStoreToken.RUnlock()
 	return calls
 }
