@@ -7,39 +7,50 @@ import (
 )
 
 const (
-	nilToken = ""
-	nilTTL   = 0
+	nilTTL = 0
 )
 
 var (
 	// ErrTokenExpired returned when GetTTL is called and the token has expired
 	ErrTokenExpired = errors.New("token expired")
+
+	getTimeNow    getTimeFunc
+	getExpiryDate getTimeFunc
+	maxTTL        time.Duration
 )
 
 type getTimeFunc func() time.Time
 
-type Tokens struct {
-	maxTTLSeconds time.Duration
-	getTimeNow    getTimeFunc
+// Token is a structure that represents an authentication token for the Identity API
+type Token struct {
+	ID          string    `bson:"token_id"`
+	IdentityID  string    `bson:"identity_id"`
+	CreatedDate time.Time `bson:"created_date"`
+	ExpiryDate  time.Time `bson:"expiry_date"`
+	Deleted     bool      `bson:"deleted"`
 }
 
-// New construct a new Tokens struct. maxTTL is the maximum duration a token should exist for in the cache,
-// getCurrentTime is function which returns the current time.
-func New(maxTTL time.Duration, getCurrentTime getTimeFunc) *Tokens {
-	return &Tokens{
-		maxTTLSeconds: maxTTL,
-		getTimeNow:    getCurrentTime,
-	}
+// Init initialises the token package.
+func Init(maxTokenDuration time.Duration, getTimeNowFunc getTimeFunc, getExpiryDateFunc getTimeFunc) {
+	maxTTL = maxTokenDuration
+	getTimeNow = getTimeNowFunc
+	getExpiryDate = getExpiryDateFunc
 }
 
 // NewToken create a new token.
-func (t *Tokens) NewToken() (string, error) {
+func New(identityID string) (*Token, error) {
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		return nilToken, err
+		return nil, err
 	}
 
-	return uuid.String(), nil
+	return &Token{
+		ID:          uuid.String(),
+		IdentityID:  identityID,
+		CreatedDate: getTimeNow(),
+		ExpiryDate:  getExpiryDate(),
+		Deleted:     false,
+	}, nil
 }
 
 // GetTTL calculates the TTL (time to live) against the configured expiry time.
@@ -49,23 +60,28 @@ func (t *Tokens) NewToken() (string, error) {
 // IF (expiry_time - current_time) < max_ttl RETURN (expiry_time - current_time)
 //
 // IF expiry_time is in the past OR expiry_time == current_time RETURN ErrTokenExpired
-func (t *Tokens) GetTTL(expiryTime time.Time) (time.Duration, error) {
-	if t.getTimeNow().After(expiryTime) {
+func (t *Token) GetTTL() (time.Duration, error) {
+	if getTimeNow().After(t.ExpiryDate) {
 		return nilTTL, ErrTokenExpired
 	}
 
 	// calculate the time remaining until the expiry time
-	timeRemaining := expiryTime.Sub(t.getTimeNow())
+	timeRemaining := t.ExpiryDate.Sub(getTimeNow())
 
 	if timeRemaining == 0 {
 		return nilTTL, ErrTokenExpired
 	}
 
-	if timeRemaining.Seconds() >= t.maxTTLSeconds.Seconds() {
+	if timeRemaining.Seconds() >= maxTTL.Seconds() {
 		// more than or equal to max TTL so just return max TTL
-		return t.maxTTLSeconds, nil
+		return maxTTL, nil
 	}
 
 	// time remaining is less than the time until expiry so just return the remaining time.
 	return timeRemaining, nil
+}
+
+// Expire update the tokens deleted flag to true.
+func (t *Token) Expire() {
+	t.Deleted = true
 }
