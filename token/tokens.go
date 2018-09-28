@@ -12,27 +12,27 @@ const (
 )
 
 var (
+	// ErrTokenExpired returned when GetTTL is called and the token has expired
 	ErrTokenExpired = errors.New("token expired")
 )
 
-func New(expiryHour int, maxTTL time.Duration) *Tokens {
-	if expiryHour < 0 || expiryHour > 23 {
-		// default to 0 (12am)
-		expiryHour = 0
-	}
-
-	return &Tokens{
-		maxTTLSeconds: maxTTL,
-		expiryHour:    expiryHour,
-	}
-}
+type getTimeFunc func() time.Time
 
 type Tokens struct {
 	maxTTLSeconds time.Duration
-	// value between 0-23 representing the hour at which the tokens will expire.
-	expiryHour int
+	getTimeNow    getTimeFunc
 }
 
+// New construct a new Tokens struct. maxTTL is the maximum duration a token should exist for in the cache,
+// getCurrentTime is function which returns the current time.
+func New(maxTTL time.Duration, getCurrentTime getTimeFunc) *Tokens {
+	return &Tokens{
+		maxTTLSeconds: maxTTL,
+		getTimeNow:    getCurrentTime,
+	}
+}
+
+// NewToken create a new token.
 func (t *Tokens) NewToken() (string, error) {
 	uuid, err := uuid.NewV4()
 	if err != nil {
@@ -42,24 +42,30 @@ func (t *Tokens) NewToken() (string, error) {
 	return uuid.String(), nil
 }
 
+// GetTTL calculates the TTL (time to live) against the configured expiry time.
+//
+// IF (expiry_time - current_time) >= max_ttl RETURN max_ttl
+//
+// IF (expiry_time - current_time) < max_ttl RETURN (expiry_time - current_time)
+//
+// IF expiry_time is in the past OR expiry_time == current_time RETURN ErrTokenExpired
 func (t *Tokens) GetTTL(expiryTime time.Time) (time.Duration, error) {
-	if time.Now().After(expiryTime) {
+	if t.getTimeNow().After(expiryTime) {
 		return nilTTL, ErrTokenExpired
 	}
 
 	// calculate the time remaining until the expiry time
-	totalRemaining := expiryTime.Sub(time.Now())
+	timeRemaining := expiryTime.Sub(t.getTimeNow())
 
-	if totalRemaining.Seconds() >= t.maxTTLSeconds.Seconds() {
+	if timeRemaining == 0 {
+		return nilTTL, ErrTokenExpired
+	}
+
+	if timeRemaining.Seconds() >= t.maxTTLSeconds.Seconds() {
 		// more than or equal to max TTL so just return max TTL
 		return t.maxTTLSeconds, nil
 	}
 
 	// time remaining is less than the time until expiry so just return the remaining time.
-	return totalRemaining, nil
-}
-
-func (t *Tokens) getExpiryTime() time.Time {
-	now := time.Now()
-	return time.Date(now.Year(), now.Month(), now.Day(), t.expiryHour, 0, 0, 0, time.UTC)
+	return timeRemaining, nil
 }
