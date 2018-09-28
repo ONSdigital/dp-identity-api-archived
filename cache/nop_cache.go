@@ -1,4 +1,4 @@
-package cachepackage
+package cache
 
 import (
 	"github.com/ONSdigital/dp-identity-api/schema"
