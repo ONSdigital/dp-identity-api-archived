@@ -9,6 +9,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/encryption"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/dp-identity-api/mongo"
+	"github.com/ONSdigital/dp-identity-api/persistence"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
@@ -20,7 +21,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"github.com/ONSdigital/dp-identity-api/persistence"
 )
 
 const serviceNamespace = "dp-identity-api"

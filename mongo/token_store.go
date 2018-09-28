@@ -1,8 +1,8 @@
 package mongo
 
 import (
-	"time"
 	"github.com/ONSdigital/dp-identity-api/schema"
+	"time"
 )
 
 func (m *Mongo) StoreToken(key string, i schema.Identity, ttl time.Duration) error {

@@ -1,9 +1,9 @@
 package cachepackage
 
 import (
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/ONSdigital/go-ns/log"
 	"time"
-	"github.com/ONSdigital/dp-identity-api/schema"
 )
 
 // NOPCache is a no op implementation of a cache.
