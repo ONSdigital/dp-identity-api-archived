@@ -9,8 +9,10 @@ import (
 // NOPCache is a no op implementation of a cache.
 type NOPCache struct{}
 
-func (c *NOPCache) Set(key string, i schema.Identity, ttl time.Duration) error {
-	log.Info("nopcache: set", log.Data{
+
+// SetToken is a stand along method for creating a token
+func (c *NOPCache) SetToken(key string, i schema.Identity, ttl time.Duration) error {
+	log.Info("nopcache: set identity", log.Data{
 		"key":   key,
 		"ID":    i.ID,
 		"email": i.Email,
@@ -19,12 +21,25 @@ func (c *NOPCache) Set(key string, i schema.Identity, ttl time.Duration) error {
 	return nil
 }
 
-func (c *NOPCache) Get(key string) (*schema.Identity, error) {
-	log.Info("nopcache: get", log.Data{"key": key})
-	return nil, nil
+// StoreToken .... uses the cache where it can
+func (c *NOPCache) StoreToken(token string, identityID string) (time.Duration, error) {
+	log.Info("nopcache: store token", log.Data{"key": token})
+	return 0, nil
 }
 
-func (c *NOPCache) Delete(key string) (bool, error) {
-	log.Info("nopcache: delete", log.Data{"key": key})
-	return true, nil
+// GetToken .... uses the cache where it can
+func (c *NOPCache) GetToken(token string, identityID string) (time.Duration, error) {
+	log.Info("nopcache: get token", log.Data{"token": token, "identityID":identityID})
+	return 0, nil
 }
+
+// GetIdentity is implemented in the cache interface for fall-through, but we do not directly serve identities via the cache
+func (c *NOPCache) GetIdentity(key string) (*schema.Identity, error) {return nil, nil}
+
+// DeleteIdentity is implemented in the cache interface for fall-through, but we do not directly delete identities via the cache
+func (c *NOPCache) DeleteIdentity(key string) (bool, error) {return false, nil}
+
+// CreateIdentity is implemented in the cache interface for fall-through, but we do not directly create identities via the cache
+func (c *NOPCache) SaveIdentity(newIdentity schema.Identity) (string, error) {return "", nil}
+
+

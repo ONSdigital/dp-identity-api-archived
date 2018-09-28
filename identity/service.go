@@ -74,7 +74,7 @@ func (s *Service) VerifyPassword(ctx context.Context, email string, password str
 }
 
 func (s *Service) Get(ctx context.Context, tokenStr string) (*schema.Identity, error) {
-
+	
 	// TODO - has token expired?
 	// TODO - token to get id from cache
 	// TODO - id to get requested identity
