@@ -25,8 +25,8 @@ var (
 	errTest = errors.New("test error")
 )
 
-func newPersistenceMock(email string, err error) *persistencetest.DBMock {
-	return &persistencetest.DBMock{
+func newPersistenceMock(email string, err error) *persistencetest.IdentityStoreMock {
+	return &persistencetest.IdentityStoreMock{
 		SaveIdentityFunc: func(identity schema.Identity) (string, error) {
 			return email, err
 		},
@@ -50,7 +50,7 @@ func TestCreate_Success(t *testing.T) {
 		persistenceMock := newPersistenceMock(EMAIL, nil)
 		encryptorMock := newEncryptorMock([]byte(newIdentity.Password), nil, nil)
 
-		s := &Service{DB: persistenceMock, Encryptor: encryptorMock}
+		s := &Service{IdentityStore: persistenceMock, Encryptor: encryptorMock}
 
 		id, err := s.Create(context.Background(), newIdentity)
 
@@ -71,7 +71,7 @@ func TestCreate_DataStoreError(t *testing.T) {
 		persistenceMock := newPersistenceMock("", errors.New("expected"))
 		encryptorMock := newEncryptorMock([]byte(newIdentity.Password), nil, nil)
 
-		s := &Service{DB: persistenceMock, Encryptor: encryptorMock}
+		s := &Service{IdentityStore: persistenceMock, Encryptor: encryptorMock}
 		id, err := s.Create(context.Background(), newIdentity)
 
 		So(err, ShouldEqual, ErrPersistence)
@@ -88,9 +88,9 @@ func TestCreate_DataStoreError(t *testing.T) {
 
 func TestCreate_ValidationError(t *testing.T) {
 	Convey("should return expected error if validate returns an error", t, func() {
-		persistenceMock := &persistencetest.DBMock{}
+		persistenceMock := &persistencetest.IdentityStoreMock{}
 		encryptorMock := &identitytest.EncryptorMock{}
-		s := &Service{DB: persistenceMock, Encryptor: encryptorMock}
+		s := &Service{IdentityStore: persistenceMock, Encryptor: encryptorMock}
 
 		id, err := s.Create(context.Background(), &schema.Identity{})
 
@@ -105,10 +105,10 @@ func TestService_CreateEncryptPasswordError(t *testing.T) {
 	Convey("should return expected error if encrypt password returns an error", t, func() {
 		expectedErr := errors.New("encryption fails")
 
-		persistenceMock := &persistencetest.DBMock{}
+		persistenceMock := &persistencetest.IdentityStoreMock{}
 		encryptorMock := newEncryptorMock([]byte{}, expectedErr, nil)
 
-		s := &Service{DB: persistenceMock, Encryptor: encryptorMock}
+		s := &Service{IdentityStore: persistenceMock, Encryptor: encryptorMock}
 
 		id, err := s.Create(context.Background(), newIdentity)
 
@@ -126,7 +126,7 @@ func TestCreate_MissingParameters(t *testing.T) {
 		persistenceMock := newPersistenceMock("", errors.New("expected"))
 		encryptorMock := &identitytest.EncryptorMock{}
 
-		s := &Service{DB: persistenceMock, Encryptor: encryptorMock}
+		s := &Service{IdentityStore: persistenceMock, Encryptor: encryptorMock}
 
 		id, err := s.Create(nil, nil)
 
@@ -140,7 +140,7 @@ func TestCreate_MissingParameters(t *testing.T) {
 		persistenceMock := newPersistenceMock("", errors.New("expected"))
 		encryptorMock := &identitytest.EncryptorMock{}
 
-		s := &Service{DB: persistenceMock, Encryptor: encryptorMock}
+		s := &Service{IdentityStore: persistenceMock, Encryptor: encryptorMock}
 
 		id, err := s.Create(context.Background(), nil)
 
@@ -186,7 +186,7 @@ func TestService_EncryptPassword(t *testing.T) {
 
 func TestService_CreateEmailAlreadyInUse(t *testing.T) {
 	Convey("todo", t, func() {
-		persistenceMock := &persistencetest.DBMock{
+		persistenceMock := &persistencetest.IdentityStoreMock{
 			SaveIdentityFunc: func(newIdentity schema.Identity) (string, error) {
 				return "", persistence.ErrNonUnique
 			},
@@ -198,7 +198,7 @@ func TestService_CreateEmailAlreadyInUse(t *testing.T) {
 			},
 		}
 
-		s := Service{DB: persistenceMock, Encryptor: enc}
+		s := Service{IdentityStore: persistenceMock, Encryptor: enc}
 
 		_, err := s.Create(context.Background(), newIdentity)
 		So(err, ShouldEqual, ErrEmailAlreadyExists)
@@ -213,7 +213,7 @@ func TestService_CreateEmailAlreadyInUse(t *testing.T) {
 
 func TestService_VerifyPassword(t *testing.T) {
 	Convey("should not return error is password is correct", t, func() {
-		p := &persistencetest.DBMock{
+		p := &persistencetest.IdentityStoreMock{
 			GetIdentityFunc: func(email string) (schema.Identity, error) {
 				return *newIdentity, nil
 			},
@@ -221,7 +221,7 @@ func TestService_VerifyPassword(t *testing.T) {
 
 		e := newEncryptorMock([]byte(newIdentity.Password), nil, nil)
 
-		s := Service{DB: p, Encryptor: e}
+		s := Service{IdentityStore: p, Encryptor: e}
 
 		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
@@ -236,7 +236,7 @@ func TestService_VerifyPassword(t *testing.T) {
 
 func TestService_VerifyPasswordIdentityNotFound(t *testing.T) {
 	Convey("should return error if identity is not found", t, func() {
-		p := &persistencetest.DBMock{
+		p := &persistencetest.IdentityStoreMock{
 			GetIdentityFunc: func(email string) (schema.Identity, error) {
 				return schema.Identity{}, persistence.ErrNotFound
 			},
@@ -244,7 +244,7 @@ func TestService_VerifyPasswordIdentityNotFound(t *testing.T) {
 
 		e := newEncryptorMock([]byte(newIdentity.Password), nil, nil)
 
-		s := Service{DB: p, Encryptor: e}
+		s := Service{IdentityStore: p, Encryptor: e}
 
 		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
@@ -257,7 +257,7 @@ func TestService_VerifyPasswordIdentityNotFound(t *testing.T) {
 
 func TestService_VerifyPasswordPersistenceErr(t *testing.T) {
 	Convey("should return error if identity is not found", t, func() {
-		p := &persistencetest.DBMock{
+		p := &persistencetest.IdentityStoreMock{
 			GetIdentityFunc: func(email string) (schema.Identity, error) {
 				return schema.Identity{}, errTest
 			},
@@ -265,7 +265,7 @@ func TestService_VerifyPasswordPersistenceErr(t *testing.T) {
 
 		e := newEncryptorMock([]byte(newIdentity.Password), nil, nil)
 
-		s := Service{DB: p, Encryptor: e}
+		s := Service{IdentityStore: p, Encryptor: e}
 
 		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
@@ -278,7 +278,7 @@ func TestService_VerifyPasswordPersistenceErr(t *testing.T) {
 
 func TestService_VerifyPasswordPasswordIncorrect(t *testing.T) {
 	Convey("should return error if provided password is incorrect", t, func() {
-		p := &persistencetest.DBMock{
+		p := &persistencetest.IdentityStoreMock{
 			GetIdentityFunc: func(email string) (schema.Identity, error) {
 				return *newIdentity, nil
 			},
@@ -286,7 +286,7 @@ func TestService_VerifyPasswordPasswordIncorrect(t *testing.T) {
 
 		e := newEncryptorMock([]byte(newIdentity.Password), nil, errTest)
 
-		s := Service{DB: p, Encryptor: e}
+		s := Service{IdentityStore: p, Encryptor: e}
 
 		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 

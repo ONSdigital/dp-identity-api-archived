@@ -39,7 +39,7 @@ func (s *Service) Create(ctx context.Context, i *schema.Identity) (string, error
 
 	i.Password = pwd
 
-	id, err := s.DB.SaveIdentity(*i)
+	id, err := s.IdentityStore.SaveIdentity(*i)
 	if err != nil && err == persistence.ErrNonUnique {
 		log.ErrorCtx(ctx, errors.New("create: failed to create identity - an active identity with this email already exists"), logD)
 		return "", ErrEmailAlreadyExists
@@ -95,7 +95,7 @@ func (s *Service) Get(ctx context.Context, tokenStr string) (*schema.Identity, e
 func (s *Service) getIdentity(ctx context.Context, email string) (*schema.Identity, error) {
 	logD := log.Data{"email": email}
 
-	i, err := s.DB.GetIdentity(email)
+	i, err := s.IdentityStore.GetIdentity(email)
 	if err != nil {
 		if err == persistence.ErrNotFound {
 			log.ErrorCtx(ctx, errors.New("user not found"), logD)
