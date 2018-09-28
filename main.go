@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ONSdigital/dp-identity-api/api"
+	c "github.com/ONSdigital/dp-identity-api/cache"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/encryption"
 	"github.com/ONSdigital/dp-identity-api/identity"
@@ -19,6 +20,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"github.com/ONSdigital/dp-identity-api/persistence"
 )
 
 const serviceNamespace = "dp-identity-api"
@@ -50,11 +52,19 @@ func main() {
 	// use Nop until kafka is added to environment
 	auditor := &audit.NopAuditor{}
 
+	// use Nop until cache is implemented
+	cacheDb := &c.NOPCache{}
+
+	cacheTokenDb := &persistence.CacheWrapper{
+		TokenCache: cacheDb,
+		Database:   mongodb,
+	}
+
 	apiErrors := make(chan error, 1)
 
 	identityService := &identity.Service{
 		IdentityStore: mongodb,
-		TokenStore:    mongodb,
+		TokenStore:    *cacheTokenDb,
 		Encryptor:     encryption.Service{},
 	}
 

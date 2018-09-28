@@ -20,6 +20,6 @@ type IdentityStore interface {
 }
 
 type TokenStore interface {
-	StoreToken(token string, identityID string) (time.Duration, error)
-	GetToken(token string, identityID string) (time.Duration, error)
+	StoreToken(key string, i schema.Identity, ttl time.Duration) error
+	GetToken(token string) (time.Duration, error)
 }
