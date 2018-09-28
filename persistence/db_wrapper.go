@@ -16,12 +16,10 @@ type Cache interface {
 	DeleteIdentity(key string) (bool, error)
 }
 
-
 type CacheWrapper struct {
 	IdentityCache Cache
 	Database      DB
 }
-
 
 func (c *CacheWrapper) SetToken(key string, i schema.Identity, ttl time.Duration) error {
 
