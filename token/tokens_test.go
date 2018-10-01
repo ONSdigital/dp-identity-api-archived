@@ -51,10 +51,10 @@ func TestTokens_GetTTLShouldReturnMaxTTL(t *testing.T) {
 			},
 		}
 
-		tokens, err := New(testIdentityID)
+		token, err := New(testIdentityID)
 		So(err, ShouldBeNil)
 
-		ttl, err := tokens.GetTTL()
+		ttl, err := GetTTL(token)
 
 		So(err, ShouldBeNil)
 		So(ttl.Seconds(), ShouldEqual, MaxTTL.Seconds())
@@ -75,10 +75,10 @@ func TestTokens_GetTTLShouldReturnTimeRemaining(t *testing.T) {
 			},
 		}
 
-		tokens, err := New(testIdentityID)
+		token, err := New(testIdentityID)
 		So(err, ShouldBeNil)
 
-		ttl, err := tokens.GetTTL()
+		ttl, err := GetTTL(token)
 
 		expected := time.Minute * 10
 		So(err, ShouldBeNil)
@@ -101,16 +101,16 @@ func TestTokens_GetTTLShouldReturnExpired(t *testing.T) {
 			},
 		}
 
-		tokens, err := New(testIdentityID)
+		token, err := New(testIdentityID)
 		So(err, ShouldBeNil)
 
-		ttl, err := tokens.GetTTL()
+		ttl, err := GetTTL(token)
 		So(err, ShouldEqual, ErrTokenExpired)
 		So(ttl, ShouldEqual, 0)
 	})
 
 	Convey("should return token expired error if current time is after the expiry time", t, func() {
-		expires := time.Now() // expires now
+		expires := time.Now()                   // expires now
 		now := time.Now().Add(time.Minute * 15) // add 15 mins to current time.
 
 		MaxTTL = time.Minute * 15
@@ -123,10 +123,10 @@ func TestTokens_GetTTLShouldReturnExpired(t *testing.T) {
 			},
 		}
 
-		tokens, err := New(testIdentityID)
+		token, err := New(testIdentityID)
 		So(err, ShouldBeNil)
 
-		ttl, err := tokens.GetTTL()
+		ttl, err := GetTTL(token)
 		So(err, ShouldEqual, ErrTokenExpired)
 		So(ttl, ShouldEqual, 0)
 	})

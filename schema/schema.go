@@ -18,6 +18,15 @@ func (e ValidationErr) Error() string {
 	return e.message
 }
 
+// Token is a structure that represents an authentication token for the Identity API
+type Token struct {
+	ID          string    `bson:"token_id"`
+	IdentityID  string    `bson:"identity_id"`
+	CreatedDate time.Time `bson:"created_date"`
+	ExpiryDate  time.Time `bson:"expiry_date"`
+	Deleted     bool      `bson:"deleted"`
+}
+
 //Identity is an object representation of a user identity.
 type Identity struct {
 	ID                string    `bson:"id" json:"id"`

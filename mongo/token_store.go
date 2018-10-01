@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (m *Mongo) StoreToken(key string, i schema.Identity, ttl time.Duration) error {
+func (m *Mongo) StoreToken(tkn schema.Token, i schema.Identity, ttl time.Duration) error {
 	return nil
 }
 

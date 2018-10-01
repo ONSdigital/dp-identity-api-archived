@@ -8,7 +8,7 @@ import (
 var nilID = ""
 
 type Cache interface {
-	StoreToken(key string, i schema.Identity, ttl time.Duration) error
+	StoreToken(tkn schema.Token, i schema.Identity, ttl time.Duration) error
 	GetToken(token string) (time.Duration, error)
 }
 type CachedTokenStored struct {
@@ -16,12 +16,12 @@ type CachedTokenStored struct {
 	TokenDB TokenStore
 }
 
-func (c *CachedTokenStored) StoreToken(key string, i schema.Identity, ttl time.Duration) error {
+func (c *CachedTokenStored) StoreToken(tkn schema.Token, i schema.Identity, ttl time.Duration) error {
 
 	// c.Cache.StoreToken() .. etc
 	// implemented this sprint - for now we'll just fall through
 
-	return c.TokenDB.StoreToken(key, i, ttl)
+	return c.TokenDB.StoreToken(tkn, i, ttl)
 }
 
 func (c *CachedTokenStored) GetToken(tokenStr string) (time.Duration, error) {

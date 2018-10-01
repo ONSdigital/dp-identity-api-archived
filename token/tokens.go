@@ -1,6 +1,7 @@
 package token
 
 import (
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"time"
@@ -25,23 +26,14 @@ type ExpiryTimeHelper interface {
 	GetExpiry() time.Time
 }
 
-// Token is a structure that represents an authentication token for the Identity API
-type Token struct {
-	ID          string    `bson:"token_id"`
-	IdentityID  string    `bson:"identity_id"`
-	CreatedDate time.Time `bson:"created_date"`
-	ExpiryDate  time.Time `bson:"expiry_date"`
-	Deleted     bool      `bson:"deleted"`
-}
-
 // NewToken create a new token.
-func New(identityID string) (*Token, error) {
+func New(identityID string) (*schema.Token, error) {
 	uuid, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Token{
+	return &schema.Token{
 		ID:          uuid.String(),
 		IdentityID:  identityID,
 		CreatedDate: TimeHelper.Now(),
@@ -52,14 +44,17 @@ func New(identityID string) (*Token, error) {
 
 // GetTTL calculates the TTL (time to live) from the configured expiry time. Returns ErrTokenExpired if the token is
 // expired.
-func (t *Token) GetTTL() (time.Duration, error) {
+func GetTTL(token *schema.Token) (time.Duration, error) {
+	if token == nil {
+		return nilTTL, errors.New("token required but was nil")
+	}
 	now := TimeHelper.Now()
-	if now.After(t.ExpiryDate) {
+	if now.After(token.ExpiryDate) {
 		return nilTTL, ErrTokenExpired
 	}
 
 	// calculate the time remaining until the expiry time
-	remainder := t.ExpiryDate.Sub(now)
+	remainder := token.ExpiryDate.Sub(now)
 
 	if remainder == 0 {
 		return nilTTL, ErrTokenExpired

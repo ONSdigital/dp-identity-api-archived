@@ -2,6 +2,7 @@ package token
 
 import (
 	"fmt"
+	"github.com/ONSdigital/dp-identity-api/schema"
 	"time"
 )
 
@@ -33,7 +34,7 @@ func ExampleToken_GetTTL() {
 	// the max TTL
 	MaxTTL = time.Minute * 15
 
-	t := Token{
+	t := &schema.Token{
 		ID:          "666",
 		CreatedDate: now,
 		ExpiryDate:  expiresAt,
@@ -41,7 +42,7 @@ func ExampleToken_GetTTL() {
 		Deleted:     false,
 	}
 
-	ttl, _ := t.GetTTL()
+	ttl, _ := GetTTL(t)
 	fmt.Printf("%t", ttl.Minutes() == MaxTTL.Minutes())
 
 	// Case 2:
@@ -58,7 +59,7 @@ func ExampleToken_GetTTL() {
 	// the max TTL
 	MaxTTL = time.Minute * 15
 
-	ttl, _ = t.GetTTL()
+	ttl, _ = GetTTL(t)
 	expected := time.Minute * 10
 
 
@@ -75,7 +76,7 @@ func ExampleToken_GetTTL() {
 	now = time.Date(2006, 1, 2, 22, 31, 0, 0, time.UTC)
 
 	var err error
-	ttl, err = t.GetTTL()
+	ttl, err = GetTTL(t)
 
 
 	fmt.Printf("%t", ttl.Minutes() == 0)

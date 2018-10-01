@@ -9,9 +9,9 @@ import (
 // NOPCache is a no op implementation of a cache.
 type NOPCache struct{}
 
-func (c *NOPCache) StoreToken(key string, i schema.Identity, ttl time.Duration) error {
+func (c *NOPCache) StoreToken(tkn schema.Token, i schema.Identity, ttl time.Duration) error {
 
-	log.Info("nopcache: store token", log.Data{"key": key})
+	log.Info("nopcache: store token", log.Data{"key": tkn.ID})
 
 	return nil
 }
