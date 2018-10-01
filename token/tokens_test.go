@@ -1,6 +1,7 @@
 package token
 
 import (
+	"github.com/ONSdigital/dp-identity-api/token/tokentest"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
@@ -11,53 +12,44 @@ const testIdentityID = "666"
 func TestNew(t *testing.T) {
 	Convey("should create new token with expected values", t, func() {
 		now := time.Now()
-		currentTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 40, 0, 0, time.UTC)
-		expiryTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, time.UTC)
+		expires := now.Add(time.Hour * 1)
 
-		// The Tokens struct has a func value to return the current time. In the real world we would simple pass in
-		// a func which returns time.Now(). For unit testing we pass in a func which returns a time value we've
-		// specified which enables us to accurately verify the calculated "TTL".
-		getCurrentTimeFunc := func() time.Time {
-			return currentTime
+		Timer = &tokentest.ExpiryTimeHelperMock{
+			GetExpiryFunc: func() time.Time {
+				return expires
+			},
+			NowFunc: func() time.Time {
+				return now
+			},
 		}
 
-		getExpiryFunc := func() time.Time {
-			return expiryTime
-		}
-
-		Init(maxTTL,  getCurrentTimeFunc, getExpiryFunc)
 		token, err := New(testIdentityID)
 
 		So(err, ShouldBeNil)
 		So(token.ID, ShouldNotBeEmpty)
 		So(token.IdentityID, ShouldEqual, testIdentityID)
-		So(token.CreatedDate, ShouldEqual, currentTime)
-		So(token.ExpiryDate, ShouldEqual, expiryTime)
+		So(token.CreatedDate, ShouldEqual, now)
+		So(token.ExpiryDate, ShouldEqual, expires)
 		So(token.Deleted, ShouldBeFalse)
 	})
-
 
 }
 
 func TestTokens_GetTTLShouldReturnMaxTTL(t *testing.T) {
-	Convey("should return max TTL if the time remaining until expiry is greater than the max TTL", t, func() {
-		maxTTL := time.Minute * 15
+	Convey("should return max TTL if the time until expiry is greater than the max TTL", t, func() {
 		now := time.Now()
-		currentTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 40, 0, 0, time.UTC)
-		expiryTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, time.UTC)
+		expires := now.Add(time.Hour * 1)
 
-		// The Tokens struct has a func value to return the current time. In the real world we would simple pass in
-		// a func which returns time.Now(). For unit testing we pass in a func which returns a time value we've
-		// specified which enables us to accurately verify the calculated "TTL".
-		getCurrentTimeFunc := func() time.Time {
-			return currentTime
+		MaxTTL = time.Minute * 15
+
+		Timer = &tokentest.ExpiryTimeHelperMock{
+			GetExpiryFunc: func() time.Time {
+				return expires
+			},
+			NowFunc: func() time.Time {
+				return now
+			},
 		}
-
-		getExpiryFunc := func() time.Time {
-			return expiryTime
-		}
-
-		Init(maxTTL,  getCurrentTimeFunc, getExpiryFunc)
 
 		tokens, err := New(testIdentityID)
 		So(err, ShouldBeNil)
@@ -65,36 +57,30 @@ func TestTokens_GetTTLShouldReturnMaxTTL(t *testing.T) {
 		ttl, err := tokens.GetTTL()
 
 		So(err, ShouldBeNil)
-		So(ttl.Seconds(), ShouldEqual, maxTTL.Seconds())
+		So(ttl.Seconds(), ShouldEqual, MaxTTL.Seconds())
 	})
 }
 func TestTokens_GetTTLShouldReturnTimeRemaining(t *testing.T) {
-	Convey("should return TTL equal to the time remaining if the time until expiry is less than the max TTL", t, func() {
-		maxTTL := time.Minute * 15
+	Convey("should return time until expiry if it is less than max TTL", t, func() {
 		now := time.Now()
-		// 5 mins until expiry
-		currentTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 54, 59, 0, time.UTC)
-		expiryTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, time.UTC)
+		expires := now.Add(time.Minute * 10)
 
-		// The Tokens struct has a func value to return the current time. In the real world we would simple pass in
-		// a func which returns time.Now(). For unit testing we pass in a func which returns a time value we've
-		// specified which enables us to accurately verify the calculated "TTL".
-		getCurrentTimeFunc := func() time.Time {
-			return currentTime
+		MaxTTL = time.Minute * 15
+		Timer = &tokentest.ExpiryTimeHelperMock{
+			GetExpiryFunc: func() time.Time {
+				return expires
+			},
+			NowFunc: func() time.Time {
+				return now
+			},
 		}
-
-		getExpiryFunc := func() time.Time {
-			return expiryTime
-		}
-
-		Init(maxTTL,  getCurrentTimeFunc, getExpiryFunc)
 
 		tokens, err := New(testIdentityID)
 		So(err, ShouldBeNil)
 
 		ttl, err := tokens.GetTTL()
 
-		expected := time.Minute * 5
+		expected := time.Minute * 10
 		So(err, ShouldBeNil)
 		So(ttl.Seconds(), ShouldEqual, expected.Seconds())
 	})
@@ -102,20 +88,18 @@ func TestTokens_GetTTLShouldReturnTimeRemaining(t *testing.T) {
 
 func TestTokens_GetTTLShouldReturnExpired(t *testing.T) {
 	Convey("should return token expired error if current time equals the expiry time", t, func() {
-		maxTTL := time.Minute * 15
 		now := time.Now()
-		expiryTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 00, 00, 0, time.UTC)
-		currentTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 00, 00, 0, time.UTC)
+		expires := now
 
-		getCurrentTimeFunc := func() time.Time {
-			return currentTime
+		MaxTTL = time.Minute * 15
+		Timer = &tokentest.ExpiryTimeHelperMock{
+			GetExpiryFunc: func() time.Time {
+				return expires
+			},
+			NowFunc: func() time.Time {
+				return now
+			},
 		}
-
-		getExpiryFunc := func() time.Time {
-			return expiryTime
-		}
-
-		Init(maxTTL,  getCurrentTimeFunc, getExpiryFunc)
 
 		tokens, err := New(testIdentityID)
 		So(err, ShouldBeNil)
@@ -126,20 +110,18 @@ func TestTokens_GetTTLShouldReturnExpired(t *testing.T) {
 	})
 
 	Convey("should return token expired error if current time is after the expiry time", t, func() {
-		maxTTL := time.Minute * 15
-		now := time.Now()
-		expiryTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 00, 00, 0, time.UTC)
-		currentTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 01, 00, 0, time.UTC)
+		expires := time.Now() // expires now
+		now := time.Now().Add(time.Minute * 15) // add 15 mins to current time.
 
-		getCurrentTimeFunc := func() time.Time {
-			return currentTime
+		MaxTTL = time.Minute * 15
+		Timer = &tokentest.ExpiryTimeHelperMock{
+			GetExpiryFunc: func() time.Time {
+				return expires
+			},
+			NowFunc: func() time.Time {
+				return now
+			},
 		}
-
-		getExpiryFunc := func() time.Time {
-			return expiryTime
-		}
-
-		Init(maxTTL,  getCurrentTimeFunc, getExpiryFunc)
 
 		tokens, err := New(testIdentityID)
 		So(err, ShouldBeNil)

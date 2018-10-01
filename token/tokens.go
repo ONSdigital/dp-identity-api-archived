@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+//go:generate moq -out tokentest/generate_mocks.go -pkg tokentest . ExpiryTimeHelper
+
 const (
 	nilTTL = 0
 )
@@ -14,12 +16,14 @@ var (
 	// ErrTokenExpired returned when GetTTL is called and the token has expired
 	ErrTokenExpired = errors.New("token expired")
 
-	getTimeNow    getTimeFunc
-	getExpiryDate getTimeFunc
-	maxTTL        time.Duration
+	Timer  ExpiryTimeHelper
+	MaxTTL time.Duration
 )
 
-type getTimeFunc func() time.Time
+type ExpiryTimeHelper interface {
+	Now() time.Time
+	GetExpiry() time.Time
+}
 
 // Token is a structure that represents an authentication token for the Identity API
 type Token struct {
@@ -28,13 +32,6 @@ type Token struct {
 	CreatedDate time.Time `bson:"created_date"`
 	ExpiryDate  time.Time `bson:"expiry_date"`
 	Deleted     bool      `bson:"deleted"`
-}
-
-// Init initialises the token package.
-func Init(maxTokenDuration time.Duration, getTimeNowFunc getTimeFunc, getExpiryDateFunc getTimeFunc) {
-	maxTTL = maxTokenDuration
-	getTimeNow = getTimeNowFunc
-	getExpiryDate = getExpiryDateFunc
 }
 
 // NewToken create a new token.
@@ -47,8 +44,8 @@ func New(identityID string) (*Token, error) {
 	return &Token{
 		ID:          uuid.String(),
 		IdentityID:  identityID,
-		CreatedDate: getTimeNow(),
-		ExpiryDate:  getExpiryDate(),
+		CreatedDate: Timer.Now(),
+		ExpiryDate:  Timer.GetExpiry(),
 		Deleted:     false,
 	}, nil
 }
@@ -61,24 +58,25 @@ func New(identityID string) (*Token, error) {
 //
 // IF expiry_time is in the past OR expiry_time == current_time RETURN ErrTokenExpired
 func (t *Token) GetTTL() (time.Duration, error) {
-	if getTimeNow().After(t.ExpiryDate) {
+	now := Timer.Now()
+	if Timer.Now().After(t.ExpiryDate) {
 		return nilTTL, ErrTokenExpired
 	}
 
 	// calculate the time remaining until the expiry time
-	timeRemaining := t.ExpiryDate.Sub(getTimeNow())
+	remainder := t.ExpiryDate.Sub(now)
 
-	if timeRemaining == 0 {
+	if remainder == 0 {
 		return nilTTL, ErrTokenExpired
 	}
 
-	if timeRemaining.Seconds() >= maxTTL.Seconds() {
+	if remainder.Seconds() >= MaxTTL.Seconds() {
 		// more than or equal to max TTL so just return max TTL
-		return maxTTL, nil
+		return MaxTTL, nil
 	}
 
 	// time remaining is less than the time until expiry so just return the remaining time.
-	return timeRemaining, nil
+	return remainder, nil
 }
 
 // Expire update the tokens deleted flag to true.
