@@ -20,6 +20,6 @@ type Encryptor interface {
 //Service encapsulates the logic for creating, updating and deleting identities
 type Service struct {
 	IdentityStore persistence.IdentityStore
-	TokenStore    persistence.CacheWrapper
+	TokenStore    persistence.Cache
 	Encryptor     Encryptor
 }

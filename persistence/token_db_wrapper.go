@@ -11,23 +11,23 @@ type Cache interface {
 	StoreToken(key string, i schema.Identity, ttl time.Duration) error
 	GetToken(token string) (time.Duration, error)
 }
-type CacheWrapper struct {
-	TokenCache Cache
-	TokenDb    TokenStore
+type CachedTokenStored struct {
+	Cache   Cache
+	TokenDB TokenStore
 }
 
-func (c *CacheWrapper) StoreToken(key string, i schema.Identity, ttl time.Duration) error {
+func (c *CachedTokenStored) StoreToken(key string, i schema.Identity, ttl time.Duration) error {
 
-	// c.TokenCache.StoreToken() .. etc
+	// c.Cache.StoreToken() .. etc
 	// implemented this sprint - for now we'll just fall through
 
-	return c.TokenDb.StoreToken(key, i, ttl)
+	return c.TokenDB.StoreToken(key, i, ttl)
 }
 
-func (c *CacheWrapper) GetToken(token string) (time.Duration, error) {
+func (c *CachedTokenStored) GetToken(token string) (time.Duration, error) {
 
-	// c.TokenCache.GetToken() ... etc
+	// c.Cache.GetToken() ... etc
 	// implemented this sprint - for now we'll just fall through
 
-	return c.TokenDb.GetToken(token)
+	return c.TokenDB.GetToken(token)
 }

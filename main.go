@@ -55,16 +55,16 @@ func main() {
 	// use Nop until cache is implemented
 	tokenCache := &cache.NOPCache{}
 
-	cacheTokenDb := &persistence.CacheWrapper{
-		TokenCache: tokenCache,
-		TokenDb:    mongodb,
+	cacheTokenDB := &persistence.CachedTokenStored{
+		Cache:   tokenCache,
+		TokenDB: mongodb,
 	}
 
 	apiErrors := make(chan error, 1)
 
 	identityService := &identity.Service{
 		IdentityStore: mongodb,
-		TokenStore:    *cacheTokenDb,
+		TokenStore:    cacheTokenDB,
 		Encryptor:     encryption.Service{},
 	}
 
