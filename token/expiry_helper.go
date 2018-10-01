@@ -11,10 +11,11 @@ const (
 	maxMin     = 59
 	maxSec     = 59
 	defaultVal = 0
+	timeFMT    = "15:04:05" // go time fmt value for HH:MM:SS
 )
 
 var (
-	invalidTimeFMT = "%s invalid, must be gte 0 and lt %d defaulting to 0"
+	invalidTimeFMT = "invalid time value, must be gte 0 and lt %d defaulting to 0"
 )
 
 // ExpiryHelper provides helper functions for calculating token expiry and TTL times.
@@ -30,30 +31,23 @@ type ExpiryHelper struct {
 // expiryHour, expiryMinute, expirySecond default to 0 if the provided testCases are outside of the ranges [0-23] (hour)
 // [0-59] (minutes/seconds).
 func NewExpiryHelper(expiryHour, expiryMinute, expirySecond int) *ExpiryHelper {
-	if expiryHour <= 0 || expiryHour > maxHour {
-		expiryHour = defaultVal
-		log.Info(fmt.Sprintf(invalidTimeFMT, "expiryHr", maxHour), nil)
-	}
-
-	if expiryMinute <= 0 || expiryMinute > maxMin {
-		expiryMinute = defaultVal
-		log.Info(fmt.Sprintf(invalidTimeFMT, "expiryMin", maxMin), nil)
-	}
-
-	if expirySecond <= 0 || expirySecond > maxSec {
-		expirySecond = defaultVal
-		log.Info(fmt.Sprintf(invalidTimeFMT, "expirySec", maxSec), nil)
-	}
-
 	helper := &ExpiryHelper{
-		expiryHour:   expiryHour,
-		expiryMinute: expiryMinute,
-		expirySecond: expirySecond,
+		expiryHour:   getValOrDefault(expiryHour, maxHour),
+		expiryMinute: getValOrDefault(expiryMinute, maxMin),
+		expirySecond: getValOrDefault(expirySecond, maxSec),
 	}
 
 	expiry := helper.GetExpiry()
-	log.Info(fmt.Sprintf("token expiry time: %s", expiry.Format("15:04:05")), nil)
+	log.Info(fmt.Sprintf("token expiry time: %s", expiry.Format(timeFMT)), nil)
 	return helper
+}
+
+func getValOrDefault(val int, max int) int {
+	if val <= 0 || val > max {
+		log.Info(fmt.Sprintf(invalidTimeFMT, max), nil)
+		return defaultVal
+	}
+	return val
 }
 
 // Now return the current time.
