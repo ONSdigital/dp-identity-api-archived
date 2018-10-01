@@ -17,19 +17,18 @@ var (
 	invalidTimeFMT = "%s invalid, must be gte 0 and lt %d defaulting to 0"
 )
 
+// ExpiryHelper provides helper functions for calculating token expiry and TTL times.
 type ExpiryHelper struct {
 	expiryHour   int
 	expiryMinute int
 	expirySecond int
 }
 
-// NewExpiryHelper construct a new NewExpiryHelper instance.
+// NewExpiryHelper construct a new NewExpiryHelper instance. Params expiryHour, expiryMinute, expirySecond specify
+// the time to at which newly created tokens will expire.
 //
-// expiryHour - The hour at which a token will expire (0-23)
-//
-// expiryMin - The minute of the expiryHour which a token will expire (0-59)
-//
-// expirySec - The second of the expiryMin which a token will expire (0-59)
+// expiryHour, expiryMinute, expirySecond default to 0 if the provided testCases are outside of the ranges [0-23] (hour)
+// [0-59] (minutes/seconds).
 func NewExpiryHelper(expiryHour, expiryMinute, expirySecond int) *ExpiryHelper {
 	if expiryHour <= 0 || expiryHour > maxHour {
 		expiryHour = defaultVal
@@ -37,12 +36,12 @@ func NewExpiryHelper(expiryHour, expiryMinute, expirySecond int) *ExpiryHelper {
 	}
 
 	if expiryMinute <= 0 || expiryMinute > maxMin {
-		expiryHour = defaultVal
+		expiryMinute = defaultVal
 		log.Info(fmt.Sprintf(invalidTimeFMT, "expiryMin", maxMin), nil)
 	}
 
 	if expirySecond <= 0 || expirySecond > maxSec {
-		expiryHour = defaultVal
+		expirySecond = defaultVal
 		log.Info(fmt.Sprintf(invalidTimeFMT, "expirySec", maxSec), nil)
 	}
 
@@ -57,22 +56,12 @@ func NewExpiryHelper(expiryHour, expiryMinute, expirySecond int) *ExpiryHelper {
 	return helper
 }
 
+// Now return the current time.
 func (e *ExpiryHelper) Now() time.Time {
 	return time.Now()
 }
 
-// GetExpiry calculates the expiry time for a token relative to the current date. Returns the current date at the
-// configured Expiry time.
-//
-// Example
-//
-// If current date is 2nd Jan 2006 and the configured expiry time is 10:30:30pm then the expiry date will be:
-//
-// 2006-01-02T22:30:30.000000
-//
-// If current date/time is 2nd Jan 2006 10:29:29pm then the expiry date is still:
-//
-// 2006-01-02T22:30:30.000000
+// GetExpiry calculate the expiry time for a token relative to the current date.
 func (e *ExpiryHelper) GetExpiry() time.Time {
 	now := time.Now()
 	return time.Date(now.Year(), now.Month(), now.Day(), e.expiryHour, e.expiryMinute, e.expirySecond, 0, time.UTC)

@@ -10,6 +10,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/dp-identity-api/mongo"
 	"github.com/ONSdigital/dp-identity-api/persistence"
+	"github.com/ONSdigital/dp-identity-api/token"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
@@ -48,6 +49,8 @@ func main() {
 		cfg.HealthCheckTimeout,
 		mongolib.NewHealthCheckClient(mongodb.Session),
 	)
+
+	token.TimeHelper = token.NewExpiryHelper(23, 59, 59)
 
 	// use Nop until kafka is added to environment
 	auditor := &audit.NopAuditor{}

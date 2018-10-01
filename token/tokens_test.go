@@ -14,7 +14,7 @@ func TestNew(t *testing.T) {
 		now := time.Now()
 		expires := now.Add(time.Hour * 1)
 
-		Timer = &tokentest.ExpiryTimeHelperMock{
+		TimeHelper = &tokentest.ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return expires
 			},
@@ -42,7 +42,7 @@ func TestTokens_GetTTLShouldReturnMaxTTL(t *testing.T) {
 
 		MaxTTL = time.Minute * 15
 
-		Timer = &tokentest.ExpiryTimeHelperMock{
+		TimeHelper = &tokentest.ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return expires
 			},
@@ -66,7 +66,7 @@ func TestTokens_GetTTLShouldReturnTimeRemaining(t *testing.T) {
 		expires := now.Add(time.Minute * 10)
 
 		MaxTTL = time.Minute * 15
-		Timer = &tokentest.ExpiryTimeHelperMock{
+		TimeHelper = &tokentest.ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return expires
 			},
@@ -92,7 +92,7 @@ func TestTokens_GetTTLShouldReturnExpired(t *testing.T) {
 		expires := now
 
 		MaxTTL = time.Minute * 15
-		Timer = &tokentest.ExpiryTimeHelperMock{
+		TimeHelper = &tokentest.ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return expires
 			},
@@ -114,7 +114,7 @@ func TestTokens_GetTTLShouldReturnExpired(t *testing.T) {
 		now := time.Now().Add(time.Minute * 15) // add 15 mins to current time.
 
 		MaxTTL = time.Minute * 15
-		Timer = &tokentest.ExpiryTimeHelperMock{
+		TimeHelper = &tokentest.ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return expires
 			},

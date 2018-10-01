@@ -16,8 +16,8 @@ var (
 	// ErrTokenExpired returned when GetTTL is called and the token has expired
 	ErrTokenExpired = errors.New("token expired")
 
-	Timer  ExpiryTimeHelper
-	MaxTTL time.Duration
+	TimeHelper ExpiryTimeHelper
+	MaxTTL     time.Duration
 )
 
 type ExpiryTimeHelper interface {
@@ -44,22 +44,17 @@ func New(identityID string) (*Token, error) {
 	return &Token{
 		ID:          uuid.String(),
 		IdentityID:  identityID,
-		CreatedDate: Timer.Now(),
-		ExpiryDate:  Timer.GetExpiry(),
+		CreatedDate: TimeHelper.Now(),
+		ExpiryDate:  TimeHelper.GetExpiry(),
 		Deleted:     false,
 	}, nil
 }
 
-// GetTTL calculates the TTL (time to live) against the configured expiry time.
-//
-// IF (expiry_time - current_time) >= max_ttl RETURN max_ttl
-//
-// IF (expiry_time - current_time) < max_ttl RETURN (expiry_time - current_time)
-//
-// IF expiry_time is in the past OR expiry_time == current_time RETURN ErrTokenExpired
+// GetTTL calculates the TTL (time to live) from the configured expiry time. Returns ErrTokenExpired if the token is
+// expired.
 func (t *Token) GetTTL() (time.Duration, error) {
-	now := Timer.Now()
-	if Timer.Now().After(t.ExpiryDate) {
+	now := TimeHelper.Now()
+	if now.After(t.ExpiryDate) {
 		return nilTTL, ErrTokenExpired
 	}
 
