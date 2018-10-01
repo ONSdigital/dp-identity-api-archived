@@ -24,10 +24,10 @@ func (c *CachedTokenStored) StoreToken(key string, i schema.Identity, ttl time.D
 	return c.TokenDB.StoreToken(key, i, ttl)
 }
 
-func (c *CachedTokenStored) GetToken(token string) (time.Duration, error) {
+func (c *CachedTokenStored) GetToken(tokenStr string) (time.Duration, error) {
 
 	// c.Cache.GetToken() ... etc
 	// implemented this sprint - for now we'll just fall through
 
-	return c.TokenDB.GetToken(token)
+	return c.TokenDB.GetToken(tokenStr)
 }

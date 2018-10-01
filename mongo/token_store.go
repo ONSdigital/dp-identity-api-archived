@@ -9,6 +9,6 @@ func (m *Mongo) StoreToken(key string, i schema.Identity, ttl time.Duration) err
 	return nil
 }
 
-func (m *Mongo) GetToken(token string) (time.Duration, error) {
+func (m *Mongo) GetToken(tokenStr string) (time.Duration, error) {
 	return time.Second * 0, nil
 }
