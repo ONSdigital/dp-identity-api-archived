@@ -57,7 +57,7 @@ func main() {
 
 	cacheTokenDb := &persistence.CacheWrapper{
 		TokenCache: tokenCache,
-		TokenDb:   mongodb,
+		TokenDb:    mongodb,
 	}
 
 	apiErrors := make(chan error, 1)

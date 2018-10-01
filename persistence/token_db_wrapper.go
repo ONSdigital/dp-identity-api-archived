@@ -13,7 +13,7 @@ type Cache interface {
 }
 type CacheWrapper struct {
 	TokenCache Cache
-	TokenDb   TokenStore
+	TokenDb    TokenStore
 }
 
 func (c *CacheWrapper) StoreToken(key string, i schema.Identity, ttl time.Duration) error {
