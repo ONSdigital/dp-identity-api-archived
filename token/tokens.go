@@ -78,8 +78,3 @@ func (t *Token) GetTTL() (time.Duration, error) {
 	// time remaining is less than the time until expiry so just return the remaining time.
 	return remainder, nil
 }
-
-// Expire update the tokens deleted flag to true.
-func (t *Token) Expire() {
-	t.Deleted = true
-}
