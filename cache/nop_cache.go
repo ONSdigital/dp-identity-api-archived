@@ -12,11 +12,13 @@ type NOPCache struct{}
 func (c *NOPCache) StoreToken(key string, i schema.Identity, ttl time.Duration) error {
 
 	log.Info("nopcache: store token", log.Data{"key": key})
+
 	return nil
 }
 
 func (c *NOPCache) GetToken(token string) (time.Duration, error) {
 
 	log.Info("nopcache: get token", log.Data{"token": token})
+
 	return 0, nil
 }

@@ -53,11 +53,11 @@ func main() {
 	auditor := &audit.NopAuditor{}
 
 	// use Nop until cache is implemented
-	cacheDb := &cache.NOPCache{}
+	tokenCache := &cache.NOPCache{}
 
 	cacheTokenDb := &persistence.CacheWrapper{
-		TokenCache: cacheDb,
-		Database:   mongodb,
+		TokenCache: tokenCache,
+		TokenDb:   mongodb,
 	}
 
 	apiErrors := make(chan error, 1)

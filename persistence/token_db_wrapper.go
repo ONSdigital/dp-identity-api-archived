@@ -13,17 +13,21 @@ type Cache interface {
 }
 type CacheWrapper struct {
 	TokenCache Cache
-	Database   TokenStore
+	TokenDb   TokenStore
 }
 
 func (c *CacheWrapper) StoreToken(key string, i schema.Identity, ttl time.Duration) error {
 
-	// until cache is implemented - just fall through
-	return c.TokenCache.StoreToken(key, i, ttl)
+	// c.TokenCache.StoreToken() .. etc
+	// implemented this sprint - for now we'll just fall through
+
+	return c.TokenDb.StoreToken(key, i, ttl)
 }
 
 func (c *CacheWrapper) GetToken(token string) (time.Duration, error) {
 
-	// until cache is implemented - just fall through
-	return c.TokenCache.GetToken(token)
+	// c.TokenCache.GetToken() ... etc
+	// implemented this sprint - for now we'll just fall through
+
+	return c.TokenDb.GetToken(token)
 }
