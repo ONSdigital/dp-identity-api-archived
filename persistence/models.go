@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"context"
 	"errors"
 	"github.com/ONSdigital/dp-identity-api/schema"
 	"time"
@@ -20,6 +21,6 @@ type IdentityStore interface {
 }
 
 type TokenStore interface {
-	StoreToken(token schema.Token, i schema.Identity, ttl time.Duration) error
-	GetToken(token string) (time.Duration, error)
+	StoreToken(ctx context.Context, token schema.Token, i schema.Identity, ttl time.Duration) error
+	GetToken(ctx context.Context, token string) (time.Duration, error)
 }
