@@ -10,19 +10,25 @@ import (
 
 // Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
-	Collection     string
-	Database       string
-	Session        *mgo.Session
-	URI            string
-	lastPingTime   time.Time
-	lastPingResult error
+	Collection         string // TODO need to make this identityCollection and tokenCollection
+	IdentityCollection string // TODO need to make this identityCollection and tokenCollection
+	TokenCollection    string // TODO need to make this identityCollection and tokenCollection
+	Database           string
+	Session            *mgo.Session
+	URI                string
+	lastPingTime       time.Time
+	lastPingResult     error
 }
+
+type changeInfo map[string]interface{}
 
 func New(cfg config.MongoConfig) (*Mongo, error) {
 	mongodb := &Mongo{
-		Collection: cfg.Collection,
-		Database:   cfg.Database,
-		URI:        cfg.BindAddr,
+		Collection:         cfg.Collection,
+		IdentityCollection: cfg.IdentityCollection,
+		TokenCollection:    cfg.TokenCollection,
+		Database:           cfg.Database,
+		URI:                cfg.BindAddr,
 	}
 
 	session, err := mongodb.createSession()
