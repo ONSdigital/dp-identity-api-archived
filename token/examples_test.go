@@ -62,7 +62,6 @@ func ExampleToken_GetTTL() {
 	ttl, _ = GetTTL(t)
 	expected := time.Minute * 10
 
-
 	fmt.Printf("%t", ttl.Minutes() == expected.Minutes())
 
 	// Case 3:
@@ -77,7 +76,6 @@ func ExampleToken_GetTTL() {
 
 	var err error
 	ttl, err = GetTTL(t)
-
 
 	fmt.Printf("%t", ttl.Minutes() == 0)
 	fmt.Printf("%t", err == ErrTokenExpired)

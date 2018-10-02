@@ -35,6 +35,7 @@ var (
 type API struct {
 	Host               string
 	IdentityService    IdentityService
+	TokenService       TokenService
 	healthCheckTimeout time.Duration
 	auditor            audit.AuditorService
 }
@@ -86,4 +87,10 @@ type IdentityService interface {
 	Get(ctx context.Context, tokenStr string) (*schema.Identity, error)
 	Create(ctx context.Context, i *schema.Identity) (string, error)
 	VerifyPassword(ctx context.Context, email string, password string) error
+}
+
+// TokenService is a service for getting and storing tokens
+type TokenService interface {
+	StoreToken(ctx context.Context, token schema.Token, i schema.Identity, ttl time.Duration) error
+	GetToken(ctx context.Context, token string) (time.Duration, error)
 }

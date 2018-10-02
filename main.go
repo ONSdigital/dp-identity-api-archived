@@ -55,6 +55,13 @@ func main() {
 	// use Nop until kafka is added to environment
 	auditor := &audit.NopAuditor{}
 
+	apiErrors := make(chan error, 1)
+
+	identityService := &identity.Service{
+		IdentityStore: mongodb,
+		Encryptor:     encryption.Service{},
+	}
+
 	// use Nop until cache is implemented
 	tokenCache := &cache.NOPCache{}
 
@@ -63,15 +70,11 @@ func main() {
 		TokenDB: mongodb,
 	}
 
-	apiErrors := make(chan error, 1)
-
-	identityService := &identity.Service{
-		IdentityStore: mongodb,
-		TokenStore:    cacheTokenDB,
-		Encryptor:     encryption.Service{},
+	tokenService := &token.Service{
+		TokenStore: cacheTokenDB,
 	}
 
-	identityAPI := api.New("http://localhost"+cfg.BindAddr, identityService, auditor) // TODO make Host config
+	identityAPI := api.New("http://localhost"+cfg.BindAddr, identityService, tokenService, auditor) // TODO make Host config
 
 	router := mux.NewRouter()
 	identityAPI.RegisterEndpoints(router)
