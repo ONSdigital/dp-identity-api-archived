@@ -32,7 +32,7 @@ func (m *Mongo) SaveIdentity(identity schema.Identity) (string, error) {
 	identity.ID = id.String()
 	identity.CreatedDate = time.Now()
 
-	err = s.DB(m.Database).C(m.Collection).Insert(identity)
+	err = s.DB(m.Database).C(m.IdentityCollection).Insert(identity)
 	if err == mgo.ErrNotFound {
 		return "", errors.New("failed to post new identity document to mongo")
 	}
@@ -47,7 +47,7 @@ func (m *Mongo) SaveIdentity(identity schema.Identity) (string, error) {
 func (m *Mongo) identityAvailable(s *mgo.Session, email string) (bool, error) {
 	query := bson.M{"email": email, "deleted": false}
 
-	count, err := s.DB(m.Database).C(m.Collection).Find(query).Count()
+	count, err := s.DB(m.Database).C(m.IdentityCollection).Find(query).Count()
 	if err != nil {
 		return false, errors.Wrap(err, "error executing count active identities query")
 	}
@@ -61,7 +61,7 @@ func (m *Mongo) GetIdentity(email string) (schema.Identity, error) {
 
 	query := bson.M{"email": email, "deleted": false}
 
-	count, err := s.DB(m.Database).C(m.Collection).Find(query).Count()
+	count, err := s.DB(m.Database).C(m.IdentityCollection).Find(query).Count()
 	if err != nil {
 		return schema.NilIdentity, err
 	}
@@ -71,7 +71,7 @@ func (m *Mongo) GetIdentity(email string) (schema.Identity, error) {
 	}
 
 	var i schema.Identity
-	if err := s.DB(m.Database).C(m.Collection).Find(query).One(&i); err != nil {
+	if err := s.DB(m.Database).C(m.IdentityCollection).Find(query).One(&i); err != nil {
 		return schema.NilIdentity, err
 	}
 	return i, nil

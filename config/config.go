@@ -20,7 +20,6 @@ type Configuration struct {
 // MongoConfig contains the config required to connect to MongoDB.
 type MongoConfig struct {
 	BindAddr           string `envconfig:"MONGODB_BIND_ADDR"   json:"-"`
-	Collection         string `envconfig:"MONGODB_COLLECTION"`
 	IdentityCollection string `envconfig:"MONGODB_IDENTITY_COLLECTION"`
 	TokenCollection    string `envconfig:"MONGODB_TOKEN_COLLECTION"`
 	Database           string `envconfig:"MONGODB_DATABASE"`
@@ -41,7 +40,6 @@ func Get() (*Configuration, error) {
 		HealthCheckTimeout:      2 * time.Second,
 		MongoConfig: MongoConfig{
 			BindAddr:           "localhost:27017",
-			Collection:         "identities",
 			IdentityCollection: "identities",
 			TokenCollection:    "tokens",
 			Database:           "identities",

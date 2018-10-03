@@ -10,7 +10,6 @@ import (
 
 // Mongo represents a simplistic MongoDB configuration.
 type Mongo struct {
-	Collection         string // TODO need to make this identityCollection and tokenCollection
 	IdentityCollection string // TODO need to make this identityCollection and tokenCollection
 	TokenCollection    string // TODO need to make this identityCollection and tokenCollection
 	Database           string
@@ -24,7 +23,6 @@ type changeInfo map[string]interface{}
 
 func New(cfg config.MongoConfig) (*Mongo, error) {
 	mongodb := &Mongo{
-		Collection:         cfg.Collection,
 		IdentityCollection: cfg.IdentityCollection,
 		TokenCollection:    cfg.TokenCollection,
 		Database:           cfg.Database,
