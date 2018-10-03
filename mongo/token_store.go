@@ -15,7 +15,7 @@ const (
 
 // StoreToken store a new token document in mongodb tokens collection. Any active token associated with the identity
 // will be marked as deleted. Sets the last modified date on all documents updated.
-func (m *Mongo) StoreToken(ctx context.Context, tkn schema.Token, i schema.Identity, ttl time.Duration) error {
+func (m *Mongo) StoreToken(ctx context.Context, tkn schema.Token, i schema.Identity) error {
 	logD := log.Data{identityIDKey: i.ID}
 	log.InfoCtx(ctx, "tokenStore: storing identity token", logD)
 

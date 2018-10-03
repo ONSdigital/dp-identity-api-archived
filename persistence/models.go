@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/ONSdigital/dp-identity-api/schema"
-	"time"
 )
 
 //go:generate moq -out persistencetest/generate_mocks.go -pkg persistencetest . IdentityStore TokenStore
@@ -21,6 +20,6 @@ type IdentityStore interface {
 }
 
 type TokenStore interface {
-	StoreToken(ctx context.Context, token schema.Token, i schema.Identity, ttl time.Duration) error
+	StoreToken(ctx context.Context, token schema.Token, i schema.Identity) error
 	GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, *schema.Token, error)
 }

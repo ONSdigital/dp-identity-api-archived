@@ -44,7 +44,7 @@ func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (*schem
 	}
 
 	// TODO remove TTL param.
-	if err := t.Store.StoreToken(ctx, *token, identity, 0); err != nil {
+	if err := t.Store.StoreToken(ctx, *token, identity); err != nil {
 		return nil, err
 	}
 
