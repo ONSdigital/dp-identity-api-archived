@@ -27,7 +27,7 @@ var (
 //             GetFunc: func(ctx context.Context, tokenStr string) (*schema.Identity, error) {
 // 	               panic("TODO: mock out the Get method")
 //             },
-//             VerifyPasswordFunc: func(ctx context.Context, email string, password string) error {
+//             VerifyPasswordFunc: func(ctx context.Context, email string, password string) (*schema.Identity, error) {
 // 	               panic("TODO: mock out the VerifyPassword method")
 //             },
 //         }
@@ -44,7 +44,7 @@ type IdentityServiceMock struct {
 	GetFunc func(ctx context.Context, tokenStr string) (*schema.Identity, error)
 
 	// VerifyPasswordFunc mocks the VerifyPassword method.
-	VerifyPasswordFunc func(ctx context.Context, email string, password string) error
+	VerifyPasswordFunc func(ctx context.Context, email string, password string) (*schema.Identity, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -145,7 +145,7 @@ func (mock *IdentityServiceMock) GetCalls() []struct {
 }
 
 // VerifyPassword calls VerifyPasswordFunc.
-func (mock *IdentityServiceMock) VerifyPassword(ctx context.Context, email string, password string) error {
+func (mock *IdentityServiceMock) VerifyPassword(ctx context.Context, email string, password string) (*schema.Identity, error) {
 	if mock.VerifyPasswordFunc == nil {
 		panic("moq: IdentityServiceMock.VerifyPasswordFunc is nil but IdentityService.VerifyPassword was just called")
 	}
