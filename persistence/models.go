@@ -22,5 +22,5 @@ type IdentityStore interface {
 
 type TokenStore interface {
 	StoreToken(ctx context.Context, token schema.Token, i schema.Identity, ttl time.Duration) error
-	GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, time.Duration, error)
+	GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, *schema.Token, error)
 }

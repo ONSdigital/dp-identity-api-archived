@@ -18,7 +18,7 @@ var (
 	invalidTimeFMT = "invalid time value, must be gte 0 and lt %d defaulting to 0"
 )
 
-// ExpiryHelper provides helper functions for calculating token expiry and TTL times.
+// TimeHepler provides helper functions for calculating token expiry and TTL times.
 type ExpiryHelper struct {
 	expiryHour   int
 	expiryMinute int

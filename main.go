@@ -49,24 +49,21 @@ func main() {
 		mongolib.NewHealthCheckClient(mongodb.Session),
 	)
 
-	token.TimeHelper = token.NewExpiryHelper(23, 59, 59)
+	tokens := &token.Tokens{
+		Cache:      &cache.NOP{}, // use Nop until cache is implemented
+		Store:      mongodb,
+		MaxTTL:     time.Minute * 15,
+		TimeHelper: token.NewExpiryHelper(23, 59, 59),
+	}
 
 	// use Nop until kafka is added to environment
 	auditor := &audit.NopAuditor{}
-
-	// use Nop until cache is implemented
-	tokenCache := &cache.NOP{}
-
-	cacheTokenDB := &token.CachedStore{
-		Cache: tokenCache,
-		Store: mongodb,
-	}
 
 	apiErrors := make(chan error, 1)
 
 	identityService := &identity.Service{
 		IdentityStore: mongodb,
-		TokenStore:    cacheTokenDB,
+		Tokens:        tokens,
 		Encryptor:     encryption.Service{},
 	}
 

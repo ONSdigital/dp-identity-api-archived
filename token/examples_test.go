@@ -1,8 +1,6 @@
 package token
 
 import (
-	"fmt"
-	"github.com/ONSdigital/dp-identity-api/schema"
 	"time"
 )
 
@@ -20,7 +18,7 @@ func ExampleExpiryHelper_GetExpiry() {
 	assertEquals(expiry, expected)
 }
 
-func ExampleToken_GetTTL() {
+/*func ExampleToken_GetTTL() {
 	// Case 1:
 	// Duration until expiry is 30 minutes, the max TTL is set to 15 minutes
 	// The duration until expiry is greater than the MaxTTL so the return value is the MaxTTL
@@ -82,3 +80,4 @@ func ExampleToken_GetTTL() {
 	fmt.Printf("%t", ttl.Minutes() == 0)
 	fmt.Printf("%t", err == ErrTokenExpired)
 }
+*/

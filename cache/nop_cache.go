@@ -9,7 +9,7 @@ import (
 // NOP is a no op implementation of a cache.
 type NOP struct{}
 
-func (c *NOP) StoreToken(ctx context.Context, tkn schema.Token, i schema.Identity, ttl time.Duration) error {
+func (c *NOP) StoreToken(ctx context.Context, token string, i schema.Identity, ttl time.Duration) error {
 	return nil
 }
 

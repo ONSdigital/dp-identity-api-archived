@@ -128,7 +128,7 @@ var (
 //
 //         // make and configure a mocked TokenStore
 //         mockedTokenStore := &TokenStoreMock{
-//             GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
+//             GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, *schema.Token, error) {
 // 	               panic("TODO: mock out the GetIdentityByToken method")
 //             },
 //             StoreTokenFunc: func(ctx context.Context, token schema.Token, i schema.Identity, ttl time.Duration) error {
@@ -142,7 +142,7 @@ var (
 //     }
 type TokenStoreMock struct {
 	// GetIdentityByTokenFunc mocks the GetIdentityByToken method.
-	GetIdentityByTokenFunc func(ctx context.Context, token string) (*schema.Identity, time.Duration, error)
+	GetIdentityByTokenFunc func(ctx context.Context, token string) (*schema.Identity, *schema.Token, error)
 
 	// StoreTokenFunc mocks the StoreToken method.
 	StoreTokenFunc func(ctx context.Context, token schema.Token, i schema.Identity, ttl time.Duration) error
@@ -171,7 +171,7 @@ type TokenStoreMock struct {
 }
 
 // GetIdentityByToken calls GetIdentityByTokenFunc.
-func (mock *TokenStoreMock) GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
+func (mock *TokenStoreMock) GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, *schema.Token, error) {
 	if mock.GetIdentityByTokenFunc == nil {
 		panic("moq: TokenStoreMock.GetIdentityByTokenFunc is nil but TokenStore.GetIdentityByToken was just called")
 	}
