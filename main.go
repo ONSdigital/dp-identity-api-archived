@@ -49,17 +49,17 @@ func main() {
 		mongolib.NewHealthCheckClient(mongodb.Session),
 	)
 
+	// use Nop until kafka is added to environment
+	auditor := &audit.NopAuditor{}
+
+	apiErrors := make(chan error, 1)
+
 	tokens := &token.Tokens{
 		Cache:      &cache.NOP{}, // use Nop until cache is implemented
 		Store:      mongodb,
 		MaxTTL:     time.Minute * 15,
 		TimeHelper: token.NewExpiryHelper(23, 59, 59),
 	}
-
-	// use Nop until kafka is added to environment
-	auditor := &audit.NopAuditor{}
-
-	apiErrors := make(chan error, 1)
 
 	identityService := &identity.Service{
 		IdentityStore: mongodb,

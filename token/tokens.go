@@ -20,16 +20,19 @@ var (
 	ErrTokenExpired = errors.New("token expired")
 )
 
+// Cache definition of a Token cache.
 type Cache interface {
 	StoreToken(ctx context.Context, token string, i schema.Identity, ttl time.Duration) error
 	GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, time.Duration, error)
 }
 
+// ExpiryTimeHelper provides functions for getting the current time and calculating a token's expiry data.
 type ExpiryTimeHelper interface {
 	Now() time.Time
 	GetExpiry() time.Time
 }
 
+// Tokens provides functionality for creating new tokens and getting existing ones.
 type Tokens struct {
 	TimeHelper ExpiryTimeHelper
 	Cache      Cache
@@ -37,57 +40,59 @@ type Tokens struct {
 	MaxTTL     time.Duration
 }
 
-func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (*schema.Token, error) {
-	token, err := t.newToken(identity)
-	if err != nil {
-		return nil, err
+// NewToken creates and stores a new token for the provided identity. Returns the generated token and its time to live,
+// or an error is unsuccessful
+func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (token *schema.Token, ttl time.Duration, err error) {
+	if token, err = t.newToken(identity); err != nil {
+		return
 	}
 
-	// TODO remove TTL param.
 	if err := t.Store.StoreToken(ctx, *token, identity); err != nil {
-		return nil, err
+		return
 	}
 
-	ttl, _ := t.GetTTL(token)
+	if ttl, err = t.GetTTL(token); err != nil {
+		return
+	}
+
 	if err := t.Cache.StoreToken(ctx, token.ID, identity, ttl); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-
-	return token, nil
+	return
 }
 
-func (t *Tokens) Get(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error) {
+// Get return the identity associated with the token (if it exists) and the tokens time to live. Return an error if
+// unsuccessful
+func (t *Tokens) Get(ctx context.Context, tokenStr string) (identity *schema.Identity, ttl time.Duration, err error) {
 	// try the cache first..
-	identity, ttl, err := t.Cache.GetIdentityByToken(ctx, tokenStr)
+	identity, ttl, err = t.Cache.GetIdentityByToken(ctx, tokenStr)
 	if err != nil {
-		return nil, 0, err
+		return
 	}
 
 	// exists in the cache (lovely jubbly) return
 	if identity != nil {
-		return identity, ttl, nil
+		return
 	}
 
 	// else fall through to DB.
 	var token *schema.Token
-	identity, token, err = t.Store.GetIdentityByToken(ctx, tokenStr)
-	if err != nil {
-		return nil, 0, err
+	if identity, token, err = t.Store.GetIdentityByToken(ctx, tokenStr); err != nil {
+		return
 	}
 
 	// calculate TTL
-	ttl, err = t.GetTTL(token)
-	if err != nil {
-		return nil, 0, err
+	if ttl, err = t.GetTTL(token); err != nil {
+		return
 	}
 
 	// put it in the cache for next time.
 	if err := t.Cache.StoreToken(ctx, tokenStr, *identity, ttl); err != nil {
-		return nil, 0, err
+		return
 	}
 
 	// happy days...
-	return identity, ttl, nil
+	return
 }
 
 func (t *Tokens) newToken(i schema.Identity) (*schema.Token, error) {

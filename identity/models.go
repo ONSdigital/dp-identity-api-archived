@@ -21,7 +21,7 @@ type Encryptor interface {
 }
 
 type TokenService interface {
-	NewToken(ctx context.Context, identity schema.Identity) (*schema.Token, error)
+	NewToken(ctx context.Context, identity schema.Identity) (*schema.Token, time.Duration, error)
 	Get(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error)
 }
 
