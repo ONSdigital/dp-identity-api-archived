@@ -31,9 +31,9 @@ func (m *Mongo) StoreToken(ctx context.Context, tkn schema.Token, i schema.Ident
 	return nil
 }
 
-func (m *Mongo) GetToken(ctx context.Context, tokenStr string) (time.Duration, error) {
+func (m *Mongo) GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
 	// TODO
-	return time.Second * 0, nil
+	return nil, time.Second * 0, nil
 }
 
 // deleteTokens soft delete any active token associated with the provided identity ID. Sets token.deleted = true and

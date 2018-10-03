@@ -4,8 +4,10 @@
 package persistencetest
 
 import (
+	"context"
 	"github.com/ONSdigital/dp-identity-api/schema"
 	"sync"
+	"time"
 )
 
 var (
@@ -112,5 +114,136 @@ func (mock *IdentityStoreMock) SaveIdentityCalls() []struct {
 	lockIdentityStoreMockSaveIdentity.RLock()
 	calls = mock.calls.SaveIdentity
 	lockIdentityStoreMockSaveIdentity.RUnlock()
+	return calls
+}
+
+var (
+	lockTokenStoreMockGetIdentityByToken sync.RWMutex
+	lockTokenStoreMockStoreToken         sync.RWMutex
+)
+
+// TokenStoreMock is a mock implementation of TokenStore.
+//
+//     func TestSomethingThatUsesTokenStore(t *testing.T) {
+//
+//         // make and configure a mocked TokenStore
+//         mockedTokenStore := &TokenStoreMock{
+//             GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
+// 	               panic("TODO: mock out the GetIdentityByToken method")
+//             },
+//             StoreTokenFunc: func(ctx context.Context, token schema.Token, i schema.Identity, ttl time.Duration) error {
+// 	               panic("TODO: mock out the StoreToken method")
+//             },
+//         }
+//
+//         // TODO: use mockedTokenStore in code that requires TokenStore
+//         //       and then make assertions.
+//
+//     }
+type TokenStoreMock struct {
+	// GetIdentityByTokenFunc mocks the GetIdentityByToken method.
+	GetIdentityByTokenFunc func(ctx context.Context, token string) (*schema.Identity, time.Duration, error)
+
+	// StoreTokenFunc mocks the StoreToken method.
+	StoreTokenFunc func(ctx context.Context, token schema.Token, i schema.Identity, ttl time.Duration) error
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// GetIdentityByToken holds details about calls to the GetIdentityByToken method.
+		GetIdentityByToken []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Token is the token argument value.
+			Token string
+		}
+		// StoreToken holds details about calls to the StoreToken method.
+		StoreToken []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Token is the token argument value.
+			Token schema.Token
+			// I is the i argument value.
+			I schema.Identity
+			// TTL is the ttl argument value.
+			TTL time.Duration
+		}
+	}
+}
+
+// GetIdentityByToken calls GetIdentityByTokenFunc.
+func (mock *TokenStoreMock) GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
+	if mock.GetIdentityByTokenFunc == nil {
+		panic("moq: TokenStoreMock.GetIdentityByTokenFunc is nil but TokenStore.GetIdentityByToken was just called")
+	}
+	callInfo := struct {
+		Ctx   context.Context
+		Token string
+	}{
+		Ctx:   ctx,
+		Token: token,
+	}
+	lockTokenStoreMockGetIdentityByToken.Lock()
+	mock.calls.GetIdentityByToken = append(mock.calls.GetIdentityByToken, callInfo)
+	lockTokenStoreMockGetIdentityByToken.Unlock()
+	return mock.GetIdentityByTokenFunc(ctx, token)
+}
+
+// GetIdentityByTokenCalls gets all the calls that were made to GetIdentityByToken.
+// Check the length with:
+//     len(mockedTokenStore.GetIdentityByTokenCalls())
+func (mock *TokenStoreMock) GetIdentityByTokenCalls() []struct {
+	Ctx   context.Context
+	Token string
+} {
+	var calls []struct {
+		Ctx   context.Context
+		Token string
+	}
+	lockTokenStoreMockGetIdentityByToken.RLock()
+	calls = mock.calls.GetIdentityByToken
+	lockTokenStoreMockGetIdentityByToken.RUnlock()
+	return calls
+}
+
+// StoreToken calls StoreTokenFunc.
+func (mock *TokenStoreMock) StoreToken(ctx context.Context, token schema.Token, i schema.Identity, ttl time.Duration) error {
+	if mock.StoreTokenFunc == nil {
+		panic("moq: TokenStoreMock.StoreTokenFunc is nil but TokenStore.StoreToken was just called")
+	}
+	callInfo := struct {
+		Ctx   context.Context
+		Token schema.Token
+		I     schema.Identity
+		TTL   time.Duration
+	}{
+		Ctx:   ctx,
+		Token: token,
+		I:     i,
+		TTL:   ttl,
+	}
+	lockTokenStoreMockStoreToken.Lock()
+	mock.calls.StoreToken = append(mock.calls.StoreToken, callInfo)
+	lockTokenStoreMockStoreToken.Unlock()
+	return mock.StoreTokenFunc(ctx, token, i, ttl)
+}
+
+// StoreTokenCalls gets all the calls that were made to StoreToken.
+// Check the length with:
+//     len(mockedTokenStore.StoreTokenCalls())
+func (mock *TokenStoreMock) StoreTokenCalls() []struct {
+	Ctx   context.Context
+	Token schema.Token
+	I     schema.Identity
+	TTL   time.Duration
+} {
+	var calls []struct {
+		Ctx   context.Context
+		Token schema.Token
+		I     schema.Identity
+		TTL   time.Duration
+	}
+	lockTokenStoreMockStoreToken.RLock()
+	calls = mock.calls.StoreToken
+	lockTokenStoreMockStoreToken.RUnlock()
 	return calls
 }

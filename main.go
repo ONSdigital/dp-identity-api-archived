@@ -9,7 +9,6 @@ import (
 	"github.com/ONSdigital/dp-identity-api/encryption"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/dp-identity-api/mongo"
-	"github.com/ONSdigital/dp-identity-api/persistence"
 	"github.com/ONSdigital/dp-identity-api/token"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
@@ -56,11 +55,11 @@ func main() {
 	auditor := &audit.NopAuditor{}
 
 	// use Nop until cache is implemented
-	tokenCache := &cache.NOPCache{}
+	tokenCache := &cache.NOP{}
 
-	cacheTokenDB := &persistence.CachedTokenStored{
-		Cache:   tokenCache,
-		TokenDB: mongodb,
+	cacheTokenDB := &token.CachedStore{
+		Cache: tokenCache,
+		Store: mongodb,
 	}
 
 	apiErrors := make(chan error, 1)
