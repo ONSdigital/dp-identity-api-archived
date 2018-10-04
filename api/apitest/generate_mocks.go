@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/schema"
 	"sync"
+	"time"
 )
 
 var (
@@ -180,5 +181,124 @@ func (mock *IdentityServiceMock) VerifyPasswordCalls() []struct {
 	lockIdentityServiceMockVerifyPassword.RLock()
 	calls = mock.calls.VerifyPassword
 	lockIdentityServiceMockVerifyPassword.RUnlock()
+	return calls
+}
+
+var (
+	lockTokenServiceMockGet      sync.RWMutex
+	lockTokenServiceMockNewToken sync.RWMutex
+)
+
+// TokenServiceMock is a mock implementation of TokenService.
+//
+//     func TestSomethingThatUsesTokenService(t *testing.T) {
+//
+//         // make and configure a mocked TokenService
+//         mockedTokenService := &TokenServiceMock{
+//             GetFunc: func(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error) {
+// 	               panic("TODO: mock out the Get method")
+//             },
+//             NewTokenFunc: func(ctx context.Context, identity schema.Identity) (*schema.Token, time.Duration, error) {
+// 	               panic("TODO: mock out the NewToken method")
+//             },
+//         }
+//
+//         // TODO: use mockedTokenService in code that requires TokenService
+//         //       and then make assertions.
+//
+//     }
+type TokenServiceMock struct {
+	// GetFunc mocks the Get method.
+	GetFunc func(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error)
+
+	// NewTokenFunc mocks the NewToken method.
+	NewTokenFunc func(ctx context.Context, identity schema.Identity) (*schema.Token, time.Duration, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// Get holds details about calls to the Get method.
+		Get []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// TokenStr is the tokenStr argument value.
+			TokenStr string
+		}
+		// NewToken holds details about calls to the NewToken method.
+		NewToken []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Identity is the identity argument value.
+			Identity schema.Identity
+		}
+	}
+}
+
+// Get calls GetFunc.
+func (mock *TokenServiceMock) Get(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error) {
+	if mock.GetFunc == nil {
+		panic("moq: TokenServiceMock.GetFunc is nil but TokenService.Get was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		TokenStr string
+	}{
+		Ctx:      ctx,
+		TokenStr: tokenStr,
+	}
+	lockTokenServiceMockGet.Lock()
+	mock.calls.Get = append(mock.calls.Get, callInfo)
+	lockTokenServiceMockGet.Unlock()
+	return mock.GetFunc(ctx, tokenStr)
+}
+
+// GetCalls gets all the calls that were made to Get.
+// Check the length with:
+//     len(mockedTokenService.GetCalls())
+func (mock *TokenServiceMock) GetCalls() []struct {
+	Ctx      context.Context
+	TokenStr string
+} {
+	var calls []struct {
+		Ctx      context.Context
+		TokenStr string
+	}
+	lockTokenServiceMockGet.RLock()
+	calls = mock.calls.Get
+	lockTokenServiceMockGet.RUnlock()
+	return calls
+}
+
+// NewToken calls NewTokenFunc.
+func (mock *TokenServiceMock) NewToken(ctx context.Context, identity schema.Identity) (*schema.Token, time.Duration, error) {
+	if mock.NewTokenFunc == nil {
+		panic("moq: TokenServiceMock.NewTokenFunc is nil but TokenService.NewToken was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		Identity schema.Identity
+	}{
+		Ctx:      ctx,
+		Identity: identity,
+	}
+	lockTokenServiceMockNewToken.Lock()
+	mock.calls.NewToken = append(mock.calls.NewToken, callInfo)
+	lockTokenServiceMockNewToken.Unlock()
+	return mock.NewTokenFunc(ctx, identity)
+}
+
+// NewTokenCalls gets all the calls that were made to NewToken.
+// Check the length with:
+//     len(mockedTokenService.NewTokenCalls())
+func (mock *TokenServiceMock) NewTokenCalls() []struct {
+	Ctx      context.Context
+	Identity schema.Identity
+} {
+	var calls []struct {
+		Ctx      context.Context
+		Identity schema.Identity
+	}
+	lockTokenServiceMockNewToken.RLock()
+	calls = mock.calls.NewToken
+	lockTokenServiceMockNewToken.RUnlock()
 	return calls
 }

@@ -12,7 +12,8 @@ import (
 	"time"
 )
 
-//go:generate moq -out apitest/generate_mocks.go -pkg apitest . IdentityService
+//go:generate moq -out apitest/generate_mocks.go -pkg apitest . IdentityService TokenService
+
 
 const (
 	getIdentityAction    = "getIdentity"
@@ -35,6 +36,7 @@ var (
 type API struct {
 	Host               string
 	IdentityService    IdentityService
+	Tokens             TokenService
 	healthCheckTimeout time.Duration
 	auditor            audit.AuditorService
 }
@@ -86,4 +88,9 @@ type IdentityService interface {
 	Get(ctx context.Context, tokenStr string) (*schema.Identity, error)
 	Create(ctx context.Context, i *schema.Identity) (string, error)
 	VerifyPassword(ctx context.Context, email string, password string) error
+}
+
+type TokenService interface {
+	NewToken(ctx context.Context, identity schema.Identity) (*schema.Token, time.Duration, error)
+	Get(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error)
 }

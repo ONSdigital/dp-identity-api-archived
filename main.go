@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/ONSdigital/dp-identity-api/api"
-	"github.com/ONSdigital/dp-identity-api/cache"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/encryption"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/dp-identity-api/mongo"
-	"github.com/ONSdigital/dp-identity-api/token"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
@@ -54,16 +52,8 @@ func main() {
 
 	apiErrors := make(chan error, 1)
 
-	tokens := &token.Tokens{
-		Cache:      &cache.NOP{}, // use Nop until cache is implemented
-		Store:      mongodb,
-		MaxTTL:     time.Minute * 15,
-		TimeHelper: token.NewExpiryHelper(23, 59, 59),
-	}
-
 	identityService := &identity.Service{
 		IdentityStore: mongodb,
-		Tokens:        tokens,
 		Encryptor:     encryption.Service{},
 	}
 

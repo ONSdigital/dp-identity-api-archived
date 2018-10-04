@@ -47,7 +47,7 @@ func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (token 
 		return
 	}
 
-	if err := t.Store.StoreToken(ctx, *token, identity); err != nil {
+	if err = t.Store.StoreToken(ctx, *token, identity); err != nil {
 		return
 	}
 
@@ -55,8 +55,8 @@ func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (token 
 		return
 	}
 
-	if err := t.Cache.StoreToken(ctx, token.ID, identity, ttl); err != nil {
-		return nil, 0, err
+	if err = t.Cache.StoreToken(ctx, token.ID, identity, ttl); err != nil {
+		return
 	}
 	return
 }
@@ -87,7 +87,7 @@ func (t *Tokens) Get(ctx context.Context, tokenStr string) (identity *schema.Ide
 	}
 
 	// put it in the cache for next time.
-	if err := t.Cache.StoreToken(ctx, tokenStr, *identity, ttl); err != nil {
+	if err = t.Cache.StoreToken(ctx, tokenStr, *identity, ttl); err != nil {
 		return
 	}
 
