@@ -9,13 +9,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-	ErrAuthenticateFailed = errors.New("authentication unsuccessful")
-	ErrEmailAlreadyExists = errors.New("active identity already exists with email")
-	ErrIdentityNotFound   = errors.New("authentication unsuccessful user not found")
-)
-
-//Create create a new user identity
+//Create create a new user identity, returns ErrInvalidArguments if the required fields are invalid,
+// ErrEmailAlreadyExists if the i.Email is already associated with an active identity and ErrPersistence for any errors
+// persisting the identity to the datastore.
 func (s *Service) Create(ctx context.Context, i *schema.Identity) (string, error) {
 	if ctx == nil {
 		log.Error(errors.New("create: failed mandatory context parameter was nil"), nil)
@@ -55,22 +51,24 @@ func (s *Service) Create(ctx context.Context, i *schema.Identity) (string, error
 	return id, nil
 }
 
-func (s *Service) VerifyPassword(ctx context.Context, email string, password string) error {
+// VerifyPassword verify if the password provided is correct the email provided. Returns the active identity with the
+// provided email if successful, returns ErrAuthenticateFailed if password incorrect.
+func (s *Service) VerifyPassword(ctx context.Context, email string, password string) (*schema.Identity, error) {
 	i, err := s.getIdentity(ctx, email)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	logD := log.Data{"email": email}
+	logD := log.Data{"email": email, "identity_id": i.ID}
 
 	err = s.Encryptor.CompareHashAndPassword([]byte(i.Password), []byte(password))
 	if err != nil {
 		log.ErrorCtx(ctx, errors.Wrap(err, "password did not match stored value"), logD)
-		return ErrAuthenticateFailed
+		return nil, ErrAuthenticateFailed
 	}
 
 	log.InfoCtx(ctx, "user authentication successful", logD)
-	return nil
+	return i, nil
 }
 
 func (s *Service) Get(ctx context.Context, tokenStr string) (*schema.Identity, error) {
