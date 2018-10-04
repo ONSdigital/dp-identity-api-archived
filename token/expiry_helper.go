@@ -18,7 +18,7 @@ var (
 	invalidTimeFMT = "invalid time value, must be gte 0 and lt %d defaulting to 0"
 )
 
-// TimeHepler provides helper functions for calculating token expiry and TTL times.
+// ExpiryHelper provides helper functions for calculating token expiry and TTL times.
 type ExpiryHelper struct {
 	expiryHour   int
 	expiryMinute int
@@ -40,6 +40,18 @@ func NewExpiryHelper(expiryHour, expiryMinute, expirySecond int) *ExpiryHelper {
 	expiry := helper.GetExpiry()
 	log.Info(fmt.Sprintf("token expiry time: %s", expiry.Format(timeFMT)), nil)
 	return helper
+}
+
+func (e *ExpiryHelper) GetExpiryHour() int {
+	return e.expiryHour
+}
+
+func (e *ExpiryHelper) GetExpiryMin() int {
+	return e.expiryMinute
+}
+
+func (e *ExpiryHelper) GetExpirySec() int {
+	return e.expirySecond
 }
 
 func getValOrDefault(val int, max int) int {

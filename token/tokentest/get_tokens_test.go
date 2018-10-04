@@ -1,10 +1,10 @@
-package token
+package tokentest
 
 import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/persistence/persistencetest"
 	"github.com/ONSdigital/dp-identity-api/schema"
-	"github.com/ONSdigital/dp-identity-api/token/tokentest"
+	"github.com/ONSdigital/dp-identity-api/token"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
@@ -16,7 +16,7 @@ var (
 
 func TestTokens_GetCacheError(t *testing.T) {
 	Convey("given cache.GetIdentityByToken returns an error", t, func() {
-		cache := &tokentest.CacheMock{
+		cache := &CacheMock{
 			GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
 				return nil, 0, errTest
 			},
@@ -24,7 +24,7 @@ func TestTokens_GetCacheError(t *testing.T) {
 
 		store := &persistencetest.TokenStoreMock{StoreTokenFunc: dbStoreTokenNoErr}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:  cache,
 			Store:  store,
 			MaxTTL: testTTL,
@@ -48,7 +48,7 @@ func TestTokens_GetCacheError(t *testing.T) {
 
 func TestTokens_GetExistsInCache(t *testing.T) {
 	Convey("given the request token exists in the cache", t, func() {
-		cache := &tokentest.CacheMock{
+		cache := &CacheMock{
 			GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
 				return testIdentity, time.Minute * 15, nil
 			},
@@ -56,7 +56,7 @@ func TestTokens_GetExistsInCache(t *testing.T) {
 
 		store := &persistencetest.TokenStoreMock{StoreTokenFunc: dbStoreTokenNoErr}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:  cache,
 			Store:  store,
 			MaxTTL: testTTL,
@@ -80,7 +80,7 @@ func TestTokens_GetExistsInCache(t *testing.T) {
 
 func TestTokens_GetStoreError(t *testing.T) {
 	Convey("given store.GetIdentityByToken returns an error", t, func() {
-		cache := &tokentest.CacheMock{
+		cache := &CacheMock{
 			GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
 				return nil, 0, nil
 			},
@@ -92,7 +92,7 @@ func TestTokens_GetStoreError(t *testing.T) {
 			},
 		}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:  cache,
 			Store:  store,
 			MaxTTL: testTTL,
@@ -118,17 +118,11 @@ func TestTokens_GetStoreError(t *testing.T) {
 
 func TestTokens_GetStoreTokenExpired(t *testing.T) {
 	Convey("given store.GetIdentityByToken returns an expired token", t, func() {
+		created := time.Now().Add(time.Hour * - 24) // created a day ago
+		expires := time.Now().Add(time.Hour * -1)   // expired an hour ago
+		tkn := newTestToken(created, expires)
 
-		expired := &schema.Token{
-			ID:           testID,
-			IdentityID:   testID,
-			CreatedDate:  time.Now().Add(time.Hour * - 24), // created a day ago
-			ExpiryDate:   time.Now().Add(time.Hour * -1),   // expired an hour ago
-			LastModified: time.Now().Add(time.Hour * - 24),
-			Deleted:      false,
-		}
-
-		cache := &tokentest.CacheMock{
+		cache := &CacheMock{
 			GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
 				return nil, 0, nil
 			},
@@ -136,17 +130,17 @@ func TestTokens_GetStoreTokenExpired(t *testing.T) {
 
 		store := &persistencetest.TokenStoreMock{
 			GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, *schema.Token, error) {
-				return testIdentity, expired, nil
+				return testIdentity, tkn, nil
 			},
 		}
 
-		timeHelp := &tokentest.ExpiryTimeHelperMock{
+		timeHelp := &ExpiryTimeHelperMock{
 			NowFunc: func() time.Time {
 				return time.Now()
 			},
 		}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:      cache,
 			Store:      store,
 			TimeHelper: timeHelp,
@@ -157,7 +151,7 @@ func TestTokens_GetStoreTokenExpired(t *testing.T) {
 			identity, ttl, err := tokens.Get(context.Background(), testID)
 
 			Convey("then expected identity, TTL and error values are returned", func() {
-				So(err, ShouldEqual, ErrTokenExpired)
+				So(err, ShouldEqual, token.ErrTokenExpired)
 				So(identity, ShouldBeNil)
 				So(ttl, ShouldEqual, 0)
 
@@ -173,17 +167,11 @@ func TestTokens_GetStoreTokenExpired(t *testing.T) {
 
 func TestTokens_GetStoreCacheStoreTokenError(t *testing.T) {
 	Convey("given cache.StoreToken returns an rrror", t, func() {
+		created := time.Now()
+		expires := time.Now().Add(time.Hour * 1) // expired an hour ago
+		tkn := newTestToken(created, expires)
 
-		tkn := &schema.Token{
-			ID:           testID,
-			IdentityID:   testID,
-			CreatedDate:  time.Now(),
-			ExpiryDate:   time.Now().Add(time.Hour * 1),   // expired an hour ago
-			LastModified: time.Now(),
-			Deleted:      false,
-		}
-
-		cache := &tokentest.CacheMock{
+		cache := &CacheMock{
 			GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
 				return nil, 0, nil
 			},
@@ -198,13 +186,13 @@ func TestTokens_GetStoreCacheStoreTokenError(t *testing.T) {
 			},
 		}
 
-		timeHelp := &tokentest.ExpiryTimeHelperMock{
+		timeHelp := &ExpiryTimeHelperMock{
 			NowFunc: func() time.Time {
 				return time.Now()
 			},
 		}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:      cache,
 			Store:      store,
 			TimeHelper: timeHelp,
@@ -234,17 +222,11 @@ func TestTokens_GetStoreCacheStoreTokenError(t *testing.T) {
 
 func TestTokens_GetStoreSuccess(t *testing.T) {
 	Convey("given store.GetIdentityByToken returns an non expired token", t, func() {
+		created := time.Now().Add(time.Hour * - 24)
+		expires := time.Now().Add(time.Hour * 1)
+		tkn := newTestToken(created, expires)
 
-		tkn := &schema.Token{
-			ID:           testID,
-			IdentityID:   testID,
-			CreatedDate:  time.Now().Add(time.Hour * - 24), // created a day ago
-			ExpiryDate:   time.Now().Add(time.Hour * 1),    // expired an hour ago
-			LastModified: time.Now().Add(time.Hour * - 24),
-			Deleted:      false,
-		}
-
-		cache := &tokentest.CacheMock{
+		cache := &CacheMock{
 			GetIdentityByTokenFunc: func(ctx context.Context, token string) (*schema.Identity, time.Duration, error) {
 				return nil, 0, nil
 			},
@@ -257,13 +239,13 @@ func TestTokens_GetStoreSuccess(t *testing.T) {
 			},
 		}
 
-		timeHelp := &tokentest.ExpiryTimeHelperMock{
+		timeHelp := &ExpiryTimeHelperMock{
 			NowFunc: func() time.Time {
 				return time.Now()
 			},
 		}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:      cache,
 			Store:      store,
 			TimeHelper: timeHelp,

@@ -1,10 +1,10 @@
-package token
+package tokentest
 
 import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/persistence/persistencetest"
 	"github.com/ONSdigital/dp-identity-api/schema"
-	"github.com/ONSdigital/dp-identity-api/token/tokentest"
+	"github.com/ONSdigital/dp-identity-api/token"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
@@ -40,11 +40,11 @@ func TestTokens_NewTokenMaxTTL(t *testing.T) {
 	Convey("given new token does not return an error", t, func() {
 		now := time.Now()
 
-		cache := &tokentest.CacheMock{StoreTokenFunc: cacheStoreTokenNoErr}
+		cache := &CacheMock{StoreTokenFunc: cacheStoreTokenNoErr}
 
 		store := &persistencetest.TokenStoreMock{StoreTokenFunc: dbStoreTokenNoErr}
 
-		timeHelper := &tokentest.ExpiryTimeHelperMock{
+		timeHelper := &ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return now.Add(time.Hour * 24)
 			},
@@ -53,7 +53,7 @@ func TestTokens_NewTokenMaxTTL(t *testing.T) {
 			},
 		}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:      cache,
 			Store:      store,
 			TimeHelper: timeHelper,
@@ -87,11 +87,11 @@ func TestTokens_NewTokenLessThatMaxTTL(t *testing.T) {
 	Convey("given duration until expiry is less than the max TTL", t, func() {
 		now := time.Now()
 
-		cache := &tokentest.CacheMock{StoreTokenFunc: cacheStoreTokenNoErr}
+		cache := &CacheMock{StoreTokenFunc: cacheStoreTokenNoErr}
 
 		store := &persistencetest.TokenStoreMock{StoreTokenFunc: dbStoreTokenNoErr}
 
-		timeHelper := &tokentest.ExpiryTimeHelperMock{
+		timeHelper := &ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return now.Add(time.Minute * 5)
 			},
@@ -100,7 +100,7 @@ func TestTokens_NewTokenLessThatMaxTTL(t *testing.T) {
 			},
 		}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:      cache,
 			Store:      store,
 			TimeHelper: timeHelper,
@@ -139,11 +139,11 @@ func TestTokens_NewTokenStoreErrors(t *testing.T) {
 			},
 		}
 
-		cache := &tokentest.CacheMock{}
+		cache := &CacheMock{}
 
 		now := time.Now()
 
-		timeHelper := &tokentest.ExpiryTimeHelperMock{
+		timeHelper := &ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return now.Add(time.Minute * 5)
 			},
@@ -152,7 +152,7 @@ func TestTokens_NewTokenStoreErrors(t *testing.T) {
 			},
 		}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:      cache,
 			Store:      store,
 			TimeHelper: timeHelper,
@@ -184,7 +184,7 @@ func TestTokens_NewTokenCacheErrors(t *testing.T) {
 
 		store := &persistencetest.TokenStoreMock{StoreTokenFunc: dbStoreTokenNoErr}
 
-		cache := &tokentest.CacheMock{
+		cache := &CacheMock{
 			StoreTokenFunc: func(ctx context.Context, token string, i schema.Identity, ttl time.Duration) error {
 				return errTest
 			},
@@ -192,7 +192,7 @@ func TestTokens_NewTokenCacheErrors(t *testing.T) {
 
 		now := time.Now()
 
-		timeHelper := &tokentest.ExpiryTimeHelperMock{
+		timeHelper := &ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return now.Add(time.Hour * 24)
 			},
@@ -201,7 +201,7 @@ func TestTokens_NewTokenCacheErrors(t *testing.T) {
 			},
 		}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:      cache,
 			Store:      store,
 			TimeHelper: timeHelper,
@@ -236,7 +236,7 @@ func TestTokens_NewTokenGetTTLErrors(t *testing.T) {
 
 		store := &persistencetest.TokenStoreMock{StoreTokenFunc: dbStoreTokenNoErr}
 
-		cache := &tokentest.CacheMock{
+		cache := &CacheMock{
 			StoreTokenFunc: func(ctx context.Context, token string, i schema.Identity, ttl time.Duration) error {
 				return errTest
 			},
@@ -244,7 +244,7 @@ func TestTokens_NewTokenGetTTLErrors(t *testing.T) {
 
 		now := time.Now()
 
-		timeHelper := &tokentest.ExpiryTimeHelperMock{
+		timeHelper := &ExpiryTimeHelperMock{
 			GetExpiryFunc: func() time.Time {
 				return now.Add(time.Hour * -24)
 			},
@@ -253,19 +253,19 @@ func TestTokens_NewTokenGetTTLErrors(t *testing.T) {
 			},
 		}
 
-		tokens := Tokens{
+		tokens := token.Tokens{
 			Cache:      cache,
 			Store:      store,
 			TimeHelper: timeHelper,
 			MaxTTL:     testTTL,
 		}
 
-		token, ttl, err := tokens.NewToken(context.Background(), *testIdentity)
+		tkn, ttl, err := tokens.NewToken(context.Background(), *testIdentity)
 
 		Convey("then the correct error is returned", func() {
-			So(err, ShouldEqual, ErrTokenExpired)
+			So(err, ShouldEqual, token.ErrTokenExpired)
 			So(ttl, ShouldEqual, 0)
-			So(token, ShouldBeNil)
+			So(tkn, ShouldBeNil)
 		})
 
 		Convey("and store.StoreToken is called 1 time with the expected params", func() {

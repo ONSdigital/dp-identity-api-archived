@@ -1,6 +1,7 @@
-package token
+package tokentest
 
 import (
+	"github.com/ONSdigital/dp-identity-api/token"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -17,10 +18,10 @@ type scenario = struct {
 
 func TestNewExpiryHelper(t *testing.T) {
 	Convey("should set provide hour, min and sec values for valid input", t, func() {
-		helper := NewExpiryHelper(23, 59, 59)
-		So(helper.expiryHour, ShouldEqual, 23)
-		So(helper.expiryMinute, ShouldEqual, 59)
-		So(helper.expirySecond, ShouldEqual, 59)
+		helper := token.NewExpiryHelper(23, 59, 59)
+		So(helper.GetExpiryHour(), ShouldEqual, 23)
+		So(helper.GetExpiryMin(), ShouldEqual, 59)
+		So(helper.GetExpirySec(), ShouldEqual, 59)
 	})
 }
 
@@ -37,11 +38,11 @@ func TestNewExpiryHelperInvalidInput(t *testing.T) {
 	Convey("should set default value if input is invalid", t, func() {
 
 		for i, s := range scenarios {
-			helper := NewExpiryHelper(s.inputH, s.inputM, s.expectS)
+			helper := token.NewExpiryHelper(s.inputH, s.inputM, s.expectS)
 
-			So(helper.expiryHour, ShouldEqual, s.expectH)
-			So(helper.expiryMinute, ShouldEqual, s.expectM)
-			So(helper.expirySecond, ShouldEqual, s.expectS)
+			So(helper.GetExpiryHour(), ShouldEqual, s.expectH)
+			So(helper.GetExpiryMin(), ShouldEqual, s.expectM)
+			So(helper.GetExpirySec(), ShouldEqual, s.expectS)
 
 			t.Logf("scenario: %d, description: %s successful", i, s.desc)
 		}

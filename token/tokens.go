@@ -20,10 +20,13 @@ var (
 	// ErrTokenExpired returned when GetTTL is called and the token has expired
 	ErrTokenExpired = errors.New("token expired")
 
+	// ErrTokenNil return if the token is nil
+	ErrTokenNil = errors.New("token required but was nil")
+
 	errCacheStoreFailed = errors.New("warning failed to write token to cache")
 )
 
-// Cache definition of a Token cache.
+// Cache defines a cache for storing/retrieving an identity against a token ID .
 type Cache interface {
 	StoreToken(ctx context.Context, token string, i schema.Identity, ttl time.Duration) error
 	GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, time.Duration, error)
@@ -104,26 +107,11 @@ func (t *Tokens) Get(ctx context.Context, tokenStr string) (identity *schema.Ide
 	return
 }
 
-func (t *Tokens) newToken(i schema.Identity) (*schema.Token, error) {
-	uuid, err := uuid.NewV4()
-	if err != nil {
-		return nil, err
-	}
-
-	return &schema.Token{
-		ID:          uuid.String(),
-		IdentityID:  i.ID,
-		CreatedDate: t.TimeHelper.Now(),
-		ExpiryDate:  t.TimeHelper.GetExpiry(),
-		Deleted:     false,
-	}, nil
-}
-
 // GetTTL calculates the TTL (time to live) from the configured expiry time. Returns ErrTokenExpired if the token is
 // expired.
 func (t *Tokens) GetTTL(token *schema.Token) (time.Duration, error) {
 	if token == nil {
-		return nilTTL, errors.New("token required but was nil")
+		return nilTTL, ErrTokenNil
 	}
 	now := t.TimeHelper.Now()
 	if now.After(token.ExpiryDate) {
@@ -144,4 +132,20 @@ func (t *Tokens) GetTTL(token *schema.Token) (time.Duration, error) {
 
 	// time remaining is less than the time until expiry so just return the remaining time.
 	return remainder, nil
+}
+
+// newToken construct a new token.
+func (t *Tokens) newToken(i schema.Identity) (*schema.Token, error) {
+	uuid, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
+
+	return &schema.Token{
+		ID:          uuid.String(),
+		IdentityID:  i.ID,
+		CreatedDate: t.TimeHelper.Now(),
+		ExpiryDate:  t.TimeHelper.GetExpiry(),
+		Deleted:     false,
+	}, nil
 }
