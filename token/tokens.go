@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-identity-api/persistence"
 	"github.com/ONSdigital/dp-identity-api/schema"
+	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"time"
@@ -18,6 +19,8 @@ const (
 var (
 	// ErrTokenExpired returned when GetTTL is called and the token has expired
 	ErrTokenExpired = errors.New("token expired")
+
+	errCacheStoreFailed = errors.New("warning failed to write token to cache")
 )
 
 // Cache definition of a Token cache.
@@ -62,41 +65,42 @@ func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (token 
 		ttl = 0
 		return
 	}
-	//log.InfoCtx(ctx, "successfully generated token for identity", log.Data{"identity_id": identity.ID})
+	log.InfoCtx(ctx, "successfully generated token for identity", log.Data{"identity_id": identity.ID})
 	return
 }
 
 // Get return the identity associated with the token (if it exists) and the tokens time to live. Return an error if
 // unsuccessful
 func (t *Tokens) Get(ctx context.Context, tokenStr string) (identity *schema.Identity, ttl time.Duration, err error) {
-	// try the cache first..
+	defer func() {
+		if err != nil { // if err return nil values
+			identity = nil
+			ttl = 0
+		}
+	}()
+
 	identity, ttl, err = t.Cache.GetIdentityByToken(ctx, tokenStr)
-	if err != nil {
+
+	if err != nil || identity != nil {
 		return
 	}
 
-	// exists in the cache (lovely jubbly) return
-	if identity != nil {
-		return
-	}
-
-	// else fall through to DB.
 	var token *schema.Token
 	if identity, token, err = t.Store.GetIdentityByToken(ctx, tokenStr); err != nil {
 		return
 	}
 
-	// calculate TTL
 	if ttl, err = t.GetTTL(token); err != nil {
 		return
 	}
 
-	// put it in the cache for next time.
 	if err = t.Cache.StoreToken(ctx, tokenStr, *identity, ttl); err != nil {
-		return
+		// We consider this non critical as the token exists and the user can still use the service.
+		// So we log an error to record that it happened, clear the error var and carry on.
+		log.ErrorCtx(ctx, errors.Wrap(err, errCacheStoreFailed.Error()), log.Data{"identity_id": identity.ID})
+		err = nil
 	}
 
-	// happy days...
 	return
 }
 
