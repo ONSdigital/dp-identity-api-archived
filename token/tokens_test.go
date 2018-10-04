@@ -5,6 +5,7 @@ import (
 	"github.com/ONSdigital/dp-identity-api/persistence/persistencetest"
 	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/ONSdigital/dp-identity-api/token/tokentest"
+	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
@@ -31,6 +32,8 @@ var (
 	cacheStoreTokenNoErr = func(e context.Context, token schema.Token, i schema.Identity) error {
 		return nil
 	}
+
+	errTest = errors.New("explosions")
 )
 
 func TestTokens_NewTokenMaxTTL(t *testing.T) {
@@ -123,6 +126,55 @@ func TestTokens_NewTokenLessThatMaxTTL(t *testing.T) {
 
 		Convey("and the correct TTL equals the duration until expiry", func() {
 			So(ttl, ShouldEqual, time.Minute*5)
+		})
+	})
+}
+
+func TestTokens_NewTokenErrors(t *testing.T) {
+	Convey("given cache.StoreToken returns an error", t, func() {
+
+		store := &persistencetest.TokenStoreMock{
+			StoreTokenFunc: func(ctx context.Context, token schema.Token, i schema.Identity) error {
+				return errTest
+			},
+		}
+
+		cache := &tokentest.CacheMock{}
+
+		now := time.Now()
+
+		timeHelper := &tokentest.ExpiryTimeHelperMock{
+			GetExpiryFunc: func() time.Time {
+				return now.Add(time.Minute * 5)
+			},
+			NowFunc: func() time.Time {
+				return now
+			},
+		}
+
+		tokens := Tokens{
+			Cache:      cache,
+			Store:      store,
+			TimeHelper: timeHelper,
+			MaxTTL:     testTTL,
+		}
+
+		token, ttl, err := tokens.NewToken(context.Background(), *testIdentity)
+
+		Convey("then the correct error is returned", func() {
+			So(err.Error(), ShouldContainSubstring, "error while storing token")
+			So(ttl, ShouldEqual,0)
+			So(token, ShouldBeNil)
+		})
+
+		Convey("and store.StoreToken should be called 1 time with the expected params", func() {
+			So(store.StoreTokenCalls(), ShouldHaveLength, 1)
+			So(store.StoreTokenCalls()[0].Token, ShouldNotBeNil)
+			So(store.StoreTokenCalls()[0].I, ShouldResemble, *testIdentity)
+		})
+
+		Convey("and cache.StoreToken is not called", func() {
+			So(cache.StoreTokenCalls(), ShouldHaveLength, 0)
 		})
 	})
 }

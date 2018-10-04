@@ -46,18 +46,23 @@ func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (token 
 	if token, err = t.newToken(identity); err != nil {
 		return
 	}
+
 	if err = t.Store.StoreToken(ctx, *token, identity); err != nil {
 		err = errors.Wrap(err, "error while storing token")
+		token = nil
 		return
 	}
 
 	if ttl, err = t.GetTTL(token); err != nil {
 		err = errors.Wrap(err, "error while calculating token TTL")
+		token = nil
 		return
 	}
 
 	if err = t.Cache.StoreToken(ctx, token.ID, identity, ttl); err != nil {
 		err = errors.Wrap(err, "error while storing token in cache")
+		token = nil
+		ttl = 0
 		return
 	}
 	return
