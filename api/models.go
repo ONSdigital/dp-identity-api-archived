@@ -14,7 +14,6 @@ import (
 
 //go:generate moq -out apitest/generate_mocks.go -pkg apitest . IdentityService TokenService
 
-
 const (
 	getIdentityAction    = "getIdentity"
 	createIdentityAction = "createIdentity"
@@ -48,7 +47,8 @@ type IdentityCreated struct {
 }
 
 type AuthToken struct {
-	Token string `json:"token"`
+	Token string        `json:"token"`
+	TTL   time.Duration `json:"ttl"`
 }
 
 type NewTokenRequest struct {
@@ -87,7 +87,7 @@ func getNewTokenRequest(ctx context.Context, r io.ReadCloser) (*NewTokenRequest,
 type IdentityService interface {
 	Get(ctx context.Context, tokenStr string) (*schema.Identity, error)
 	Create(ctx context.Context, i *schema.Identity) (string, error)
-	VerifyPassword(ctx context.Context, email string, password string) error
+	VerifyPassword(ctx context.Context, email string, password string) (*schema.Identity, error)
 }
 
 type TokenService interface {

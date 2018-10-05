@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/ONSdigital/dp-identity-api/api"
+	"github.com/ONSdigital/dp-identity-api/cache"
 	"github.com/ONSdigital/dp-identity-api/config"
 	"github.com/ONSdigital/dp-identity-api/encryption"
 	"github.com/ONSdigital/dp-identity-api/identity"
 	"github.com/ONSdigital/dp-identity-api/mongo"
+	"github.com/ONSdigital/dp-identity-api/token"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
@@ -57,7 +59,20 @@ func main() {
 		Encryptor:     encryption.Service{},
 	}
 
-	identityAPI := api.New("http://localhost"+cfg.BindAddr, identityService, auditor) // TODO make Host config
+	// TODO get from config
+	timeHelper := token.NewExpiryHelper(23, 59, 59)
+	// TODO get from config
+	tokenTTL := time.Minute * 30
+
+	tokens := &token.Tokens{
+		TimeHelper: timeHelper,
+		MaxTTL:     tokenTTL,
+		Store:      mongodb,
+		Cache:      &cache.NOP{},
+	}
+
+	// TODO make Host config
+	identityAPI := api.New("http://localhost"+cfg.BindAddr, identityService, tokens, auditor)
 
 	router := mux.NewRouter()
 	identityAPI.RegisterEndpoints(router)

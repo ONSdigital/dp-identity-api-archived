@@ -6,7 +6,6 @@ import (
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"net/http"
 )
 
@@ -57,17 +56,19 @@ func (api *API) CreateTokenHandler(w http.ResponseWriter, r *http.Request) {
 func (api *API) createToken(ctx context.Context, tokenReq *NewTokenRequest) (*AuthToken, error) {
 	logD := log.Data{"email": tokenReq.Email}
 
-	err := api.IdentityService.VerifyPassword(ctx, tokenReq.Email, tokenReq.Password)
+	identity, err := api.IdentityService.VerifyPassword(ctx, tokenReq.Email, tokenReq.Password)
 	if err != nil {
 		log.ErrorCtx(ctx, errors.Wrap(err, "createToken: request unsuccessful"), logD)
 		return nil, err
 	}
 
-	token, err := uuid.NewV4()
+	token, ttl, err := api.Tokens.NewToken(ctx, *identity)
 	if err != nil {
+		log.ErrorCtx(ctx, errors.Wrap(err, "createToken: request unsuccessful"), logD)
 		return nil, err
 	}
 
+	logD["identity_id"] = token.IdentityID
 	log.InfoCtx(ctx, "createToken: user credential successfully verified", logD)
-	return &AuthToken{Token: token.String()}, nil
+	return &AuthToken{Token: token.ID, TTL: ttl}, nil
 }

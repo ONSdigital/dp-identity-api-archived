@@ -55,10 +55,10 @@ func (s *Service) Create(ctx context.Context, i *schema.Identity) (string, error
 	return id, nil
 }
 
-func (s *Service) VerifyPassword(ctx context.Context, email string, password string) error {
+func (s *Service) VerifyPassword(ctx context.Context, email string, password string) (*schema.Identity, error) {
 	i, err := s.getIdentity(ctx, email)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	logD := log.Data{"email": email}
@@ -66,11 +66,11 @@ func (s *Service) VerifyPassword(ctx context.Context, email string, password str
 	err = s.Encryptor.CompareHashAndPassword([]byte(i.Password), []byte(password))
 	if err != nil {
 		log.ErrorCtx(ctx, errors.Wrap(err, "password did not match stored value"), logD)
-		return ErrAuthenticateFailed
+		return nil, ErrAuthenticateFailed
 	}
 
 	log.InfoCtx(ctx, "user authentication successful", logD)
-	return nil
+	return i, nil
 }
 
 func (s *Service) Get(ctx context.Context, tokenStr string) (*schema.Identity, error) {

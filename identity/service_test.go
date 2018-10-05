@@ -223,9 +223,10 @@ func TestService_VerifyPassword(t *testing.T) {
 
 		s := Service{IdentityStore: p, Encryptor: e}
 
-		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
+		identity, err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
 		So(err, ShouldBeNil)
+		So(identity, ShouldResemble, newIdentity)
 		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
 		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newIdentity.Email)
 		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 1)
@@ -246,9 +247,10 @@ func TestService_VerifyPasswordIdentityNotFound(t *testing.T) {
 
 		s := Service{IdentityStore: p, Encryptor: e}
 
-		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
+		identity, err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
 		So(err, ShouldEqual, ErrIdentityNotFound)
+		So(identity, ShouldBeNil)
 		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
 		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newIdentity.Email)
 		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 0)
@@ -267,9 +269,10 @@ func TestService_VerifyPasswordPersistenceErr(t *testing.T) {
 
 		s := Service{IdentityStore: p, Encryptor: e}
 
-		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
+		identity, err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
 		So(err, ShouldEqual, errTest)
+		So(identity, ShouldBeNil)
 		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
 		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newIdentity.Email)
 		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 0)
@@ -288,9 +291,10 @@ func TestService_VerifyPasswordPasswordIncorrect(t *testing.T) {
 
 		s := Service{IdentityStore: p, Encryptor: e}
 
-		err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
+		identity, err := s.VerifyPassword(context.Background(), newIdentity.Email, newIdentity.Password)
 
 		So(err, ShouldEqual, ErrAuthenticateFailed)
+		So(identity, ShouldBeNil)
 		So(p.GetIdentityCalls(), ShouldHaveLength, 1)
 		So(p.GetIdentityCalls()[0].Email, ShouldEqual, newIdentity.Email)
 		So(e.CompareHashAndPasswordCalls(), ShouldHaveLength, 1)

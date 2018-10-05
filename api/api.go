@@ -8,10 +8,11 @@ import (
 )
 
 //New is a constructor function for creating a new instance of the API.
-func New(host string, identityService IdentityService, auditor audit.AuditorService) *API {
+func New(host string, identityService IdentityService, tokenService TokenService, auditor audit.AuditorService) *API {
 	return &API{
 		Host:            host,
 		IdentityService: identityService,
+		Tokens:          tokenService,
 		auditor:         auditor,
 	}
 }
