@@ -210,10 +210,10 @@ func TestTokens_NewTokenCacheErrors(t *testing.T) {
 
 		token, ttl, err := tokens.NewToken(context.Background(), *testIdentity)
 
-		Convey("then the correct error is returned", func() {
-			So(err, ShouldEqual, errTest)
-			So(ttl, ShouldEqual, 0)
-			So(token, ShouldBeNil)
+		Convey("then a success response is still returned", func() {
+			So(err, ShouldBeNil)
+			So(ttl, ShouldEqual, testTTL)
+			So(token, ShouldNotBeNil)
 		})
 
 		Convey("and store.StoreToken is called 1 time with the expected params", func() {

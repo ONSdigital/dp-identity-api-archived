@@ -23,7 +23,7 @@ var (
 	// ErrTokenNil return if the token is nil
 	ErrTokenNil = errors.New("token required but was nil")
 
-	errCacheStoreFailed = errors.New("warning failed to write token to cache")
+	cacheStoreFailed = "warning failed to write token to cache"
 )
 
 // Cache defines a cache for storing/retrieving an identity against a token ID .
@@ -49,6 +49,7 @@ type Tokens struct {
 // NewToken creates and stores a new token for the provided identity. Returns the generated token and its time to live,
 // or an error is unsuccessful
 func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (token *schema.Token, ttl time.Duration, err error) {
+	logD := log.Data{"identity_id": identity.ID}
 	if token, err = t.newToken(identity); err != nil {
 		return
 	}
@@ -64,11 +65,13 @@ func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (token 
 	}
 
 	if err = t.Cache.StoreToken(ctx, token.ID, identity, ttl); err != nil {
-		token = nil
-		ttl = 0
-		return
+		// We consider this non critical. Log an error that it happened so any monitoring is aware the cache might be
+		// down/borked but return a success response as the token has been generated and successfully stored in the
+		// DB so the caller can still use the service.
+		log.ErrorCtx(ctx, errors.Wrap(err, cacheStoreFailed), logD)
+		err = nil
 	}
-	log.InfoCtx(ctx, "successfully generated token for identity", log.Data{"identity_id": identity.ID})
+	log.InfoCtx(ctx, "successfully generated token for identity", logD)
 	return
 }
 
@@ -100,7 +103,7 @@ func (t *Tokens) Get(ctx context.Context, tokenStr string) (identity *schema.Ide
 	if err = t.Cache.StoreToken(ctx, tokenStr, *identity, ttl); err != nil {
 		// We consider this non critical as the token exists and the user can still use the service.
 		// So we log an error to record that it happened, clear the error var and carry on.
-		log.ErrorCtx(ctx, errors.Wrap(err, errCacheStoreFailed.Error()), log.Data{"identity_id": identity.ID})
+		log.ErrorCtx(ctx, errors.Wrap(err, cacheStoreFailed), log.Data{"identity_id": identity.ID})
 		err = nil
 	}
 

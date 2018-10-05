@@ -92,7 +92,7 @@ func TestTokens_GetTTL_RemainderGreaterThanMaxTTL(t *testing.T) {
 	})
 }
 
-func TestTokens_GetTTL_RemainderLessThatLL(t *testing.T) {
+func TestTokens_GetTTL_RemainderLessThanTLL(t *testing.T) {
 	Convey("should return remaining duration until expiry if less than TTL", t, func() {
 		now := time.Now()
 		tkn := newTestToken(now, now.Add(time.Minute*10)) // expires in 10 mins, ttl is 15 mins

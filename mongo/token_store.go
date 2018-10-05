@@ -23,12 +23,12 @@ func (m *Mongo) StoreToken(ctx context.Context, tkn schema.Token, i schema.Ident
 
 	_, err := m.deleteTokens(ctx, i.ID)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error deleting tokens")
 	}
 
 	err = m.storeNewActiveToken(ctx, tkn)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error storing new active token")
 	}
 	return nil
 }
@@ -39,12 +39,12 @@ func (m *Mongo) GetIdentityByToken(ctx context.Context, token string) (*schema.I
 
 	t, err := m.getTokenByID(ctx, token)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "error getting token by ID")
 	}
 
 	i, err := m.GetIdentityByID(ctx, t.IdentityID)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "error getting identity by ID")
 	}
 	return i, t, nil
 }
@@ -115,7 +115,7 @@ func (m *Mongo) getTokenByID(ctx context.Context, tokenID string) (*schema.Token
 		if err == mgo.ErrNotFound {
 			err = persistence.ErrNotFound
 		}
-		return nil, err
+		return nil, errors.Wrap(err, "error querying for active token")
 	}
 	return &t, nil
 }
