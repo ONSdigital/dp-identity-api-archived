@@ -1,14 +1,14 @@
 package mongo
 
 import (
-"context"
-"github.com/ONSdigital/dp-identity-api/persistence"
-"github.com/ONSdigital/dp-identity-api/schema"
-"github.com/globalsign/mgo"
-"github.com/globalsign/mgo/bson"
-"github.com/pkg/errors"
-"github.com/satori/go.uuid"
-"time"
+	"context"
+	"github.com/ONSdigital/dp-identity-api/persistence"
+	"github.com/ONSdigital/dp-identity-api/schema"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
+	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"time"
 )
 
 func (m *Mongo) SaveIdentity(identity schema.Identity) (string, error) {
