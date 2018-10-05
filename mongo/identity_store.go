@@ -1,13 +1,14 @@
 package mongo
 
 import (
-	"github.com/ONSdigital/dp-identity-api/persistence"
-	"github.com/ONSdigital/dp-identity-api/schema"
-	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
-	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
-	"time"
+"context"
+"github.com/ONSdigital/dp-identity-api/persistence"
+"github.com/ONSdigital/dp-identity-api/schema"
+"github.com/globalsign/mgo"
+"github.com/globalsign/mgo/bson"
+"github.com/pkg/errors"
+"github.com/satori/go.uuid"
+"time"
 )
 
 func (m *Mongo) SaveIdentity(identity schema.Identity) (string, error) {
@@ -75,4 +76,21 @@ func (m *Mongo) GetIdentity(email string) (schema.Identity, error) {
 		return schema.NilIdentity, err
 	}
 	return i, nil
+}
+
+func (m *Mongo) GetIdentityByID(ctx context.Context, id string) (*schema.Identity, error) {
+	s := m.Session.Copy()
+	defer s.Close()
+
+	var i schema.Identity
+
+	query := bson.M{"id": id, "deleted": false}
+
+	if err := s.DB(m.Database).C(m.IdentityCollection).Find(query).One(&i); err != nil {
+		if err == mgo.ErrNotFound {
+			err = persistence.ErrNotFound
+		}
+		return nil, err
+	}
+	return &i, nil
 }

@@ -2,8 +2,10 @@ package mongo
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-identity-api/persistence"
 	"github.com/ONSdigital/dp-identity-api/schema"
 	"github.com/ONSdigital/go-ns/log"
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/pkg/errors"
 	"time"
@@ -32,7 +34,19 @@ func (m *Mongo) StoreToken(ctx context.Context, tkn schema.Token, i schema.Ident
 }
 
 func (m *Mongo) GetIdentityByToken(ctx context.Context, token string) (*schema.Identity, *schema.Token, error) {
-	return nil, nil, nil
+	s := m.Session.Copy()
+	defer s.Close()
+
+	t, err := m.getTokenByID(ctx, token)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	i, err := m.GetIdentityByID(ctx, t.IdentityID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return i, t, nil
 }
 
 // deleteTokens soft delete any active token associated with the provided identity ID. Sets token.deleted = true and
@@ -84,8 +98,30 @@ func (m *Mongo) storeNewActiveToken(ctx context.Context, tkn schema.Token) error
 	return nil
 }
 
+func (m *Mongo) getTokenByID(ctx context.Context, tokenID string) (*schema.Token, error) {
+	s := m.Session.Copy()
+	defer s.Close()
+
+	queryForToken := bson.M{
+		"token_id": tokenID,
+		"deleted":  false,
+		"expiry_date": bson.M{
+			"$gt": time.Now(),
+		},
+	}
+
+	var t schema.Token
+	if err := s.DB(m.Database).C(m.TokenCollection).Find(queryForToken).One(&t); err != nil {
+		if err == mgo.ErrNotFound {
+			err = persistence.ErrNotFound
+		}
+		return nil, err
+	}
+	return &t, nil
+}
+
 // activeTokens return a list of tokens associated with the provided identity with "deleted = false".
-func (m *Mongo) getActiveTokens(ctx context.Context, identityID string) ([]schema.Token, error) {
+func (m *Mongo) getActiveTokensByIdentity(ctx context.Context, identityID string) ([]schema.Token, error) {
 	log.InfoCtx(ctx, "tokenStore: querying for active tokens", log.Data{identityIDKey: identityID})
 	s := m.Session.Copy()
 	defer s.Close()
