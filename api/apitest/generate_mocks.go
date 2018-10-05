@@ -12,7 +12,6 @@ import (
 
 var (
 	lockIdentityServiceMockCreate         sync.RWMutex
-	lockIdentityServiceMockGet            sync.RWMutex
 	lockIdentityServiceMockVerifyPassword sync.RWMutex
 )
 
@@ -24,9 +23,6 @@ var (
 //         mockedIdentityService := &IdentityServiceMock{
 //             CreateFunc: func(ctx context.Context, i *schema.Identity) (string, error) {
 // 	               panic("TODO: mock out the Create method")
-//             },
-//             GetFunc: func(ctx context.Context, tokenStr string) (*schema.Identity, error) {
-// 	               panic("TODO: mock out the Get method")
 //             },
 //             VerifyPasswordFunc: func(ctx context.Context, email string, password string) (*schema.Identity, error) {
 // 	               panic("TODO: mock out the VerifyPassword method")
@@ -41,9 +37,6 @@ type IdentityServiceMock struct {
 	// CreateFunc mocks the Create method.
 	CreateFunc func(ctx context.Context, i *schema.Identity) (string, error)
 
-	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, tokenStr string) (*schema.Identity, error)
-
 	// VerifyPasswordFunc mocks the VerifyPassword method.
 	VerifyPasswordFunc func(ctx context.Context, email string, password string) (*schema.Identity, error)
 
@@ -55,13 +48,6 @@ type IdentityServiceMock struct {
 			Ctx context.Context
 			// I is the i argument value.
 			I *schema.Identity
-		}
-		// Get holds details about calls to the Get method.
-		Get []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// TokenStr is the tokenStr argument value.
-			TokenStr string
 		}
 		// VerifyPassword holds details about calls to the VerifyPassword method.
 		VerifyPassword []struct {
@@ -110,41 +96,6 @@ func (mock *IdentityServiceMock) CreateCalls() []struct {
 	return calls
 }
 
-// Get calls GetFunc.
-func (mock *IdentityServiceMock) Get(ctx context.Context, tokenStr string) (*schema.Identity, error) {
-	if mock.GetFunc == nil {
-		panic("moq: IdentityServiceMock.GetFunc is nil but IdentityService.Get was just called")
-	}
-	callInfo := struct {
-		Ctx      context.Context
-		TokenStr string
-	}{
-		Ctx:      ctx,
-		TokenStr: tokenStr,
-	}
-	lockIdentityServiceMockGet.Lock()
-	mock.calls.Get = append(mock.calls.Get, callInfo)
-	lockIdentityServiceMockGet.Unlock()
-	return mock.GetFunc(ctx, tokenStr)
-}
-
-// GetCalls gets all the calls that were made to Get.
-// Check the length with:
-//     len(mockedIdentityService.GetCalls())
-func (mock *IdentityServiceMock) GetCalls() []struct {
-	Ctx      context.Context
-	TokenStr string
-} {
-	var calls []struct {
-		Ctx      context.Context
-		TokenStr string
-	}
-	lockIdentityServiceMockGet.RLock()
-	calls = mock.calls.Get
-	lockIdentityServiceMockGet.RUnlock()
-	return calls
-}
-
 // VerifyPassword calls VerifyPasswordFunc.
 func (mock *IdentityServiceMock) VerifyPassword(ctx context.Context, email string, password string) (*schema.Identity, error) {
 	if mock.VerifyPasswordFunc == nil {
@@ -185,8 +136,8 @@ func (mock *IdentityServiceMock) VerifyPasswordCalls() []struct {
 }
 
 var (
-	lockTokenServiceMockGet      sync.RWMutex
-	lockTokenServiceMockNewToken sync.RWMutex
+	lockTokenServiceMockGetIdentityByToken sync.RWMutex
+	lockTokenServiceMockNewToken           sync.RWMutex
 )
 
 // TokenServiceMock is a mock implementation of TokenService.
@@ -195,8 +146,8 @@ var (
 //
 //         // make and configure a mocked TokenService
 //         mockedTokenService := &TokenServiceMock{
-//             GetFunc: func(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error) {
-// 	               panic("TODO: mock out the Get method")
+//             GetIdentityByTokenFunc: func(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error) {
+// 	               panic("TODO: mock out the GetIdentityByToken method")
 //             },
 //             NewTokenFunc: func(ctx context.Context, identity schema.Identity) (*schema.Token, time.Duration, error) {
 // 	               panic("TODO: mock out the NewToken method")
@@ -208,16 +159,16 @@ var (
 //
 //     }
 type TokenServiceMock struct {
-	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error)
+	// GetIdentityByTokenFunc mocks the GetIdentityByToken method.
+	GetIdentityByTokenFunc func(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error)
 
 	// NewTokenFunc mocks the NewToken method.
 	NewTokenFunc func(ctx context.Context, identity schema.Identity) (*schema.Token, time.Duration, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// Get holds details about calls to the Get method.
-		Get []struct {
+		// GetIdentityByToken holds details about calls to the GetIdentityByToken method.
+		GetIdentityByToken []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// TokenStr is the tokenStr argument value.
@@ -233,10 +184,10 @@ type TokenServiceMock struct {
 	}
 }
 
-// Get calls GetFunc.
-func (mock *TokenServiceMock) Get(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error) {
-	if mock.GetFunc == nil {
-		panic("moq: TokenServiceMock.GetFunc is nil but TokenService.Get was just called")
+// GetIdentityByToken calls GetIdentityByTokenFunc.
+func (mock *TokenServiceMock) GetIdentityByToken(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error) {
+	if mock.GetIdentityByTokenFunc == nil {
+		panic("moq: TokenServiceMock.GetIdentityByTokenFunc is nil but TokenService.GetIdentityByToken was just called")
 	}
 	callInfo := struct {
 		Ctx      context.Context
@@ -245,16 +196,16 @@ func (mock *TokenServiceMock) Get(ctx context.Context, tokenStr string) (*schema
 		Ctx:      ctx,
 		TokenStr: tokenStr,
 	}
-	lockTokenServiceMockGet.Lock()
-	mock.calls.Get = append(mock.calls.Get, callInfo)
-	lockTokenServiceMockGet.Unlock()
-	return mock.GetFunc(ctx, tokenStr)
+	lockTokenServiceMockGetIdentityByToken.Lock()
+	mock.calls.GetIdentityByToken = append(mock.calls.GetIdentityByToken, callInfo)
+	lockTokenServiceMockGetIdentityByToken.Unlock()
+	return mock.GetIdentityByTokenFunc(ctx, tokenStr)
 }
 
-// GetCalls gets all the calls that were made to Get.
+// GetIdentityByTokenCalls gets all the calls that were made to GetIdentityByToken.
 // Check the length with:
-//     len(mockedTokenService.GetCalls())
-func (mock *TokenServiceMock) GetCalls() []struct {
+//     len(mockedTokenService.GetIdentityByTokenCalls())
+func (mock *TokenServiceMock) GetIdentityByTokenCalls() []struct {
 	Ctx      context.Context
 	TokenStr string
 } {
@@ -262,9 +213,9 @@ func (mock *TokenServiceMock) GetCalls() []struct {
 		Ctx      context.Context
 		TokenStr string
 	}
-	lockTokenServiceMockGet.RLock()
-	calls = mock.calls.Get
-	lockTokenServiceMockGet.RUnlock()
+	lockTokenServiceMockGetIdentityByToken.RLock()
+	calls = mock.calls.GetIdentityByToken
+	lockTokenServiceMockGetIdentityByToken.RUnlock()
 	return calls
 }
 

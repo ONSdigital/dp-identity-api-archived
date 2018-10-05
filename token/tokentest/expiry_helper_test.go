@@ -8,12 +8,12 @@ import (
 
 type scenario = struct {
 	desc    string
-	inputH  int
-	inputM  int
-	inputS  int
-	expectH int
-	expectM int
-	expectS int
+	inputH  int64
+	inputM  int64
+	inputS  int64
+	expectH int64
+	expectM int64
+	expectS int64
 }
 
 func TestNewExpiryHelper(t *testing.T) {

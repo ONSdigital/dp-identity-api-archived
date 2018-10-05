@@ -17,9 +17,6 @@ const (
 )
 
 var (
-	// ErrTokenExpired returned when GetTTL is called and the token has expired
-	ErrTokenExpired = errors.New("token expired")
-
 	// ErrTokenNil return if the token is nil
 	ErrTokenNil = errors.New("token required but was nil")
 
@@ -59,7 +56,7 @@ func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (token 
 		return
 	}
 
-	if ttl, err = t.GetTTL(token); err != nil {
+	if ttl, err = t.GetTokenTTL(token); err != nil {
 		token = nil
 		return
 	}
@@ -75,29 +72,28 @@ func (t *Tokens) NewToken(ctx context.Context, identity schema.Identity) (token 
 	return
 }
 
-// Get return the identity associated with the token (if it exists) and the tokens time to live. Return an error if
+// GetIdentityByToken return the identity associated with the token (if it exists) and the tokens time to live. Return an error if
 // unsuccessful
-func (t *Tokens) Get(ctx context.Context, tokenStr string) (identity *schema.Identity, ttl time.Duration, err error) {
-	defer func() {
-		if err != nil { // if err return nil values
-			identity = nil
-			ttl = 0
-		}
-	}()
+func (t *Tokens) GetIdentityByToken(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error) {
+	identity, ttl, err := t.Cache.GetIdentityByToken(ctx, tokenStr)
+	if err != nil {
+		return nil, 0, err
+	}
 
-	identity, ttl, err = t.Cache.GetIdentityByToken(ctx, tokenStr)
-
-	if err != nil || identity != nil {
-		return
+	if identity != nil {
+		return identity, ttl, err
 	}
 
 	var token *schema.Token
 	if identity, token, err = t.Store.GetIdentityByToken(ctx, tokenStr); err != nil {
-		return
+		if err == persistence.ErrNotFound {
+			return nil, 0, schema.ErrTokenNotFound
+		}
+		return nil, 0, err
 	}
 
-	if ttl, err = t.GetTTL(token); err != nil {
-		return
+	if ttl, err = t.GetTokenTTL(token); err != nil {
+		return nil, 0, err
 	}
 
 	if err = t.Cache.StoreToken(ctx, tokenStr, *identity, ttl); err != nil {
@@ -107,25 +103,25 @@ func (t *Tokens) Get(ctx context.Context, tokenStr string) (identity *schema.Ide
 		err = nil
 	}
 
-	return
+	return identity, ttl, nil
 }
 
-// GetTTL calculates the TTL (time to live) from the configured expiry time. Returns ErrTokenExpired if the token is
+// GetTokenTTL calculates the TTL (time to live) from the configured expiry time. Returns ErrTokenExpired if the token is
 // expired.
-func (t *Tokens) GetTTL(token *schema.Token) (time.Duration, error) {
+func (t *Tokens) GetTokenTTL(token *schema.Token) (time.Duration, error) {
 	if token == nil {
 		return nilTTL, ErrTokenNil
 	}
 	now := t.TimeHelper.Now()
 	if now.After(token.ExpiryDate) {
-		return nilTTL, ErrTokenExpired
+		return nilTTL, schema.ErrTokenExpired
 	}
 
 	// calculate the time remaining until the expiry time
 	remainder := token.ExpiryDate.Sub(now)
 
 	if remainder == 0 {
-		return nilTTL, ErrTokenExpired
+		return nilTTL, schema.ErrTokenExpired
 	}
 
 	if remainder.Seconds() >= t.MaxTTL.Seconds() {

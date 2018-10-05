@@ -38,6 +38,11 @@ func (m *Mongo) GetIdentityByToken(ctx context.Context, token string) (*schema.I
 	defer s.Close()
 
 	t, err := m.getTokenByID(ctx, token)
+	if err != nil && err == persistence.ErrNotFound { // token does not exit
+		return nil, nil, err
+	}
+
+	// some other error querying fot token.
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error getting token by ID")
 	}
@@ -102,18 +107,13 @@ func (m *Mongo) getTokenByID(ctx context.Context, tokenID string) (*schema.Token
 	s := m.Session.Copy()
 	defer s.Close()
 
-	queryForToken := bson.M{
-		"token_id": tokenID,
-		"deleted":  false,
-		"expiry_date": bson.M{
-			"$gt": time.Now(),
-		},
-	}
+	queryForToken := bson.M{"token_id": tokenID, "deleted": false}
 
 	var t schema.Token
 	if err := s.DB(m.Database).C(m.TokenCollection).Find(queryForToken).One(&t); err != nil {
 		if err == mgo.ErrNotFound {
-			err = persistence.ErrNotFound
+			log.InfoCtx(ctx, "active token for this values does not exist", nil)
+			return nil, persistence.ErrNotFound
 		}
 		return nil, errors.Wrap(err, "error querying for active token")
 	}

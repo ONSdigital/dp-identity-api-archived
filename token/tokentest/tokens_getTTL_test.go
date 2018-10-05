@@ -22,9 +22,9 @@ func TestTokens_GetTTLTokenExpire(t *testing.T) {
 
 		tokens := token.Tokens{TimeHelper: timeHelper, MaxTTL: testTTL}
 
-		ttl, err := tokens.GetTTL(tkn)
+		ttl, err := tokens.GetTokenTTL(tkn)
 
-		So(err, ShouldEqual, token.ErrTokenExpired)
+		So(err, ShouldEqual, schema.ErrTokenExpired)
 		So(ttl, ShouldEqual, 0)
 		So(timeHelper.NowCalls(), ShouldHaveLength, 1)
 	})
@@ -36,7 +36,7 @@ func TestTokens_GetTTLTokenNil(t *testing.T) {
 
 		tokens := token.Tokens{TimeHelper: timeHelper, MaxTTL: testTTL}
 
-		ttl, err := tokens.GetTTL(nil)
+		ttl, err := tokens.GetTokenTTL(nil)
 
 		So(err, ShouldEqual, token.ErrTokenNil)
 		So(ttl, ShouldEqual, 0)
@@ -60,9 +60,9 @@ func TestTokens_GetTTLExpiresNow(t *testing.T) {
 		after := now.After(now)
 		fmt.Println(after)
 
-		ttl, err := tokens.GetTTL(tkn)
+		ttl, err := tokens.GetTokenTTL(tkn)
 
-		So(err, ShouldEqual, token.ErrTokenExpired)
+		So(err, ShouldEqual, schema.ErrTokenExpired)
 		So(ttl, ShouldEqual, 0)
 		So(timeHelper.NowCalls(), ShouldHaveLength, 1)
 	})
@@ -84,7 +84,7 @@ func TestTokens_GetTTL_RemainderGreaterThanMaxTTL(t *testing.T) {
 		after := now.After(now)
 		fmt.Println(after)
 
-		ttl, err := tokens.GetTTL(tkn)
+		ttl, err := tokens.GetTokenTTL(tkn)
 
 		So(err, ShouldBeNil)
 		So(ttl, ShouldEqual, testTTL)
@@ -108,7 +108,7 @@ func TestTokens_GetTTL_RemainderLessThanTLL(t *testing.T) {
 		after := now.After(now)
 		fmt.Println(after)
 
-		ttl, err := tokens.GetTTL(tkn)
+		ttl, err := tokens.GetTokenTTL(tkn)
 
 		So(err, ShouldBeNil)
 		So(ttl, ShouldEqual, time.Minute*10)

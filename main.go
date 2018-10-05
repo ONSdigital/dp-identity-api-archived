@@ -60,9 +60,9 @@ func main() {
 	}
 
 	// TODO get from config
-	timeHelper := token.NewExpiryHelper(23, 59, 59)
+	timeHelper := token.NewExpiryHelper(1, 0, 0)
 	// TODO get from config
-	tokenTTL := time.Minute * 30
+	tokenTTL := time.Minute * 15
 
 	tokens := &token.Tokens{
 		TimeHelper: timeHelper,

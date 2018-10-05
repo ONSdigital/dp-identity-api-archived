@@ -31,7 +31,7 @@ func TestTokens_GetCacheError(t *testing.T) {
 		}
 
 		Convey("when get token is called", func() {
-			identity, ttl, err := tokens.Get(context.Background(), testID)
+			identity, ttl, err := tokens.GetIdentityByToken(context.Background(), testID)
 
 			Convey("then expected identity, TTL and error values are returned", func() {
 				So(err, ShouldEqual, errTest)
@@ -63,7 +63,7 @@ func TestTokens_GetExistsInCache(t *testing.T) {
 		}
 
 		Convey("when get token is called", func() {
-			identity, ttl, err := tokens.Get(context.Background(), testID)
+			identity, ttl, err := tokens.GetIdentityByToken(context.Background(), testID)
 
 			Convey("then expected identity, TTL and error values are returned", func() {
 				So(identity, ShouldResemble, testIdentity)
@@ -99,7 +99,7 @@ func TestTokens_GetStoreError(t *testing.T) {
 		}
 
 		Convey("when get token is called", func() {
-			identity, ttl, err := tokens.Get(context.Background(), testID)
+			identity, ttl, err := tokens.GetIdentityByToken(context.Background(), testID)
 
 			Convey("then expected identity, TTL and error values are returned", func() {
 				So(err, ShouldEqual, errTest)
@@ -148,10 +148,10 @@ func TestTokens_GetStoreTokenExpired(t *testing.T) {
 		}
 
 		Convey("when get token is called", func() {
-			identity, ttl, err := tokens.Get(context.Background(), testID)
+			identity, ttl, err := tokens.GetIdentityByToken(context.Background(), testID)
 
 			Convey("then expected identity, TTL and error values are returned", func() {
-				So(err, ShouldEqual, token.ErrTokenExpired)
+				So(err, ShouldEqual, schema.ErrTokenExpired)
 				So(identity, ShouldBeNil)
 				So(ttl, ShouldEqual, 0)
 
@@ -200,7 +200,7 @@ func TestTokens_GetStoreCacheStoreTokenError(t *testing.T) {
 		}
 
 		Convey("when get token is called", func() {
-			identity, ttl, err := tokens.Get(context.Background(), testID)
+			identity, ttl, err := tokens.GetIdentityByToken(context.Background(), testID)
 
 			Convey("then expected identity, TTL and error values are returned", func() {
 				So(err, ShouldBeNil)
@@ -253,7 +253,7 @@ func TestTokens_GetStoreSuccess(t *testing.T) {
 		}
 
 		Convey("when get token is called", func() {
-			identity, ttl, err := tokens.Get(context.Background(), testID)
+			identity, ttl, err := tokens.GetIdentityByToken(context.Background(), testID)
 
 			Convey("then expected identity, TTL and error values are returned", func() {
 				So(err, ShouldBeNil)

@@ -35,7 +35,7 @@ func ExampleTokens_GetTTL() {
 		ExpiryDate: now.Add(time.Hour * 24),
 	}
 
-	ttl, _ := tokens.GetTTL(token)
+	ttl, _ := tokens.GetTokenTTL(token)
 	fmt.Printf("%t", ttl.Minutes() == tokens.MaxTTL.Minutes())
 
 	// Case 2:
@@ -46,7 +46,7 @@ func ExampleTokens_GetTTL() {
 		ExpiryDate: now.Add(time.Minute * 10),
 	}
 
-	ttl, _ = tokens.GetTTL(token)
+	ttl, _ = tokens.GetTokenTTL(token)
 	expected := time.Minute * 10
 	fmt.Printf("%t", ttl.Minutes() == expected.Minutes())
 
@@ -57,7 +57,7 @@ func ExampleTokens_GetTTL() {
 		ExpiryDate: now.Add(time.Minute * - 10),
 	}
 
-	ttl, _ = tokens.GetTTL(token)
+	ttl, _ = tokens.GetTokenTTL(token)
 	expected = time.Minute * 10
 	fmt.Printf("%t", ttl.Minutes() == expected.Minutes())
 }

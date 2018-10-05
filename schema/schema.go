@@ -1,12 +1,17 @@
 package schema
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 var (
 	ErrIdentityNil        = ValidationErr{message: "identity required but was nil"}
 	ErrNameValidation     = ValidationErr{message: "mandatory field name was empty"}
 	ErrEmailValidation    = ValidationErr{message: "mandatory field email was empty"}
 	ErrPasswordValidation = ValidationErr{message: "mandatory field password was empty"}
+	ErrTokenExpired       = errors.New("token expired")
+	ErrTokenNotFound      = errors.New("token not found")
 	NilIdentity           = Identity{}
 )
 

@@ -46,6 +46,17 @@ type IdentityCreated struct {
 	URI string `json:"uri"`
 }
 
+// GetIdentityResponse is the HTTP response entity for a successful get identity request
+type GetIdentityResponse struct {
+	ID          string        `json:"id"`
+	Name        string        `json:"name"`
+	Email       string        `json:"email"`
+	UserType    string        `json:"user_type"`
+	Deleted     bool          `json:"deleted"`
+	CreatedDate time.Time     `json:"created_date"`
+	TokenTTL    time.Duration `json:"token_ttl"`
+}
+
 type AuthToken struct {
 	Token string        `json:"token"`
 	TTL   time.Duration `json:"ttl"`
@@ -85,12 +96,11 @@ func getNewTokenRequest(ctx context.Context, r io.ReadCloser) (*NewTokenRequest,
 
 //IdentityService is a service for creating, updating and deleting Identities.
 type IdentityService interface {
-	Get(ctx context.Context, tokenStr string) (*schema.Identity, error)
 	Create(ctx context.Context, i *schema.Identity) (string, error)
 	VerifyPassword(ctx context.Context, email string, password string) (*schema.Identity, error)
 }
 
 type TokenService interface {
 	NewToken(ctx context.Context, identity schema.Identity) (*schema.Token, time.Duration, error)
-	Get(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error)
+	GetIdentityByToken(ctx context.Context, tokenStr string) (*schema.Identity, time.Duration, error)
 }

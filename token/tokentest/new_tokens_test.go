@@ -232,7 +232,7 @@ func TestTokens_NewTokenCacheErrors(t *testing.T) {
 }
 
 func TestTokens_NewTokenGetTTLErrors(t *testing.T) {
-	Convey("given GetTTL returns an error", t, func() {
+	Convey("given GetTokenTTL returns an error", t, func() {
 
 		store := &persistencetest.TokenStoreMock{StoreTokenFunc: dbStoreTokenNoErr}
 
@@ -263,7 +263,7 @@ func TestTokens_NewTokenGetTTLErrors(t *testing.T) {
 		tkn, ttl, err := tokens.NewToken(context.Background(), *testIdentity)
 
 		Convey("then the correct error is returned", func() {
-			So(err, ShouldEqual, token.ErrTokenExpired)
+			So(err, ShouldEqual, schema.ErrTokenExpired)
 			So(ttl, ShouldEqual, 0)
 			So(tkn, ShouldBeNil)
 		})
